@@ -1,0 +1,30 @@
+{
+  "name": "provider",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "dev": "next dev --port 3000",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint --max-warnings 0",
+    "check-types": "next typegen && tsc --noEmit"
+  },
+  "dependencies": {
+    "@repo/ui": "workspace:*",
+    "next": "16.2.0",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5"
+  },
+  "devDependencies": {
+    "@ordre/config": "workspace:*",
+    "@types/node": "^22.19.17",
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2",
+    "eslint": "^9.39.4",
+    "typescript": "5.9.2"
+  }
+}

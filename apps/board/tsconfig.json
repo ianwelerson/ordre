@@ -1,0 +1,15 @@
+{
+  "extends": "@ordre/config/typescript/react-router.json",
+  "include": [
+    "**/*",
+    "**/.server/**/*",
+    "**/.client/**/*",
+    ".react-router/types/**/*"
+  ],
+  "compilerOptions": {
+    "rootDirs": [".", "./.react-router/types"],
+    "paths": {
+      "~/*": ["./app/*"]
+    }
+  }
+}
