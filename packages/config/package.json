@@ -5,11 +5,13 @@
   "private": true,
   "exports": {
     "./eslint/*": "./eslint/*",
-    "./typescript/*": "./typescript/*"
+    "./typescript/*": "./typescript/*",
+    "./prettier": "./prettier/index.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
     "@next/eslint-plugin-next": "^16.2.3",
+    "@trivago/prettier-plugin-sort-imports": "^6.0.2",
     "eslint": "^9.39.4",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-only-warn": "^1.2.1",

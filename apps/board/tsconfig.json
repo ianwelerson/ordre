@@ -4,7 +4,8 @@
     "**/*",
     "**/.server/**/*",
     "**/.client/**/*",
-    ".react-router/types/**/*"
+    ".react-router/types/**/*",
+    "prettier.config.ts"
   ],
   "compilerOptions": {
     "rootDirs": [".", "./.react-router/types"],

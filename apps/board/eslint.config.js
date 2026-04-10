@@ -1,9 +1,9 @@
-import { reactConfig } from "@ordre/config/eslint/react.js";
+import { reactConfig } from '@ordre/config/eslint/react.js';
 
 /** @type {import("eslint").Linter.Config[]} */
 export default [
   ...reactConfig,
   {
-    ignores: [".react-router/**"],
+    ignores: ['.react-router/**'],
   },
 ];
