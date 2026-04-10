@@ -1,16 +1,5 @@
 {
   "name": "board",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "build": "react-router build",
-    "dev": "react-router dev",
-    "start": "react-router-serve ./build/server/index.js",
-    "lint": "eslint --max-warnings 0",
-    "format": "prettier . --write",
-    "format:check": "prettier . --check",
-    "check-types": "react-router typegen && tsc"
-  },
   "dependencies": {
     "@react-router/node": "7.14.0",
     "@react-router/serve": "7.14.0",
@@ -30,5 +19,16 @@
     "tailwindcss": "^4.2.2",
     "typescript": "^5.9.3",
     "vite": "^8.0.8"
-  }
+  },
+  "private": true,
+  "scripts": {
+    "build": "react-router build",
+    "check-types": "react-router typegen && tsc",
+    "dev": "react-router dev",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "lint": "eslint --max-warnings 0",
+    "start": "react-router-serve ./build/server/index.js"
+  },
+  "type": "module"
 }

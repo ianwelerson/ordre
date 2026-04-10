@@ -1,28 +1,28 @@
 {
   "name": "@ordre/ui",
   "version": "0.0.0",
-  "private": true,
-  "type": "module",
-  "exports": {
-    "./*": "./src/*.tsx"
-  },
-  "scripts": {
-    "lint": "eslint . --max-warnings 0",
-    "format": "prettier . --write",
-    "format:check": "prettier . --check",
-    "generate:component": "turbo gen react-component",
-    "check-types": "tsc --noEmit"
+  "dependencies": {
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5"
   },
   "devDependencies": {
     "@ordre/config": "workspace:*",
     "@types/node": "^22.19.17",
-    "@types/react": "19.2.2",
-    "@types/react-dom": "19.2.2",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "eslint": "^9.39.4",
-    "typescript": "5.9.2"
+    "typescript": "^5.9.3"
   },
-  "dependencies": {
-    "react": "^19.2.5",
-    "react-dom": "^19.2.5"
-  }
+  "exports": {
+    "./*": "./src/*.tsx"
+  },
+  "private": true,
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "generate:component": "turbo gen react-component",
+    "lint": "eslint . --max-warnings 0"
+  },
+  "type": "module"
 }
