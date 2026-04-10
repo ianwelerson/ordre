@@ -1,9 +1,8 @@
 {
   "extends": "@ordre/config/typescript/react-library.json",
   "compilerOptions": {
-    "outDir": "dist",
     "strictNullChecks": true
   },
-  "include": ["src"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src", "eslint.config.ts", "prettier.config.ts"],
+  "exclude": ["node_modules"]
 }
