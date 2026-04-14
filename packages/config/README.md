@@ -76,7 +76,7 @@ Extends base and adds:
 **Usage:**
 
 ```ts
-// apps/provider/eslint.config.ts
+// apps/dashboard/eslint.config.ts
 import { nextJsConfig } from "@ordre/config/eslint/next";
 
 export default nextJsConfig;
@@ -116,7 +116,7 @@ Strict baseline shared by every preset:
 For Next.js apps. Overrides: `module: "ESNext"`, `moduleResolution: "Bundler"`, `jsx: "preserve"`, `allowJs: true`, `noEmit: true`, and the Next.js TS plugin.
 
 ```jsonc
-// apps/provider/tsconfig.json
+// apps/dashboard/tsconfig.json
 { "extends": "@ordre/config/typescript/nextjs.json" }
 ```
 
@@ -168,7 +168,7 @@ Groups are separated by a blank line and sorted case-insensitively.
 **Usage:**
 
 ```ts
-// apps/provider/prettier.config.ts
+// apps/dashboard/prettier.config.ts
 export { default } from "@ordre/config/prettier";
 ```
 

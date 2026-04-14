@@ -109,7 +109,7 @@ importers:
         specifier: ^4.1.4
         version: 4.1.4(@types/node@22.19.17)(@vitest/browser-playwright@4.1.4)(@vitest/coverage-v8@4.1.4)(@vitest/ui@4.1.4)(jsdom@29.0.2)(vite@8.0.8(@types/node@22.19.17)(esbuild@0.27.7)(jiti@2.6.1)(yaml@2.8.3))
 
-  apps/marketing:
+  apps/dashboard:
     dependencies:
       '@ordre/ui':
         specifier: workspace:*
@@ -167,7 +167,7 @@ importers:
         specifier: ^4.1.4
         version: 4.1.4(@types/node@22.19.17)(@vitest/browser-playwright@4.1.4)(@vitest/coverage-v8@4.1.4)(@vitest/ui@4.1.4)(jsdom@29.0.2)(vite@8.0.8(@types/node@22.19.17)(esbuild@0.27.7)(jiti@2.6.1)(yaml@2.8.3))
 
-  apps/provider:
+  apps/marketing:
     dependencies:
       '@ordre/ui':
         specifier: workspace:*
