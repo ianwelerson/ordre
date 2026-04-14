@@ -24,6 +24,9 @@
     "lint": "turbo run lint",
     "packages:fix": "syncpack fix && syncpack format",
     "packages:lint": "syncpack lint && syncpack format --check",
-    "prepare": "husky"
+    "prepare": "husky",
+    "test:unit": "turbo run test:unit",
+    "test:unit:ci": "turbo run test:unit:ci",
+    "test:unit:ui": "turbo run test:unit:ui"
   }
 }

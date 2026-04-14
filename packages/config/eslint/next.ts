@@ -25,6 +25,7 @@ export const nextJsConfig: Linter.Config[] = [
     "out/**",
     "build/**",
     "next-env.d.ts",
+    "coverage/**",
   ]),
   {
     ...pluginReact.configs.flat.recommended,
