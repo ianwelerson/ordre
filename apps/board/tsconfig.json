@@ -7,6 +7,7 @@
     ".react-router/types/**/*",
     "prettier.config.ts"
   ],
+  "exclude": ["node_modules", "coverage"],
   "compilerOptions": {
     "rootDirs": [".", "./.react-router/types"],
     "paths": {

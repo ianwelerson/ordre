@@ -5,3 +5,7 @@
 # React Router
 /.react-router/
 /build/
+
+# Vitest
+**/__screenshots__/**
+**/.vitest-attachments/**
