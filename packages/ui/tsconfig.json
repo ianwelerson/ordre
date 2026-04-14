@@ -1,8 +1,10 @@
 {
   "extends": "@ordre/config/typescript/react-library.json",
   "compilerOptions": {
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler"
   },
-  "include": ["src", "eslint.config.ts", "prettier.config.ts"],
-  "exclude": ["node_modules"]
+  "include": ["src", "eslint.config.ts", "prettier.config.ts", "vitest.config.ts"],
+  "exclude": ["node_modules", "coverage"]
 }
