@@ -19,14 +19,6 @@ export const nextJsConfig: Linter.Config[] = [
   js.configs.recommended,
   eslintConfigPrettier,
   ...tseslint.configs.recommended,
-  globalIgnores([
-    // Default ignores of eslint-config-next:
-    ".next/**",
-    "out/**",
-    "build/**",
-    "next-env.d.ts",
-    "coverage/**",
-  ]),
   {
     ...pluginReact.configs.flat.recommended,
     languageOptions: {
