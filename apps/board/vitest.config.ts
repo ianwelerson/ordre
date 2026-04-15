@@ -21,7 +21,7 @@ export default defineConfig({
       provider: 'v8',
       exclude: EXCLUDE_PATTERN,
     },
-    include: ['app/**/*.{test,spec}.{ts,tsx}'],
+    include: ['src/**/*.{test,spec}.{ts,tsx}'],
     exclude: EXCLUDE_PATTERN,
     browser: {
       provider: playwright(),
