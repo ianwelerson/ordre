@@ -1,12 +1,15 @@
 {
   "extends": "@ordre/config/typescript/nextjs.json",
   "compilerOptions": {
+    "strictNullChecks": true,
     "plugins": [
       {
         "name": "next"
       }
     ],
-    "strictNullChecks": true
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
   "include": ["**/*.ts", "**/*.tsx", "next-env.d.ts", "next.config.js", ".next/types/**/*.ts"],
   "exclude": ["node_modules", "coverage"]
