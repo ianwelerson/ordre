@@ -1,4 +1,4 @@
-import { HomePage } from '../../views/Home';
+import { HomePage } from '@/views/Home';
 
 export function meta() {
   return [
