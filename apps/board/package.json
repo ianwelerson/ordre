@@ -1,30 +1,30 @@
 {
   "name": "board",
   "dependencies": {
-    "@react-router/node": "7.14.0",
-    "@react-router/serve": "7.14.0",
-    "isbot": "^5.1.38",
+    "@react-router/node": "7.14.1",
+    "@react-router/serve": "7.14.1",
+    "isbot": "^5.1.39",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
-    "react-router": "7.14.0"
+    "react-router": "7.14.1"
   },
   "devDependencies": {
     "@ordre/config": "workspace:*",
-    "@react-router/dev": "7.14.0",
+    "@react-router/dev": "7.14.1",
     "@tailwindcss/vite": "^4.2.2",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.3.2",
-    "@types/node": "^22.19.17",
+    "@types/node": "^25.6.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
     "@vitest/browser-playwright": "^4.1.4",
     "@vitest/coverage-v8": "^4.1.4",
     "@vitest/ui": "^4.1.4",
-    "eslint": "^9.39.4",
+    "eslint": "^10.2.0",
     "playwright": "^1.59.1",
     "tailwindcss": "^4.2.2",
-    "typescript": "^5.9.3",
+    "typescript": "^6.0.2",
     "vite": "^8.0.8",
     "vitest": "^4.1.4"
   },

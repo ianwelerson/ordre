@@ -2,7 +2,6 @@ import js from "@eslint/js";
 import eslintConfigPrettier from "eslint-config-prettier";
 import tseslint from "typescript-eslint";
 import pluginReactHooks from "eslint-plugin-react-hooks";
-import pluginReact from "eslint-plugin-react";
 import globals from "globals";
 // @ts-expect-error force the extension
 import { config as baseConfig } from "./base.ts";
@@ -17,10 +16,8 @@ export const reactConfig: Linter.Config[] = [
   js.configs.recommended,
   eslintConfigPrettier,
   ...tseslint.configs.recommended,
-  pluginReact.configs.flat.recommended,
   {
     languageOptions: {
-      ...pluginReact.configs.flat.recommended?.languageOptions,
       globals: {
         ...globals.serviceworker,
         ...globals.browser,
@@ -29,13 +26,10 @@ export const reactConfig: Linter.Config[] = [
   },
   {
     plugins: {
-      "react-hooks": pluginReactHooks,
+      "react-hooks": pluginReactHooks as any,
     },
-    settings: { react: { version: "detect" } },
     rules: {
       ...pluginReactHooks.configs.recommended.rules,
-      // React scope no longer necessary with new JSX transform.
-      "react/react-in-jsx-scope": "off",
     },
   },
-].filter((c): c is Linter.Config => c !== undefined);
+];
