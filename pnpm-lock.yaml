@@ -184,12 +184,18 @@ importers:
 
   apps/marketing:
     dependencies:
+      '@ordre/i18n':
+        specifier: workspace:*
+        version: link:../../packages/i18n
       '@ordre/ui':
         specifier: workspace:*
         version: link:../../packages/ui
       next:
         specifier: ^16.2.4
         version: 16.2.4(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      next-intl:
+        specifier: ^4.9.1
+        version: 4.9.1(next@16.2.4(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react@19.2.5)(typescript@6.0.2)
       react:
         specifier: ^19.2.5
         version: 19.2.5
