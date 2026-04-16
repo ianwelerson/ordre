@@ -1,0 +1,9 @@
+{
+  "name": "@ordre/i18n",
+  "version": "0.0.0",
+  "exports": {
+    "./messages": "./messages/index.ts"
+  },
+  "private": true,
+  "type": "module"
+}
