@@ -1,15 +1,47 @@
 import './app.css';
 
+import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
+  data,
   isRouteErrorResponse,
   Links,
   Meta,
   Outlet,
+  redirect,
   Scripts,
   ScrollRestoration,
 } from 'react-router';
 
+import {
+  fallbackLanguage,
+  getLocaleFromPath,
+  localePrefixes,
+  stripLocalePrefix,
+  type SupportedLanguage,
+} from '@/app/locale/locales';
+import { getLocale, i18nextMiddleware, localeCookie } from '@/app/middleware/i18next';
+
 import type { Route } from './+types/root';
+
+export const middleware = [i18nextMiddleware];
+
+export async function loader({ context, request }: Route.LoaderArgs) {
+  const locale = getLocale(context) as SupportedLanguage;
+  const url = new URL(request.url);
+  const pathLocale = getLocaleFromPath(url.pathname) ?? fallbackLanguage;
+
+  if (pathLocale !== locale) {
+    const basePath = stripLocalePrefix(url.pathname);
+    const expectedPrefix = localePrefixes[locale];
+    const destination = expectedPrefix + (basePath === '/' && expectedPrefix ? '' : basePath);
+    throw redirect(destination + url.search, {
+      headers: { 'Set-Cookie': await localeCookie.serialize(locale) },
+    });
+  }
+
+  return data({ locale }, { headers: { 'Set-Cookie': await localeCookie.serialize(locale) } });
+}
 
 export const links: Route.LinksFunction = () => [
   { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -25,8 +57,10 @@ export const links: Route.LinksFunction = () => [
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const { i18n } = useTranslation();
+
   return (
-    <html lang="en">
+    <html lang={i18n.language} dir={i18n.dir(i18n.language)}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -42,7 +76,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function App() {
+export default function App({ loaderData }: Route.ComponentProps) {
+  const { i18n } = useTranslation();
+  const { locale } = loaderData;
+
+  useEffect(() => {
+    if (i18n.language !== locale) i18n.changeLanguage(locale);
+  }, [locale, i18n]);
+
   return <Outlet />;
 }
 
