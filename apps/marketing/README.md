@@ -1,36 +1,129 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/create-next-app).
+# 🌎 marketing
 
-## Getting Started
+The **marketing** app is the public-facing website for Ordre - the home page, pricing, about, and legal pages. It's the first impression: fast, static-friendly, and localized.
 
-First, run the development server:
+Built with **[Next.js](https://nextjs.org/) (App Router)**.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## 🧩 Responsibilities
+
+- Present the product to prospective workspace members
+- Host pricing, about, privacy, and terms pages
+- Drive sign-ups toward the [`dashboard`](../dashboard) app
+- Serve localized content via path-based routing
+
+---
+
+## 🧰 Tech Stack
+
+- **Framework**: [Next.js 16](https://nextjs.org/) (App Router)
+- **UI**: React 19, [`@ordre/ui`](../../packages/ui), Tailwind CSS v4
+- **i18n**: [`next-intl`](https://next-intl.dev/) with path-based routing (`as-needed` mode)
+- **Testing**: [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/) (Playwright as browser provider)
+
+---
+
+## 📁 Structure
+
+```
+apps/marketing/
+├── src/
+│   ├── app/
+│   │   └── [locale]/                 # Locale prefix wraps all marketing routes
+│   │       ├── about/
+│   │       ├── pricing/
+│   │       ├── terms-conditions/
+│   │       ├── privacy/
+│   │       ├── page.tsx              # Home
+│   │       ├── layout.tsx
+│   │       └── not-found.tsx
+│   │
+│   ├── views/                        # Page UI components (one folder per page)
+│   ├── shared/                       # Reusable app-level code
+│   │   ├── components/
+│   │   ├── hooks/
+│   │   ├── utils/
+│   │   ├── types/
+│   │   └── i18n/
+│   │       ├── routing.ts            # next-intl routing config
+│   │       ├── navigation.ts         # Locale-aware Link, useRouter, etc.
+│   │       ├── requests.ts           # getRequestConfig
+│   │       └── messages/
+│   └── proxy.ts                      # next-intl middleware
+│
+├── next.config.ts
+├── tsconfig.json
+├── vitest.config.ts
+└── package.json
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Three-folder convention
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Folder    | Responsibility                                                 |
+| --------- | -------------------------------------------------------------- |
+| `app/`    | Next.js App Router - routes re-export views, no business logic |
+| `views/`  | Page UI and page-level logic, tests, and stories               |
+| `shared/` | Cross-cutting code reused across views (hooks, utils, i18n)    |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load Inter, a custom Google Font.
+### Import alias
 
-## Learn More
+| Alias | Resolves to |
+| ----- | ----------- |
+| `@/*` | `src/*`     |
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🚀 Getting Started
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+From the repo root:
 
-## Deploy on Vercel
+```bash
+pnpm install
+pnpm --filter marketing dev
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Or from this directory:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+pnpm dev
+```
+
+The app is served at **http://localhost:3001** by default.
+
+---
+
+## 🔍 Scripts
+
+| Command             | Description                     |
+| ------------------- | ------------------------------- |
+| `pnpm dev`          | Start Next.js on port 3001      |
+| `pnpm build`        | Build for production            |
+| `pnpm start`        | Run the production build        |
+| `pnpm check-types`  | `next typegen` + `tsc --noEmit` |
+| `pnpm lint`         | ESLint (fails on warnings)      |
+| `pnpm format`       | Prettier write                  |
+| `pnpm format:check` | Prettier check                  |
+| `pnpm test:unit`    | Vitest with coverage            |
+| `pnpm test:unit:ci` | Vitest run once (CI)            |
+| `pnpm test:unit:ui` | Vitest UI                       |
+
+---
+
+## 🌍 i18n
+
+**Supported locales**: English (`en`, default) and Portuguese (`pt`).
+
+| Path      | Locale |
+| --------- | ------ |
+| `/`       | `en`   |
+| `/br/...` | `pt`   |
+
+Default locale carries no prefix (`as-needed` mode). Shared translations come from [`@ordre/i18n`](../../packages/i18n) and are merged with app-specific messages at runtime.
+
+---
+
+## 📚 Further Reading
+
+- [Root README](../../README.md) - monorepo overview
+- [architecture.md](../../../ordre-internal-docs/architecture.md) - monorepo architecture (internal docs)

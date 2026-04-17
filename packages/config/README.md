@@ -4,6 +4,18 @@
 
 ---
 
+## Table of Contents
+
+- [Structure](#-structure)
+- [Exports](#-exports)
+- [ESLint](#-eslint)
+- [TypeScript](#-typescript)
+- [Prettier](#-prettier)
+- [Adding a new consumer](#-adding-a-new-consumer)
+- [Further Reading](#-further-reading)
+
+---
+
 ## 📁 Structure
 
 ```
@@ -180,3 +192,10 @@ export { default } from "@ordre/config/prettier";
 2. Create `eslint.config.ts`, `tsconfig.json`, and `prettier.config.ts` using the snippets above.
 3. Run `pnpm lint`, `pnpm check-types`, and `pnpm format:check` locally to verify wiring.
 4. Run `pnpm packages:lint` at the repo root - Syncpack will flag any version drift introduced by the new consumer.
+
+---
+
+## 📚 Further Reading
+
+- [Root README](../../README.md) - monorepo overview
+- [architecture.md](../../../ordre-internal-docs/architecture.md) - package architecture (internal docs)
