@@ -29,7 +29,7 @@ export const Default: Story = {
 export const WithClassName: Story = {
   args: {
     children: 'Styled Button',
-    className: 'bg-blue-500 text-white px-4 py-2 rounded',
+    className: 'bg-amber text-white px-4 py-2 rounded',
     appName: 'MyApp',
   },
 };

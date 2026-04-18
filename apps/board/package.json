@@ -39,11 +39,11 @@
   "scripts": {
     "build": "react-router build",
     "check-types": "react-router typegen && tsc",
-    "dev": "react-router dev",
+    "dev": "react-router dev --port 3002",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "lint": "eslint --max-warnings 0",
-    "start": "react-router-serve ./build/server/index.js",
+    "start": "PORT=3002 react-router-serve ./build/server/index.js",
     "test:unit": "vitest --coverage",
     "test:unit:ci": "vitest run --coverage",
     "test:unit:ui": "vitest --coverage --ui"

@@ -1,3 +1,8 @@
+import base from "./app";
+
 export default {
-  tagline: "Mantenha todos os clientes informados.",
+  app: {
+    ...base.app,
+    tagline: "Seu cliente sempre informado.",
+  },
 };

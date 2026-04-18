@@ -4,7 +4,7 @@ import { dirname, join } from "node:path";
 import remarkGfm from "remark-gfm";
 import { mergeConfig } from "vite";
 
-import tailwindcss from "@tailwindcss/postcss";
+import tailwindcss from "@tailwindcss/vite";
 
 /**
  * This function is used to resolve the absolute path of a package.
@@ -18,11 +18,11 @@ function getAbsolutePath(value: string): any {
 
 const config: StorybookConfig = {
   stories: [
-    "../src/**/*.mdx",
-    "../src/**/*.stories.@(js|jsx|mjs|ts|tsx)",
-    "../../cockpit/src/**/*.stories.@(js|jsx|mjs|ts|tsx)",
-    "../../../packages/ui/src/**/*.mdx",
-    "../../../packages/ui/src/**/*.stories.@(js|jsx|mjs|ts|tsx)",
+    "../DesignTokens/**/*.mdx",
+    "../../../packages/*/src/**/*.mdx",
+    "../../../packages/*/src/**/*.stories.@(js|jsx|mjs|ts|tsx)",
+    "../../../apps/*/src/**/*.mdx",
+    "../../../apps/*/src/**/*.stories.@(js|jsx|mjs|ts|tsx)",
   ],
   addons: [
     {
@@ -54,6 +54,7 @@ const config: StorybookConfig = {
     const docsBlocksPath = join(pkgDir, "dist", "blocks.js");
 
     return mergeConfig(config, {
+      plugins: [tailwindcss()],
       resolve: {
         alias: [
           { find: "@storybook/addon-docs/blocks", replacement: docsBlocksPath },
@@ -62,11 +63,6 @@ const config: StorybookConfig = {
       },
       optimizeDeps: {
         include: ["@storybook/addon-docs", "@storybook/addon-docs/blocks"],
-      },
-      css: {
-        postcss: {
-          plugins: [tailwindcss()],
-        },
       },
       esbuild: {
         // Ensure React is in scope when any classic JSX slips through

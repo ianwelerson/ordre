@@ -1,6 +1,11 @@
 export default {
   app: {
     name: "Ordre",
-    domain: "ordre.app",
+    domain: {
+      base: "ordre.app",
+      board: "go.ordre.app",
+      marketing: "ordre.app",
+      dashboard: "dashboard.ordre.app",
+    },
   },
 };

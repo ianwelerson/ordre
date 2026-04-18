@@ -1,7 +1,6 @@
-import { app, en as globalEn } from '@ordre/i18n/messages';
+import { en as globalEn } from '@ordre/i18n/messages';
 
 export default {
-  ...app,
   ...globalEn,
   HomePage: {
     title: 'Test - EN',

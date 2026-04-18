@@ -1,3 +1,8 @@
+import base from "./app";
+
 export default {
-  tagline: "Keep every client in the loop.",
+  app: {
+    ...base.app,
+    tagline: "Keep every client in the loop.",
+  },
 };

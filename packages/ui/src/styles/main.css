@@ -1,0 +1,26 @@
+/* Watch for internal components */
+/* Import Fonts */
+@import './fonts.css';
+
+/* Import tailwind config */
+@import './tailwind.css';
+
+@source '../components';
+
+/* Global Styles */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--color-snow);
+  color: var(--color-midnight);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}

@@ -20,7 +20,7 @@ Storybook does not contain product code - it is a thin app whose only job is to 
 
 - **Documentation framework**: [Storybook 10](https://storybook.js.org/) (`@storybook/react-vite`)
 - **Bundler**: [Vite](https://vitejs.dev/)
-- **Styling**: Tailwind CSS v4 via PostCSS (`@tailwindcss/postcss`)
+- **Styling**: Tailwind CSS v4 via Vite plugin (`@tailwindcss/vite`)
 - **Markdown**: MDX with [`remark-gfm`](https://github.com/remarkjs/remark-gfm) for tables and task lists
 
 ---

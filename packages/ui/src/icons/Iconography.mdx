@@ -1,0 +1,62 @@
+import { IconGallery, IconItem, Meta } from '@storybook/addon-docs/blocks';
+
+import Icon from './Icons';
+
+<Meta title="Design Tokens/Iconography" />
+
+# Iconography
+
+The `Icon` component exposes two sources behind a single API:
+
+- **Custom icons** — hand-authored SVGs in `./icons/custom/*`, registered in `Icons.tsx` and loaded via `React.lazy`.
+- **[Lucide](https://lucide.dev/icons/) icons** — the full set, resolved at runtime through `lucide-react/dynamic`'s `DynamicIcon`.
+
+Both paths are code-split: only the icons you actually render are downloaded.
+
+## Usage
+
+```tsx
+import Icon from '@ordre/ui/icons';
+
+// custom
+<Icon name="logo" />
+
+// lucide (kebab-case)
+<Icon name="check" />
+<Icon name="arrow-right" size={20} strokeWidth={1.5} />
+```
+
+`name` is typed as the union of custom icon keys and lucide's `IconName`, so autocomplete and type-checking cover both sets. Any extra `SVGProps` (`className`, `color`, `size`, `strokeWidth`, …) are forwarded to the underlying SVG. If a custom name collides with a lucide name, the custom icon wins.
+
+### Available custom icons
+
+<IconGallery>
+  <IconItem name="logo">
+    <Icon name="logo" />
+  </IconItem>
+</IconGallery>
+
+### Lucide icons
+
+Any lucide icon is available by its kebab-case name — no registration needed. Browse the full catalog at [lucide.dev/icons](https://lucide.dev/icons/).
+
+```tsx
+<Icon name="circle-check" />
+<Icon name="triangle-alert" />
+```
+
+---
+
+## Adding a new custom icon
+
+1. Drop the SVG component in `./custom/`, e.g. `./custom/MyIcon.tsx`. It should accept `SVGProps<SVGSVGElement>` and spread them onto the root `<svg>` so sizing and styling props work consistently.
+2. Register it in the `customIcons` map inside `Icons.tsx`:
+
+   ```tsx
+   const customIcons = {
+     logo: lazy(() => import('./custom/Logo')),
+     myIcon: lazy(() => import('./custom/MyIcon')),
+   } satisfies Record<string, ComponentType<SVGProps<SVGSVGElement>>>;
+   ```
+
+3. Add an `<IconItem>` entry under the gallery above so it shows up in this page.

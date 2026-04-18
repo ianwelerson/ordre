@@ -1,0 +1,94 @@
+import { ColorItem, ColorPalette, Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Design Tokens/Colors" />
+
+# Colors
+
+The palette is defined as Tailwind v4 CSS variables in `./tailwind.css`, exposed as both CSS custom properties (`var(--color-…)`) and Tailwind utility classes (`bg-amber`, `text-midnight`, `border-ash`, …).
+
+The tokens split into four groups:
+
+- **Neutrals** — grayscale for surfaces, borders, and text.
+- **Brand** — primary brand colors used for identity and key calls to action.
+- **Status** — semantic colors for success and error states.
+- **Accent** — semantic aliases pointing at brand colors; prefer these over raw brand tokens when the intent is "highlight / interactive", so the mapping can change without a codebase-wide rename.
+
+## Usage
+
+```tsx
+// Tailwind utilities
+<div className="bg-snow text-midnight border-ash" />
+<button className="bg-accent hover:bg-accent-deep text-white" />
+
+// Raw CSS variable
+<div style={{ background: 'var(--color-amber)' }} />
+```
+
+Reach for the **semantic** tokens (`accent`, `accent-deep`, `sage`, `brick`) whenever the color carries meaning. Use the **raw brand/neutral** tokens only when you genuinely need that specific hue.
+
+## Palette
+
+<ColorPalette>
+  <ColorItem
+    title="Neutrals"
+    subtitle="Grayscale used for surfaces, borders, and text"
+    colors={{
+      white: 'var(--color-white)',
+      snow: 'var(--color-snow)',
+      'warm-gray': 'var(--color-warm-gray)',
+      ash: 'var(--color-ash)',
+      stone: 'var(--color-stone)',
+      slate: 'var(--color-slate)',
+      midnight: 'var(--color-midnight)',
+    }}
+  />
+
+<ColorItem
+  title="Brand"
+  subtitle="Primary brand colors"
+  colors={{
+    amber: 'var(--color-amber)',
+    'deep-amber': 'var(--color-deep-amber)',
+  }}
+/>
+
+<ColorItem
+  title="Status"
+  subtitle="Semantic colors for success and error states"
+  colors={{
+    sage: 'var(--color-sage)',
+    brick: 'var(--color-brick)',
+  }}
+/>
+
+  <ColorItem
+    title="Accent"
+    subtitle="Highlight colors for emphasis and interactive elements"
+    colors={{
+      accent: 'var(--color-accent)',
+      'accent-deep': 'var(--color-accent-deep)',
+    }}
+  />
+</ColorPalette>
+
+---
+
+## Adding a new color
+
+1. Add the variable under the `@theme` block in `./tailwind.css`:
+
+   ```css
+   @theme {
+     --color-my-color: #abcdef;
+   }
+   ```
+
+   Once declared there, Tailwind v4 automatically generates utilities (`bg-my-color`, `text-my-color`, …).
+
+2. If the color is **semantic** (i.e. its role may outlive its hue), add an alias too:
+
+   ```css
+   --color-danger: var(--color-brick);
+   ```
+
+3. Register it in the relevant `<ColorItem>` group above so it shows up in this page.

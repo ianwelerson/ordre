@@ -1,0 +1,25 @@
+@font-face {
+  font-family: 'Geist';
+  font-weight: 200 800;
+  src: url('../fonts/Geist.woff');
+}
+
+@font-face {
+  font-family: 'Geist Mono';
+  font-weight: 200 800;
+  src: url('../fonts/GeistMono.woff');
+}
+
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-weight: 200 800;
+  font-style: normal;
+  src: url('../fonts/PlusJakartaSans.ttf');
+}
+
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-weight: 200 800;
+  font-style: italic;
+  src: url('../fonts/PlusJakartaSans-Italic.ttf');
+}

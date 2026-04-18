@@ -5,6 +5,7 @@ import Layout from './layout';
 
 vi.mock('next-intl/server', () => ({
   getLocale: () => Promise.resolve('en'),
+  getTranslations: () => Promise.resolve('en'),
 }));
 
 describe('Layouts.tsx', () => {

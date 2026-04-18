@@ -1,0 +1,24 @@
+/* Tailwind Configuration */
+@theme static {
+  /* === Colors === */
+  --color-*: initial;
+  --color-midnight: #1a1d26;
+  --color-slate: #3a3f4b;
+  --color-amber: #e0913e;
+  --color-deep-amber: #c67a2e;
+  --color-sage: #5b9a6f;
+  --color-snow: #fafaf8;
+  --color-warm-gray: #f0eeeb;
+  --color-ash: #d9d6d0;
+  --color-stone: #8a8680;
+  --color-brick: #c44b3f;
+  --color-white: #ffffff;
+
+  --color-accent: var(--color-amber);
+  --color-accent-deep: var(--color-deep-amber);
+
+  /* === Fonts === */
+  --font-headline: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-body: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, monospace;
+}
