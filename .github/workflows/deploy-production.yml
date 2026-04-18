@@ -1,0 +1,65 @@
+name: Deploy to Production
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "*"
+
+permissions:
+  contents: read
+
+jobs:
+  dashboard-deployment:
+    uses: ./.github/workflows/vercel.yml
+    secrets: inherit
+    with:
+      IS_PROD: true
+      VERCEL_PROJECT_ID_KEY: "VERCEL_PROJECT_ID_DASHBOARD"
+
+  marketing-deployment:
+    uses: ./.github/workflows/vercel.yml
+    secrets: inherit
+    with:
+      IS_PROD: true
+      VERCEL_PROJECT_ID_KEY: "VERCEL_PROJECT_ID_MARKETING"
+
+  board-deployment:
+    uses: ./.github/workflows/vercel.yml
+    secrets: inherit
+    with:
+      IS_PROD: true
+      VERCEL_PROJECT_ID_KEY: "VERCEL_PROJECT_ID_BOARD"
+
+  # storybook-deployment:
+  # needs: [dashboard-deployment, marketing-deployment, board-deployment]
+  # uses: ./.github/workflows/vercel.yml
+  # secrets: inherit
+  # with:
+  #   IS_PROD: true
+  #   APP_NAME: "storybook"
+  #   VERCEL_PROJECT_ID_KEY: "VERCEL_PROJECT_ID_STORYBOOK"
+
+  sentry-dashboard:
+    needs: dashboard-deployment
+    uses: ./.github/workflows/sentry.yml
+    secrets: inherit
+    with:
+      IS_PROD: true
+      APP_NAME: "ordre-dashboard"
+
+  sentry-marketing:
+    needs: marketing-deployment
+    uses: ./.github/workflows/sentry.yml
+    secrets: inherit
+    with:
+      IS_PROD: true
+      APP_NAME: "ordre-marketing"
+
+  sentry-board:
+    needs: board-deployment
+    uses: ./.github/workflows/sentry.yml
+    secrets: inherit
+    with:
+      IS_PROD: true
+      APP_NAME: "ordre-board"

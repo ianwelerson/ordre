@@ -1,0 +1,80 @@
+name: Deploy to Develop
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - develop
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    uses: ./.github/workflows/checks.yml
+    secrets: inherit
+
+  tests:
+    uses: ./.github/workflows/tests.yml
+    secrets: inherit
+
+  dashboard-deployment:
+    needs: [checks, tests]
+    uses: ./.github/workflows/vercel.yml
+    secrets: inherit
+    with:
+      IS_PROD: false
+      VERCEL_PROJECT_ID_KEY: "VERCEL_PROJECT_ID_DASHBOARD"
+
+  marketing-deployment:
+    needs: [checks, tests]
+    uses: ./.github/workflows/vercel.yml
+    secrets: inherit
+    with:
+      IS_PROD: false
+      VERCEL_PROJECT_ID_KEY: "VERCEL_PROJECT_ID_MARKETING"
+
+  board-deployment:
+    needs: [checks, tests]
+    uses: ./.github/workflows/vercel.yml
+    secrets: inherit
+    with:
+      IS_PROD: false
+      VERCEL_PROJECT_ID_KEY: "VERCEL_PROJECT_ID_BOARD"
+
+  # storybook-deployment:
+  #   needs: [checks, tests]
+  #   uses: ./.github/workflows/vercel.yml
+  #   secrets: inherit
+  #   with:
+  #     IS_PROD: false
+  #     APP_NAME: "storybook"
+  #     VERCEL_PROJECT_ID_KEY: "VERCEL_PROJECT_ID_STORYBOOK"
+
+  sentry-dashboard:
+    needs: dashboard-deployment
+    uses: ./.github/workflows/sentry.yml
+    secrets: inherit
+    with:
+      IS_PROD: false
+      APP_NAME: "ordre-dashboard"
+
+  sentry-marketing:
+    needs: marketing-deployment
+    uses: ./.github/workflows/sentry.yml
+    secrets: inherit
+    with:
+      IS_PROD: false
+      APP_NAME: "ordre-marketing"
+
+  sentry-board:
+    needs: board-deployment
+    uses: ./.github/workflows/sentry.yml
+    secrets: inherit
+    with:
+      IS_PROD: false
+      APP_NAME: "ordre-board"

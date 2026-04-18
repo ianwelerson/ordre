@@ -1,0 +1,39 @@
+name: Lint and Type-Check
+
+on: [workflow_call, workflow_dispatch]
+
+permissions:
+  contents: read
+
+jobs:
+  runs-lint-type-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Use Node.js 24.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run ESLint
+        run: pnpm lint
+
+      - name: Run Syncpack
+        run: pnpm packages:lint
+
+      - name: Run Check-Types
+        run: pnpm check-types

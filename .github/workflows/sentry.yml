@@ -1,0 +1,40 @@
+name: Sentry
+
+on:
+  workflow_call:
+    inputs:
+      IS_PROD:
+        required: true
+        type: boolean
+      APP_NAME:
+        required: true
+        type: string
+    secrets:
+      SENTRY_AUTH_TOKEN:
+        required: true
+      SENTRY_ORG:
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  sentry-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create Release
+        uses: getsentry/action-release@v3
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ inputs.APP_NAME }}
+        with:
+          environment: ${{ inputs.IS_PROD && 'production' || 'preview' }}
+          release: ${{ inputs.IS_PROD && github.ref_name || github.sha }}
+          ignore_missing: true
