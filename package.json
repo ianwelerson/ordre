@@ -26,6 +26,8 @@
     "packages:fix": "syncpack fix && syncpack format",
     "packages:lint": "syncpack lint && syncpack format --check",
     "prepare": "husky",
+    "storybook": "turbo run storybook",
+    "storybook:build": "turbo run storybook:build",
     "test:unit": "turbo run test:unit",
     "test:unit:ci": "turbo run test:unit:ci",
     "test:unit:ui": "turbo run test:unit:ui"

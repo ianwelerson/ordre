@@ -37,7 +37,6 @@ jobs:
   # secrets: inherit
   # with:
   #   IS_PROD: true
-  #   APP_NAME: "storybook"
   #   VERCEL_PROJECT_ID_KEY: "VERCEL_PROJECT_ID_STORYBOOK"
 
   sentry-dashboard:

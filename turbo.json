@@ -15,6 +15,14 @@
       "cache": false,
       "persistent": true
     },
+    "storybook": {
+      "dependsOn": ["^dev"],
+      "cache": false,
+      "persistent": true
+    },
+    "storybook:build": {
+      "dependsOn": ["^build"]
+    },
     "format": {
       "dependsOn": ["^format"]
     },

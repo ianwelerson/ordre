@@ -5,6 +5,7 @@
     "@formatjs/intl-localematcher": "^0.8.3",
     "@ordre/i18n": "workspace:*",
     "@ordre/ui": "workspace:*",
+    "@storybook/react": "^10.3.5",
     "@tailwindcss/postcss": "^4.2.2",
     "negotiator": "^1.0.0",
     "next": "^16.2.4",

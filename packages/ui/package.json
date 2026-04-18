@@ -27,6 +27,7 @@
     "./styles/*": "./src/styles/*"
   },
   "peerDependencies": {
+    "@storybook/react": "^10.3.5",
     "tailwindcss": "^4.2.2"
   },
   "private": true,

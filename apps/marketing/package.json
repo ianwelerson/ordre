@@ -4,6 +4,7 @@
   "dependencies": {
     "@ordre/i18n": "workspace:*",
     "@ordre/ui": "workspace:*",
+    "@storybook/react": "^10.3.5",
     "@tailwindcss/postcss": "^4.2.2",
     "next": "^16.2.4",
     "next-intl": "^4.9.1",

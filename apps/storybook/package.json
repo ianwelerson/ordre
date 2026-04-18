@@ -1,0 +1,25 @@
+{
+  "name": "storybook-app",
+  "version": "0.0.0",
+  "dependencies": {
+    "@ordre/ui": "workspace:*",
+    "postcss": "^8.5.10",
+    "tailwindcss": "^4.2.2"
+  },
+  "devDependencies": {
+    "@storybook/addon-docs": "^10.3.5",
+    "@storybook/react": "^10.3.5",
+    "@storybook/react-vite": "^10.3.5",
+    "@tailwindcss/postcss": "^4.2.2",
+    "globals": "^17.5.0",
+    "remark-gfm": "^4.0.1",
+    "storybook": "^10.3.5",
+    "vite": "^8.0.8"
+  },
+  "private": true,
+  "scripts": {
+    "storybook": "storybook dev -p 6006",
+    "storybook:build": "storybook build"
+  },
+  "type": "module"
+}
