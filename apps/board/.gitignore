@@ -9,3 +9,4 @@
 # Vitest
 **/__screenshots__/**
 **/.vitest-attachments/**
+.vercel
