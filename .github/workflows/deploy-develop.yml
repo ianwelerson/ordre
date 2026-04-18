@@ -46,13 +46,13 @@ jobs:
       IS_PROD: false
       VERCEL_PROJECT_ID_KEY: "VERCEL_PROJECT_ID_BOARD"
 
-  # storybook-deployment:
-  #   needs: [checks, tests]
-  #   uses: ./.github/workflows/vercel.yml
-  #   secrets: inherit
-  #   with:
-  #     IS_PROD: false
-  #     VERCEL_PROJECT_ID_KEY: "VERCEL_PROJECT_ID_STORYBOOK"
+  storybook-deployment:
+    needs: [checks, tests]
+    uses: ./.github/workflows/vercel.yml
+    secrets: inherit
+    with:
+      IS_PROD: false
+      VERCEL_PROJECT_ID_KEY: "VERCEL_PROJECT_ID_STORYBOOK"
 
   sentry-dashboard:
     needs: dashboard-deployment
