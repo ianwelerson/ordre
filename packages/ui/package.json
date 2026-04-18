@@ -22,7 +22,12 @@
     "vitest": "^4.1.4"
   },
   "exports": {
-    "./*": "./src/*.tsx"
+    "./components": "./src/components/index.ts",
+    "./config/postcss": "./src/config/postcss.ts",
+    "./styles/*": "./src/styles/*"
+  },
+  "peerDependencies": {
+    "tailwindcss": "^4.2.2"
   },
   "private": true,
   "scripts": {

@@ -2,7 +2,7 @@ import styles from './page.module.css';
 
 import Image, { type ImageProps } from 'next/image';
 
-import { Button } from '@ordre/ui/button';
+import { Button } from '@ordre/ui/components';
 
 type Props = Omit<ImageProps, 'src'> & {
   srcLight: string;

@@ -1,4 +1,7 @@
 @import 'tailwindcss';
+@import '@ordre/ui/styles/global.css';
+
+@source '../../';
 
 @theme {
   --font-sans:
