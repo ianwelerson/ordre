@@ -5,6 +5,10 @@ on: [workflow_call, workflow_dispatch]
 permissions:
   contents: read
 
+env:
+  TURBO_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+  TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+
 jobs:
   runs-lint-type-check:
     runs-on: ubuntu-latest
