@@ -1,0 +1,54 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Introduction" />
+
+# Ordre UI Kit
+
+Welcome to the **Ordre** Storybook - the single browsable surface where every component, design token, and documented view across the monorepo lives side by side.
+
+Ordre is a client communication platform for service providers: every job gets a private, shareable status page that clients can open with one link and watch progress unfold. This Storybook is how the team reviews the pieces that make up those surfaces in isolation - without spinning up the full apps.
+
+## What you'll find here
+
+- **[Design Tokens](?path=/docs/design-tokens-introduction--docs)** - the shared vocabulary (colors, icons, typography) consumed by every app through Tailwind v4 CSS variables and `@ordre/ui` exports.
+- **Components** - atomic React components from `@ordre/ui` with their stories and interactive controls.
+- **App stories** - in-context views and flows contributed directly by each app in the monorepo.
+
+Every `*.stories.tsx` or `*.mdx` file in `apps/*` or `packages/*` is picked up automatically - adding a story anywhere in the repo makes it show up here.
+
+## The apps
+
+Ordre is split into three product apps plus this documentation surface. Each one has a distinct audience and framework, but they all consume the same UI Kit.
+
+### 🗂️ board
+
+The **client-facing** surface. One board per job, opened via a unique link - no account, no download. Built with **React Router v7** in framework mode (SSR) so clients get a fast first paint on mobile networks. Stories here cover the public timeline, verification gates, and status views.
+
+### 🧭 dashboard
+
+The **authenticated workspace app** used by service providers to create boards, post updates, and manage members and clients. Built with **Next.js 16**. Stories here cover the internal tools - board editors, member invites, workspace settings.
+
+### 🌐 marketing
+
+The **public marketing site** - home, pricing, about, and legal pages. Built with **Next.js 16**, tuned for SEO and fast static delivery. Stories here cover the landing sections and reusable marketing blocks.
+
+### 📖 storybook
+
+The app you're reading right now. A thin aggregator that loads stories from across the monorepo and publishes them as a static site so the team (and non-technical reviewers) can browse work without a dev environment.
+
+## The shared packages
+
+- **[@ordre/ui](?path=/docs/design-tokens-introduction--docs)** - React components and design tokens. The heart of the UI Kit.
+- **@ordre/i18n** - shared translations merged with app-specific strings at runtime.
+- **@ordre/config** - shared ESLint, TypeScript, and Prettier presets.
+
+## Getting started
+
+From the repo root:
+
+```bash
+pnpm install
+pnpm --filter storybook-app storybook
+```
+
+Storybook runs at **http://localhost:6006**. Adding a new story is as simple as dropping a `*.stories.tsx` next to the component it documents - the glob in `.storybook/main.ts` picks it up on the next reload.
