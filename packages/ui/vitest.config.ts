@@ -6,10 +6,12 @@ const EXCLUDE_PATTERN = [
   'node_modules/**',
   'coverage/**',
   'vitest/**',
+  'icons/custom/**',
   '.*/**',
   '**/*.css',
   '**/*.svg',
   '**/*.config.{ts,js}',
+  '**/*.stories.*',
 ];
 
 export default defineConfig({

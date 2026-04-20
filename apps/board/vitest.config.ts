@@ -11,6 +11,7 @@ const EXCLUDE_PATTERN = [
   '**/*.css',
   '**/*.svg',
   '**/*.config.{ts,js}',
+  '**/*.stories.*',
 ];
 
 export default defineConfig({

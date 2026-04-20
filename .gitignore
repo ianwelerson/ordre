@@ -37,3 +37,7 @@ yarn-error.log*
 .DS_Store
 *.pem
 .env*.local
+
+# Test
+**/__screenshots__/**
+**/.vitest-attachments/**
