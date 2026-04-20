@@ -11,8 +11,13 @@ const meta: Meta<typeof Button> = {
   tags: ['autodocs'],
   argTypes: {
     children: { control: 'text' },
-    className: { control: 'text' },
-    appName: { control: 'text' },
+    intent: { control: 'select', options: ['primary', 'secondary', 'ghost'] },
+    size: { control: 'select', options: ['sm', 'base', 'lg'] },
+    align: { control: 'select', options: ['left', 'center', 'right'] },
+    fullWidth: { control: 'boolean' },
+    iconOnly: { control: 'boolean' },
+    iconPosition: { control: 'select', options: ['leading', 'trailing'] },
+    icon: { control: 'text' },
   },
 };
 
@@ -22,14 +27,77 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     children: 'Click me',
-    appName: 'MyApp',
+    size: 'base',
+    fullWidth: false,
+    iconOnly: false,
+    intent: 'primary',
   },
 };
 
-export const WithClassName: Story = {
+export const Secondary: Story = {
   args: {
-    children: 'Styled Button',
-    className: 'bg-amber text-white px-4 py-2 rounded',
-    appName: 'MyApp',
+    children: 'Click me',
+    size: 'base',
+    fullWidth: false,
+    iconOnly: false,
+    intent: 'secondary',
   },
+};
+
+export const Ghost: Story = {
+  args: {
+    children: 'Click me',
+    size: 'base',
+    fullWidth: false,
+    iconOnly: false,
+    intent: 'ghost',
+  },
+};
+
+export const LeadingIcon: Story = {
+  args: {
+    children: 'Click me',
+    size: 'base',
+    fullWidth: false,
+    iconOnly: false,
+    intent: 'primary',
+    icon: 'plus',
+  },
+};
+
+export const TrailingIcon: Story = {
+  args: {
+    children: 'Click me',
+    size: 'base',
+    fullWidth: false,
+    iconOnly: false,
+    intent: 'primary',
+    iconPosition: 'trailing',
+    icon: 'arrow-right',
+  },
+};
+
+export const IconOnly: Story = {
+  args: {
+    iconPosition: 'trailing',
+    icon: 'arrow-right',
+    iconOnly: true,
+  },
+};
+
+export const FullWidth: Story = {
+  args: {
+    children: 'Click me',
+    size: 'base',
+    iconOnly: false,
+    intent: 'primary',
+    fullWidth: true,
+  },
+  decorators: [
+    (Story) => (
+      <div style={{ width: '300px' }}>
+        <Story />
+      </div>
+    ),
+  ],
 };
