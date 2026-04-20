@@ -8,8 +8,8 @@ import Icon from './Icons';
 
 The `Icon` component exposes two sources behind a single API:
 
-- **Custom icons** — hand-authored SVGs in `./icons/custom/*`, registered in `Icons.tsx` and loaded via `React.lazy`.
-- **[Lucide](https://lucide.dev/icons/) icons** — the full set, resolved at runtime through `lucide-react/dynamic`'s `DynamicIcon`.
+- **Custom icons** - hand-authored SVGs in `./icons/custom/*`, registered in `Icons.tsx` and loaded via `React.lazy`.
+- **[Lucide](https://lucide.dev/icons/) icons** - the full set, resolved at runtime through `lucide-react/dynamic`'s `DynamicIcon`.
 
 Both paths are code-split: only the icons you actually render are downloaded.
 
@@ -38,7 +38,7 @@ import Icon from '@ordre/ui/icons';
 
 ### Lucide icons
 
-Any lucide icon is available by its kebab-case name — no registration needed. Browse the full catalog at [lucide.dev/icons](https://lucide.dev/icons/).
+Any lucide icon is available by its kebab-case name - no registration needed. Browse the full catalog at [lucide.dev/icons](https://lucide.dev/icons/).
 
 ```tsx
 <Icon name="circle-check" />

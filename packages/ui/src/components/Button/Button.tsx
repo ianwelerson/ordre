@@ -58,7 +58,6 @@ const variants = cva(
 
 interface ButtonProps extends VariantProps<typeof variants> {
   children?: ReactNode;
-  className?: string;
   icon?: IconName;
 }
 

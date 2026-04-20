@@ -11,14 +11,14 @@ The scale is grouped into:
 - **Family** - `font-headline`, `font-body`, `font-mono`.
 - **Size** - `text-sm` → `text-4xl`.
 - **Weight** - `font-light`, `font-normal`, `font-medium`, `font-semibold`, `font-bold`.
-- **Letter spacing** - `tracking-tight`.
-- **Line height** - `leading-xsmall`, `leading-small`, `leading-base`.
+- **Letter spacing** - `tracking-display-lg`, `tracking-display`, `tracking-headline`, `tracking-title`.
+- **Line height** - `leading-display-lg`, `leading-display`, `leading-headline`, `leading-title`, `leading-subtitle`, `leading-body`, `leading-caption`.
 
 ## Usage
 
 ```tsx
 // Tailwind utilities
-<h1 className="font-headline text-4xl font-bold tracking-tight">Headline</h1>
+<h1 className="font-headline text-4xl font-bold leading-display-lg tracking-display-lg">Headline</h1>
 <p className="font-body text-base">Body copy.</p>
 <code className="font-mono text-sm">inline()</code>
 
@@ -169,7 +169,12 @@ The quick brown fox
   <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tailwind / CSS var</div>
   <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Preview</div>
 
-{[{ name: 'tight', token: '--tracking-tight', value: '-0.03em' }].flatMap(({ name, token, value }) => [
+{[
+{ name: 'display-lg', token: '--tracking-display-lg', value: '-0.03em' },
+{ name: 'display', token: '--tracking-display', value: '-0.02em' },
+{ name: 'headline', token: '--tracking-headline', value: '-0.018em' },
+{ name: 'title', token: '--tracking-title', value: '-0.015em' },
+].flatMap(({ name, token, value }) => [
 
 <div key={`${name}-value`} style={{ fontWeight: 700, fontSize: 15 }}>{value}</div>,
 <div key={`${name}-name`} style={{ fontWeight: 600 }}>{name}</div>,
@@ -214,9 +219,13 @@ The quick brown fox
   <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Preview</div>
 
 {[
-{ name: 'xsmall', token: '--leading-xsmall', value: '1.02' },
-{ name: 'small', token: '--leading-small', value: '1.5' },
-{ name: 'base', token: '--leading-base', value: '1.6' },
+{ name: 'display-lg', token: '--leading-display-lg', value: '1.02' },
+{ name: 'display', token: '--leading-display', value: '1.1' },
+{ name: 'headline', token: '--leading-headline', value: '1.2' },
+{ name: 'title', token: '--leading-title', value: '1.25' },
+{ name: 'subtitle', token: '--leading-subtitle', value: '1.4' },
+{ name: 'body', token: '--leading-body', value: '1.6' },
+{ name: 'caption', token: '--leading-caption', value: '1.5' },
 ].flatMap(({ name, token, value }) => [
 
 <div key={`${name}-value`} style={{ fontWeight: 700, fontSize: 15 }}>{value}</div>,

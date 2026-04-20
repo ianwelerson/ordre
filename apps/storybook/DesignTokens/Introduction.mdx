@@ -4,25 +4,25 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # Design Tokens
 
-Design tokens are the shared vocabulary of the **@ordre/ui** design system — the named values (colors, fonts, icons, …) every surface reads from instead of hard-coding hex values, pixel sizes, or bespoke SVGs.
+Design tokens are the shared vocabulary of the **@ordre/ui** design system - the named values (colors, fonts, icons, …) every surface reads from instead of hard-coding hex values, pixel sizes, or bespoke SVGs.
 
 They live as Tailwind v4 CSS variables in `packages/ui/src/styles/tailwind.css`, which means every token is available **three** ways:
 
-- a CSS custom property — `var(--color-amber)`
-- a generated Tailwind utility — `bg-amber`, `text-amber`, `border-amber`, …
-- an `@ordre/ui` export — e.g. `<Icon name="logo" />` for iconography
+- a CSS custom property - `var(--color-amber)`
+- a generated Tailwind utility - `bg-amber`, `text-amber`, `border-amber`, …
+- an `@ordre/ui` export - e.g. `<Icon name="logo" />` for iconography
 
 ## Why tokens
 
-- **Consistency** — one source of truth means the same "amber" appears on every button, border, and hover state.
-- **Theming** — semantic aliases (e.g. `--color-accent → --color-amber`) let the palette shift without touching call sites.
-- **Low drift** — hex values and ad-hoc SVGs don't creep into feature code.
+- **Consistency** - one source of truth means the same "amber" appears on every button, border, and hover state.
+- **Theming** - semantic aliases (e.g. `--color-accent → --color-amber`) let the palette shift without touching call sites.
+- **Low drift** - hex values and ad-hoc SVGs don't creep into feature code.
 
 ## What's in the system
 
-- **[Colors](?path=/docs/design-tokens-colors--docs)** — neutrals, brand, status, and semantic accent tokens.
-- **[Iconography](?path=/docs/design-tokens-iconography--docs)** — custom SVGs plus the full Lucide set, exposed through a single `<Icon />` component.
-- **Typography** — the `--font-headline`, `--font-body`, and `--font-mono` families (Plus Jakarta Sans, Geist, Geist Mono). A dedicated page is coming soon.
+- **[Colors](?path=/docs/design-tokens-colors--docs)** - neutrals, brand, status, and semantic accent tokens.
+- **[Iconography](?path=/docs/design-tokens-iconography--docs)** - custom SVGs plus the full Lucide set, exposed through a single `<Icon />` component.
+- **Typography** - the `--font-headline`, `--font-body`, and `--font-mono` families (Plus Jakarta Sans, Geist, Geist Mono). A dedicated page is coming soon.
 
 ## Using tokens
 
@@ -44,5 +44,5 @@ Prefer semantic tokens (`accent`, `accent-deep`, `sage`, `brick`) when the color
 ## Adding or changing a token
 
 1. Edit `packages/ui/src/styles/tailwind.css` (under the `@theme` block).
-2. Document it on the matching page in this section — colors, iconography, etc. — so the team can discover it.
+2. Document it on the matching page in this section - colors, iconography, etc. - so the team can discover it.
 3. Prefer adding a semantic alias over renaming a raw token: aliases protect consumers from breaking changes when the underlying value shifts.

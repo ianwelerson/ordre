@@ -42,9 +42,13 @@
 
   /* === Line Height === */
   --leading-*: initial;
-  --leading-xsmall: 1.02;
-  --leading-small: 1.5;
-  --leading-base: 1.6;
+  --leading-display-lg: 1.02;
+  --leading-display: 1.1;
+  --leading-headline: 1.2;
+  --leading-title: 1.25;
+  --leading-subtitle: 1.4;
+  --leading-body: 1.6;
+  --leading-caption: 1.5;
 
   /* === Weight === */
   --font-weight-*: initial;
@@ -56,5 +60,8 @@
 
   /* === Letter Spacing === */
   --tracking-*: initial;
-  --tracking-tight: -0.03em;
+  --tracking-display-lg: -0.03em;
+  --tracking-display: -0.02em;
+  --tracking-headline: -0.018em;
+  --tracking-title: -0.015em;
 }
