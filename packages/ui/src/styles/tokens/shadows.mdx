@@ -1,0 +1,107 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Design Tokens/Shadows" />
+
+# Shadows
+
+Shadow tokens are defined as Tailwind v4 CSS variables in `./shadows.css`. Every variable is declared as `--shadow-*`, so Tailwind automatically generates utilities (`shadow-raised`, `shadow-popover`, `shadow-modal`, `shadow-mockup`).
+
+Each token maps to an **intent**, not an elevation number — reach for the one that matches what you're building, so the shadow values can evolve without touching consumers.
+
+## Usage
+
+```tsx
+// Tailwind utilities
+<div className="shadow-raised" />
+<div className="shadow-popover" />
+
+// Raw CSS variable
+<div style={{ boxShadow: 'var(--shadow-modal)' }} />
+```
+
+## Scale
+
+**Pick the token that matches your intent** — the CSS value is shown so you can cross-reference existing box-shadows against a token.
+
+<div
+  style={{
+    display: 'grid',
+    gridTemplateColumns: '120px 1fr 140px',
+    alignItems: 'center',
+    rowGap: '1.5rem',
+    columnGap: '2rem',
+    padding: '1.5rem 1rem',
+    fontFamily: 'var(--font-mono)',
+    fontSize: 13,
+    background: 'var(--color-background, #fafaf8)',
+    borderRadius: 'var(--radius-md, 8px)',
+  }}
+>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Token / Utility</div>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Intent & value</div>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Preview</div>
+
+{[
+{
+name: 'raised',
+token: '--shadow-raised',
+value: '0 4px 16px rgba(26, 29, 38, 0.06)',
+intent: 'Cards, hover states, and surfaces that subtly lift off the page.',
+},
+{
+name: 'popover',
+token: '--shadow-popover',
+value: '0 4px 12px rgba(26, 29, 38, 0.08)',
+intent: 'Popovers, dropdowns, tooltips, menus.',
+},
+{
+name: 'modal',
+token: '--shadow-modal',
+value: '0 12px 40px rgba(26, 29, 38, 0.08)',
+intent: 'Modals, dialogs, full overlays.',
+},
+{
+name: 'mockup',
+token: '--shadow-mockup',
+value: '0 24px 60px -20px rgba(26, 29, 38, 0.18), 0 2px 8px rgba(26, 29, 38, 0.04)',
+intent: 'Product / device mockups and marketing imagery.',
+},
+].flatMap(({ name, token, value, intent }) => [
+
+<div key={`${name}-name`}>
+<div style={{ fontWeight: 700, fontSize: 14 }}>shadow-{name}</div>
+<div style={{ opacity: 0.7, fontSize: 12, marginTop: 2 }}>var({token})</div>
+</div>,
+<div key={`${name}-value`}>
+<div style={{ fontFamily: 'var(--font-body)', fontSize: 13, opacity: 0.85 }}>{intent}</div>
+<div style={{ opacity: 0.65, fontSize: 11, marginTop: 4, wordBreak: 'break-word' }}>{value}</div>
+</div>,
+<div
+key={`${name}-preview`}
+style={{
+width: 120,
+height: 80,
+background: 'var(--color-background-elevated, #ffffff)',
+borderRadius: 'var(--radius-md, 8px)',
+boxShadow: `var(${token})`,
+}}
+/>,
+])}
+
+</div>
+
+---
+
+## Adding a new shadow
+
+1. Add the variable under the `@theme static` block in `./shadows.css`:
+
+   ```css
+   @theme static {
+     --shadow-sticky: 0 2px 8px rgba(26, 29, 38, 0.05);
+   }
+   ```
+
+   Once declared, Tailwind v4 automatically generates the utility (`shadow-sticky`).
+
+2. Add an entry to the array in the **Scale** section above so it shows up in this page.

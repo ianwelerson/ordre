@@ -1,0 +1,60 @@
+@font-face {
+  font-family: 'Geist';
+  font-weight: 300 700;
+  src: url('../../fonts/Geist.woff');
+}
+
+@font-face {
+  font-family: 'Geist Mono';
+  font-weight: 400 500;
+  src: url('../../fonts/GeistMono.woff');
+}
+
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-weight: 400 700;
+  font-style: normal;
+  src: url('../../fonts/PlusJakartaSans.ttf');
+}
+
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-weight: 400 700;
+  font-style: italic;
+  src: url('../../fonts/PlusJakartaSans-Italic.ttf');
+}
+
+@theme static {
+  /* === Family === */
+  --font-headline: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-body: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, monospace;
+
+  /* === Size === */
+  --text-*: initial;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 18px;
+  --text-xl: 22px;
+  --text-2xl: 28px;
+  --text-3xl: 44px;
+  --text-4xl: 72px;
+
+  /* === Line Height === */
+  --leading-*: initial;
+  --leading-xsmall: 1.02;
+  --leading-small: 1.5;
+  --leading-base: 1.6;
+
+  /* === Weight === */
+  --font-weight-*: initial;
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* === Letter Spacing === */
+  --tracking-*: initial;
+  --tracking-tight: -0.03em;
+}

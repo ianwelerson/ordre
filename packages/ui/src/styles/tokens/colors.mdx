@@ -1,0 +1,326 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Design Tokens/Colors" />
+
+# Colors
+
+The palette is defined as Tailwind v4 CSS variables in `./colors.css`. Every variable is declared as `--color-*`, so Tailwind automatically generates utilities (`bg-background`, `text-foreground`, `bg-amber`, …).
+
+The palette comes in two layers:
+
+- **Tokens** (prefer these) — semantic names that encode intent: `background`, `background-alt`, `background-elevated`, `foreground`, `foreground-muted`, `foreground-subtle`, `button`, `button-hover`, `success`, `invalid`, `border`.
+- **Base colors** — the raw hues tokens resolve to: neutrals (`midnight`, `slate`, `stone`, `ash`, `warm-gray`, `snow`, `white`) and brand (`amber`, `deep-amber`, `sage`, `brick`).
+
+## Usage
+
+```tsx
+// Semantic tokens (preferred)
+<div className="bg-background text-foreground border-border" />
+<button className="bg-button hover:bg-button-hover text-white" />
+
+// Raw CSS variable
+<div style={{ background: 'var(--color-background-alt)' }} />
+```
+
+**Always start with a token.** Drop down to a base color (`amber`, `midnight`, `ash`, …) only when no token fits and you genuinely need that specific hue — if you find yourself reaching for a base color often, that's a signal a new token should be added instead.
+
+export const SWATCH_SIZE = 48;
+
+export const Swatch = ({ color }) => (
+  <div
+    style={{
+      width: SWATCH_SIZE,
+      height: SWATCH_SIZE,
+      background: color,
+      borderRadius: 'var(--radius-md, 8px)',
+      border: '1px solid rgba(0,0,0,0.08)',
+      flexShrink: 0,
+    }}
+  />
+);
+
+export const ColorRow = ({ swatch, name, utility, cssVar, value, resolvesTo, subtitle }) => (
+  <>
+    <Swatch color={swatch} />
+    <div>
+      <div style={{ fontWeight: 600, fontSize: 14 }}>{name}</div>
+      {subtitle && <div style={{ opacity: 0.65, fontSize: 12, marginTop: 2 }}>{subtitle}</div>}
+    </div>
+    <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, opacity: 0.8 }}>
+      <div style={{ fontSize: 13, fontWeight: 600, opacity: 1 }}>{value}</div>
+      {resolvesTo && <div style={{ opacity: 0.7, marginTop: 2 }}>→ {resolvesTo}</div>}
+    </div>
+    <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, opacity: 0.7 }}>
+      <div>{utility}</div>
+      <div style={{ opacity: 0.75, marginTop: 2 }}>var({cssVar})</div>
+    </div>
+  </>
+);
+
+export const PaletteGrid = ({ children }) => (
+  <div
+    style={{
+      display: 'grid',
+      gridTemplateColumns: `${SWATCH_SIZE}px 1.4fr 1fr 1.4fr`,
+      alignItems: 'center',
+      rowGap: '1rem',
+      columnGap: '1.5rem',
+      padding: '1rem 0',
+    }}
+  >
+    <div />
+    <div
+      style={{
+        fontFamily: 'var(--font-mono)',
+        fontWeight: 700,
+        opacity: 0.5,
+        fontSize: 11,
+        textTransform: 'uppercase',
+        letterSpacing: '0.05em',
+      }}
+    >
+      Name
+    </div>
+    <div
+      style={{
+        fontFamily: 'var(--font-mono)',
+        fontWeight: 700,
+        opacity: 0.5,
+        fontSize: 11,
+        textTransform: 'uppercase',
+        letterSpacing: '0.05em',
+      }}
+    >
+      Value
+    </div>
+    <div
+      style={{
+        fontFamily: 'var(--font-mono)',
+        fontWeight: 700,
+        opacity: 0.5,
+        fontSize: 11,
+        textTransform: 'uppercase',
+        letterSpacing: '0.05em',
+      }}
+    >
+      Tailwind / CSS var
+    </div>
+    {children}
+  </div>
+);
+
+## Tokens
+
+Prefer these in components. They carry meaning, so the palette can evolve without a codebase-wide rename. The **Value** column shows the hex each token currently resolves to, plus the base color it aliases.
+
+<PaletteGrid>
+  <ColorRow
+    swatch="var(--color-background)"
+    name="background"
+    subtitle="Page, section and card backgrounds."
+    value="#fafaf8"
+    resolvesTo="snow"
+    utility="bg-background"
+    cssVar="--color-background"
+  />
+  <ColorRow
+    swatch="var(--color-background-alt)"
+    name="background-alt"
+    value="#f0eeeb"
+    resolvesTo="warm-gray"
+    utility="bg-background-alt"
+    cssVar="--color-background-alt"
+  />
+  <ColorRow
+    swatch="var(--color-background-elevated)"
+    name="background-elevated"
+    value="#ffffff"
+    resolvesTo="white"
+    utility="bg-background-elevated"
+    cssVar="--color-background-elevated"
+  />
+  <ColorRow
+    swatch="var(--color-foreground)"
+    name="foreground"
+    subtitle="Content colors."
+    value="#1a1d26"
+    resolvesTo="midnight"
+    utility="text-foreground"
+    cssVar="--color-foreground"
+  />
+  <ColorRow
+    swatch="var(--color-foreground-muted)"
+    name="foreground-muted"
+    value="#3a3f4b"
+    resolvesTo="slate"
+    utility="text-foreground-muted"
+    cssVar="--color-foreground-muted"
+  />
+  <ColorRow
+    swatch="var(--color-foreground-subtle)"
+    name="foreground-subtle"
+    value="#8a8680"
+    resolvesTo="stone"
+    utility="text-foreground-subtle"
+    cssVar="--color-foreground-subtle"
+  />
+  <ColorRow
+    swatch="var(--color-button)"
+    name="button"
+    subtitle="CTA colors."
+    value="#e0913e"
+    resolvesTo="amber"
+    utility="bg-button"
+    cssVar="--color-button"
+  />
+  <ColorRow
+    swatch="var(--color-button-hover)"
+    name="button-hover"
+    value="#c67a2e"
+    resolvesTo="deep-amber"
+    utility="bg-button-hover"
+    cssVar="--color-button-hover"
+  />
+  <ColorRow
+    swatch="var(--color-success)"
+    name="success"
+    subtitle="Success state."
+    value="#5b9a6f"
+    resolvesTo="sage"
+    utility="bg-success / text-success"
+    cssVar="--color-success"
+  />
+  <ColorRow
+    swatch="var(--color-invalid)"
+    name="invalid"
+    subtitle="Error state."
+    value="#c44b3f"
+    resolvesTo="brick"
+    utility="bg-invalid / text-invalid"
+    cssVar="--color-invalid"
+  />
+  <ColorRow
+    swatch="var(--color-border)"
+    name="border"
+    subtitle="Default separator and outline color."
+    value="#d9d6d0"
+    resolvesTo="ash"
+    utility="border-border"
+    cssVar="--color-border"
+  />
+</PaletteGrid>
+
+## Base colors
+
+Raw hues the tokens resolve to. Avoid using them directly in components — reach for a token first.
+
+### Neutrals
+
+<PaletteGrid>
+  <ColorRow
+    swatch="var(--color-white)"
+    name="white"
+    value="#ffffff"
+    utility="bg-white"
+    cssVar="--color-white"
+  />
+  <ColorRow
+    swatch="var(--color-snow)"
+    name="snow"
+    value="#fafaf8"
+    utility="bg-snow"
+    cssVar="--color-snow"
+  />
+  <ColorRow
+    swatch="var(--color-warm-gray)"
+    name="warm-gray"
+    value="#f0eeeb"
+    utility="bg-warm-gray"
+    cssVar="--color-warm-gray"
+  />
+  <ColorRow
+    swatch="var(--color-ash)"
+    name="ash"
+    value="#d9d6d0"
+    utility="bg-ash"
+    cssVar="--color-ash"
+  />
+  <ColorRow
+    swatch="var(--color-stone)"
+    name="stone"
+    value="#8a8680"
+    utility="bg-stone"
+    cssVar="--color-stone"
+  />
+  <ColorRow
+    swatch="var(--color-slate)"
+    name="slate"
+    value="#3a3f4b"
+    utility="bg-slate"
+    cssVar="--color-slate"
+  />
+  <ColorRow
+    swatch="var(--color-midnight)"
+    name="midnight"
+    value="#1a1d26"
+    utility="bg-midnight"
+    cssVar="--color-midnight"
+  />
+</PaletteGrid>
+
+### Brand
+
+<PaletteGrid>
+  <ColorRow
+    swatch="var(--color-amber)"
+    name="amber"
+    value="#e0913e"
+    utility="bg-amber"
+    cssVar="--color-amber"
+  />
+  <ColorRow
+    swatch="var(--color-deep-amber)"
+    name="deep-amber"
+    value="#c67a2e"
+    utility="bg-deep-amber"
+    cssVar="--color-deep-amber"
+  />
+  <ColorRow
+    swatch="var(--color-sage)"
+    name="sage"
+    value="#5b9a6f"
+    utility="bg-sage"
+    cssVar="--color-sage"
+  />
+  <ColorRow
+    swatch="var(--color-brick)"
+    name="brick"
+    value="#c44b3f"
+    utility="bg-brick"
+    cssVar="--color-brick"
+  />
+</PaletteGrid>
+
+---
+
+## Adding a new color
+
+1. Add the variable under the `@theme static` block in `./colors.css`:
+
+   ```css
+   @theme static {
+     --color-my-color: #abcdef;
+   }
+   ```
+
+   Once declared, Tailwind v4 automatically generates utilities (`bg-my-color`, `text-my-color`, …).
+
+2. If the token is **semantic** (its role may outlive its hue), alias it to an existing raw color instead of picking a new hex:
+
+   ```css
+   --color-danger: var(--color-brick);
+   ```
+
+   This keeps the palette tight — changing `brick` later updates every semantic token that points at it.
+
+3. Register the new token in the relevant `<PaletteGrid>` group above so it shows up in this page. Keep the `value` and `resolvesTo` fields in sync with `./colors.css`.

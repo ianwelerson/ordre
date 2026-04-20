@@ -1,10 +1,7 @@
-/* Watch for internal components */
-/* Import Fonts */
-@import './fonts.css';
-
 /* Import tailwind config */
 @import './tailwind.css';
 
+/* Watch for internal components */
 @source '../components';
 
 /* Global Styles */
@@ -16,8 +13,8 @@ html,
 body {
   margin: 0;
   padding: 0;
-  background: var(--color-snow);
-  color: var(--color-midnight);
+  background: var(--color-background);
+  color: var(--color-foreground);
   font-family: var(--font-body);
   font-size: 16px;
   line-height: 1.6;

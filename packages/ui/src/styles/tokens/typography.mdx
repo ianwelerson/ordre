@@ -1,0 +1,263 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Design Tokens/Typography" />
+
+# Typography
+
+Typography tokens are defined as Tailwind v4 CSS variables in `./fonts.css`. Each group uses a Tailwind-native prefix, so utilities are generated automatically: families (`font-body`), sizes (`text-lg`), weights (`font-bold`), tracking (`tracking-tight`), and line-height (`leading-base`).
+
+The scale is grouped into:
+
+- **Family** - `font-headline`, `font-body`, `font-mono`.
+- **Size** - `text-sm` → `text-4xl`.
+- **Weight** - `font-light`, `font-normal`, `font-medium`, `font-semibold`, `font-bold`.
+- **Letter spacing** - `tracking-tight`.
+- **Line height** - `leading-xsmall`, `leading-small`, `leading-base`.
+
+## Usage
+
+```tsx
+// Tailwind utilities
+<h1 className="font-headline text-4xl font-bold tracking-tight">Headline</h1>
+<p className="font-body text-base">Body copy.</p>
+<code className="font-mono text-sm">inline()</code>
+
+// Raw CSS variable
+<h1 style={{ fontFamily: 'var(--font-headline)' }}>Headline</h1>
+```
+
+---
+
+## Families
+
+<div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', padding: '1rem 0' }}>
+  {[
+    { name: 'headline', token: '--font-headline', label: 'Plus Jakarta Sans' },
+    { name: 'body', token: '--font-body', label: 'Geist' },
+    { name: 'mono', token: '--font-mono', label: 'Geist Mono' },
+  ].map(({ name, token, label }) => (
+    <div key={name}>
+      <div style={{ fontFamily: `var(${token})`, fontSize: 28, lineHeight: 1.2 }}>
+        The quick brown fox jumps over the lazy dog
+      </div>
+      <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, opacity: 0.7, marginTop: 6 }}>
+        <strong>{label}</strong> · font-{name} · var({token})
+      </div>
+    </div>
+  ))}
+</div>
+
+---
+
+## Sizes
+
+**Got a pixel value? Scan the left column to find the matching token.**
+
+<div
+  style={{
+    display: 'grid',
+    gridTemplateColumns: '80px 100px 1fr 1fr',
+    alignItems: 'baseline',
+    rowGap: '1rem',
+    columnGap: '1.5rem',
+    padding: '1rem 0',
+    fontFamily: 'var(--font-mono)',
+    fontSize: 13,
+  }}
+>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Value</div>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Token</div>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tailwind / CSS var</div>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Preview</div>
+
+{[
+{ name: 'sm', token: '--text-sm', value: '14px' },
+{ name: 'base', token: '--text-base', value: '16px' },
+{ name: 'lg', token: '--text-lg', value: '18px' },
+{ name: 'xl', token: '--text-xl', value: '22px' },
+{ name: '2xl', token: '--text-2xl', value: '28px' },
+{ name: '3xl', token: '--text-3xl', value: '44px' },
+{ name: '4xl', token: '--text-4xl', value: '72px' },
+].flatMap(({ name, token, value }) => [
+
+<div key={`${name}-value`} style={{ fontWeight: 700, fontSize: 15 }}>{value}</div>,
+<div key={`${name}-name`} style={{ fontWeight: 600 }}>{name}</div>,
+<div key={`${name}-var`} style={{ opacity: 0.7, fontSize: 12 }}>
+<div>text-{name}</div>
+<div style={{ opacity: 0.75 }}>var({token})</div>
+</div>,
+<div
+key={`${name}-preview`}
+style={{ fontFamily: 'var(--font-body)', fontSize: `var(${token})`, lineHeight: 1.2 }}
+>
+The quick brown fox
+</div>,
+])}
+
+</div>
+
+---
+
+## Weights
+
+**Got a numeric weight? Scan the left column to find the matching token.**
+
+<div
+  style={{
+    display: 'grid',
+    gridTemplateColumns: '80px 120px 1fr 1fr',
+    alignItems: 'baseline',
+    rowGap: '1rem',
+    columnGap: '1.5rem',
+    padding: '1rem 0',
+    fontFamily: 'var(--font-mono)',
+    fontSize: 13,
+  }}
+>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Value</div>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Token</div>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tailwind / CSS var</div>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Preview</div>
+
+{[
+{ name: 'light', token: '--font-weight-light', value: '300' },
+{ name: 'normal', token: '--font-weight-normal', value: '400' },
+{ name: 'medium', token: '--font-weight-medium', value: '500' },
+{ name: 'semibold', token: '--font-weight-semibold', value: '600' },
+{ name: 'bold', token: '--font-weight-bold', value: '700' },
+].flatMap(({ name, token, value }) => [
+
+<div key={`${name}-value`} style={{ fontWeight: 700, fontSize: 15 }}>{value}</div>,
+<div key={`${name}-name`} style={{ fontWeight: 600 }}>{name}</div>,
+<div key={`${name}-var`} style={{ opacity: 0.7, fontSize: 12 }}>
+<div>font-{name}</div>
+<div style={{ opacity: 0.75 }}>var({token})</div>
+</div>,
+<div
+key={`${name}-preview`}
+style={{
+fontFamily: 'var(--font-body)',
+fontSize: 20,
+fontWeight: `var(${token})`,
+lineHeight: 1.2,
+}}
+>
+The quick brown fox
+</div>,
+])}
+
+</div>
+
+---
+
+## Letter spacing
+
+<div
+  style={{
+    display: 'grid',
+    gridTemplateColumns: '80px 120px 1fr 1fr',
+    alignItems: 'baseline',
+    rowGap: '1rem',
+    columnGap: '1.5rem',
+    padding: '1rem 0',
+    fontFamily: 'var(--font-mono)',
+    fontSize: 13,
+  }}
+>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Value</div>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Token</div>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tailwind / CSS var</div>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Preview</div>
+
+{[{ name: 'tight', token: '--tracking-tight', value: '-0.03em' }].flatMap(({ name, token, value }) => [
+
+<div key={`${name}-value`} style={{ fontWeight: 700, fontSize: 15 }}>{value}</div>,
+<div key={`${name}-name`} style={{ fontWeight: 600 }}>{name}</div>,
+<div key={`${name}-var`} style={{ opacity: 0.7, fontSize: 12 }}>
+<div>tracking-{name}</div>
+<div style={{ opacity: 0.75 }}>var({token})</div>
+</div>,
+<div
+key={`${name}-preview`}
+style={{
+fontFamily: 'var(--font-headline)',
+fontSize: 24,
+letterSpacing: `var(${token})`,
+lineHeight: 1.2,
+}}
+>
+The quick brown fox
+</div>,
+])}
+
+</div>
+
+---
+
+## Line height
+
+<div
+  style={{
+    display: 'grid',
+    gridTemplateColumns: '80px 120px 1fr 2fr',
+    alignItems: 'baseline',
+    rowGap: '1.25rem',
+    columnGap: '1.5rem',
+    padding: '1rem 0',
+    fontFamily: 'var(--font-mono)',
+    fontSize: 13,
+  }}
+>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Value</div>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Token</div>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tailwind / CSS var</div>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Preview</div>
+
+{[
+{ name: 'xsmall', token: '--leading-xsmall', value: '1.02' },
+{ name: 'small', token: '--leading-small', value: '1.5' },
+{ name: 'base', token: '--leading-base', value: '1.6' },
+].flatMap(({ name, token, value }) => [
+
+<div key={`${name}-value`} style={{ fontWeight: 700, fontSize: 15 }}>{value}</div>,
+<div key={`${name}-name`} style={{ fontWeight: 600 }}>{name}</div>,
+<div key={`${name}-var`} style={{ opacity: 0.7, fontSize: 12 }}>
+<div>leading-{name}</div>
+<div style={{ opacity: 0.75 }}>var({token})</div>
+</div>,
+<div
+key={`${name}-preview`}
+style={{
+fontFamily: 'var(--font-body)',
+fontSize: 15,
+lineHeight: `var(${token})`,
+maxWidth: 480,
+}}
+>
+The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog.
+</div>,
+])}
+
+</div>
+
+---
+
+## Adding a new font token
+
+1. Add the variable to the right group in `./fonts.css` using the matching Tailwind prefix:
+
+   | Group          | Prefix            | Utility      |
+   | -------------- | ----------------- | ------------ |
+   | Family         | `--font-*`        | `font-*`     |
+   | Size           | `--text-*`        | `text-*`     |
+   | Weight         | `--font-weight-*` | `font-*`     |
+   | Letter spacing | `--tracking-*`    | `tracking-*` |
+   | Line height    | `--leading-*`     | `leading-*`  |
+
+   ```css
+   @theme static {
+     --text-5xl: 96px;
+   }
+   ```
+
+2. Add an entry to the relevant array above so it shows up in this page.

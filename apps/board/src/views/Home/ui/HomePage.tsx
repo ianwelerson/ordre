@@ -10,7 +10,7 @@ export function HomePage() {
       data-testid="home-page"
       className="flex h-screen w-screen flex-col flex-wrap items-center justify-center gap-3"
     >
-      <div className="h-10 w-10">
+      <div className="h-8 w-8">
         <Icon name="logo" />
       </div>
       <div className="flex flex-col items-center gap-3">
@@ -18,7 +18,7 @@ export function HomePage() {
           <h1 className="font-headline text-2xl font-bold">{t('app.name')}</h1>
           <p className="font-body">{t('app.tagline')}</p>
         </div>
-        <p className="font-mono text-xs">{t('app.domain.board')}</p>
+        <p className="font-mono text-sm">{t('app.domain.board')}</p>
       </div>
     </main>
   );
