@@ -1,0 +1,7 @@
+@theme static {
+  --shadow-*: initial;
+  --shadow-raised: 0 4px 16px rgba(26, 29, 38, 0.06);
+  --shadow-popover: 0 4px 12px rgba(26, 29, 38, 0.08);
+  --shadow-modal: 0 12px 40px rgba(26, 29, 38, 0.08);
+  --shadow-mockup: 0 24px 60px -20px rgba(26, 29, 38, 0.18), 0 2px 8px rgba(26, 29, 38, 0.04);
+}

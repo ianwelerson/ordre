@@ -1,0 +1,91 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Design Tokens/Spacing" />
+
+# Spacing
+
+Spacing tokens are defined as Tailwind v4 CSS variables in `./spacing.css`. Every variable is declared as `--spacing-*`, so Tailwind automatically generates utilities across the full spacing-aware property set: `p-*`, `m-*`, `gap-*`, `space-x-*`, `w-*`, `h-*`, `inset-*`, …
+
+The scale follows Tailwind's numeric convention where each step is 4px (step `1` = 4px, step `2` = 8px, and so on). Reach for these tokens instead of hard-coded pixel values so the rhythm of the UI stays consistent.
+
+## Usage
+
+```tsx
+// Tailwind utilities
+<div className="p-3 gap-2" />
+<section className="py-8 px-4" />
+
+// Raw CSS variable
+<div style={{ padding: 'var(--spacing-3)' }} />
+```
+
+## Scale
+
+**Got a pixel value? Scan the left column to find the matching token.**
+
+<div
+  style={{
+    display: 'grid',
+    gridTemplateColumns: '90px 80px 1fr 1fr',
+    alignItems: 'center',
+    rowGap: '0.75rem',
+    columnGap: '1.5rem',
+    padding: '1rem 0',
+    fontFamily: 'var(--font-mono)',
+    fontSize: 13,
+  }}
+>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Value</div>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Token</div>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tailwind / CSS var</div>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Preview</div>
+
+{[
+{ name: '1', token: '--spacing-1', value: '4px' },
+{ name: '2', token: '--spacing-2', value: '8px' },
+{ name: '3', token: '--spacing-3', value: '12px' },
+{ name: '3.5', token: '--spacing-3\\.5', value: '14px' },
+{ name: '4', token: '--spacing-4', value: '16px' },
+{ name: '4.5', token: '--spacing-4\\.5', value: '18px' },
+{ name: '6', token: '--spacing-6', value: '24px' },
+{ name: '8', token: '--spacing-8', value: '32px' },
+{ name: '12', token: '--spacing-12', value: '48px' },
+{ name: '13', token: '--spacing-13', value: '52px' },
+{ name: '16', token: '--spacing-16', value: '64px' },
+{ name: '20', token: '--spacing-20', value: '80px' },
+].flatMap(({ name, token, value }) => [
+
+<div key={`${name}-value`} style={{ fontWeight: 700, fontSize: 15 }}>{value}</div>,
+<div key={`${name}-name`} style={{ fontWeight: 600 }}>{name}</div>,
+<div key={`${name}-var`} style={{ opacity: 0.7, fontSize: 12 }}>
+<div>p-{name} · m-{name} · gap-{name} …</div>
+<div style={{ opacity: 0.75 }}>var({token.replace('\\.', '.')})</div>
+</div>,
+<div
+key={`${name}-preview`}
+style={{
+height: 16,
+width: `var(${token})`,
+background: 'var(--color-button, #e0913e)',
+borderRadius: 2,
+}}
+/>,
+])}
+
+</div>
+
+---
+
+## Adding a new spacing step
+
+1. Add the variable under the `@theme static` block in `./spacing.css`:
+
+   ```css
+   @theme static {
+     --spacing-24: 96px;
+   }
+   ```
+
+   Once declared, Tailwind v4 automatically generates utilities (`p-24`, `m-24`, `gap-24`, …).
+
+2. Add an entry to the array in the **Scale** section above so it shows up in this page.

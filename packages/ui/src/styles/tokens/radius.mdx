@@ -1,0 +1,83 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Design Tokens/Radius" />
+
+# Radius
+
+Radius tokens are defined as Tailwind v4 CSS variables in `./radius.css`. Every variable is declared as `--radius-*`, so Tailwind automatically generates utilities (`rounded-sm`, `rounded-md`, `rounded-full`, …).
+
+## Usage
+
+```tsx
+// Tailwind utilities
+<div className="rounded-md" />
+<button className="rounded-full" />
+
+// Raw CSS variable
+<div style={{ borderRadius: 'var(--radius-lg)' }} />
+```
+
+## Scale
+
+**Got a pixel value? Scan the left column to find the matching token.**
+
+<div
+  style={{
+    display: 'grid',
+    gridTemplateColumns: '90px 90px 1fr 96px',
+    alignItems: 'center',
+    rowGap: '1rem',
+    columnGap: '1.5rem',
+    padding: '1rem 0',
+    fontFamily: 'var(--font-mono)',
+    fontSize: 13,
+  }}
+>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Value</div>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Token</div>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tailwind / CSS var</div>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Preview</div>
+
+{[
+{ name: 'none', token: '--radius-none', value: '0' },
+{ name: 'sm', token: '--radius-sm', value: '4px' },
+{ name: 'md', token: '--radius-md', value: '8px' },
+{ name: 'lg', token: '--radius-lg', value: '12px' },
+{ name: 'xl', token: '--radius-xl', value: '16px' },
+{ name: 'full', token: '--radius-full', value: '9999px' },
+].flatMap(({ name, token, value }) => [
+
+<div key={`${name}-value`} style={{ fontWeight: 700, fontSize: 15 }}>{value}</div>,
+<div key={`${name}-name`} style={{ fontWeight: 600 }}>{name}</div>,
+<div key={`${name}-var`} style={{ opacity: 0.7, fontSize: 12 }}>
+<div>rounded-{name}</div>
+<div style={{ opacity: 0.75 }}>var({token})</div>
+</div>,
+<div
+key={`${name}-preview`}
+style={{
+width: 64,
+height: 64,
+background: 'var(--color-button, #e0913e)',
+borderRadius: `var(${token})`,
+}}
+/>,
+])}
+
+</div>
+
+---
+
+## Adding a new radius
+
+1. Add the variable under the `@theme static` block in `./radius.css`:
+
+   ```css
+   @theme static {
+     --radius-xs: 2px;
+   }
+   ```
+
+   Once declared, Tailwind v4 automatically generates utilities (`rounded-xs`).
+
+2. Add an entry to the array in the **Scale** section above so it shows up in this page.

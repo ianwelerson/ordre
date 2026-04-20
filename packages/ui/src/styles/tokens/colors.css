@@ -1,0 +1,29 @@
+@theme static {
+  /* === Colors Base === */
+  --color-*: initial;
+  --color-midnight: #1a1d26;
+  --color-slate: #3a3f4b;
+  --color-snow: #fafaf8;
+  --color-warm-gray: #f0eeeb;
+  --color-ash: #d9d6d0;
+  --color-stone: #8a8680;
+  --color-white: #ffffff;
+  --color-amber: #e0913e;
+  --color-deep-amber: #c67a2e;
+  --color-sage: #5b9a6f;
+  --color-brick: #c44b3f;
+  --color-transparent: transparent;
+
+  /* === Color Tokens === */
+  --color-background: var(--color-snow);
+  --color-background-alt: var(--color-warm-gray);
+  --color-background-elevated: var(--color-white);
+  --color-foreground: var(--color-midnight);
+  --color-foreground-muted: var(--color-slate);
+  --color-foreground-subtle: var(--color-stone);
+  --color-border: var(--color-ash);
+  --color-button: var(--color-amber);
+  --color-button-hover: var(--color-deep-amber);
+  --color-success: var(--color-sage);
+  --color-invalid: var(--color-brick);
+}
