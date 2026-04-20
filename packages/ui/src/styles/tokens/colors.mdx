@@ -8,8 +8,8 @@ The palette is defined as Tailwind v4 CSS variables in `./colors.css`. Every var
 
 The palette comes in two layers:
 
-- **Tokens** (prefer these) — semantic names that encode intent: `background`, `background-alt`, `background-elevated`, `foreground`, `foreground-muted`, `foreground-subtle`, `button`, `button-hover`, `success`, `invalid`, `border`.
-- **Base colors** — the raw hues tokens resolve to: neutrals (`midnight`, `slate`, `stone`, `ash`, `warm-gray`, `snow`, `white`) and brand (`amber`, `deep-amber`, `sage`, `brick`).
+- **Tokens** (prefer these) - semantic names that encode intent: `background`, `background-alt`, `background-elevated`, `foreground`, `foreground-muted`, `foreground-subtle`, `button`, `button-hover`, `success`, `invalid`, `border`.
+- **Base colors** - the raw hues tokens resolve to: neutrals (`midnight`, `slate`, `stone`, `ash`, `warm-gray`, `snow`, `white`) and brand (`amber`, `deep-amber`, `sage`, `brick`).
 
 ## Usage
 
@@ -22,7 +22,7 @@ The palette comes in two layers:
 <div style={{ background: 'var(--color-background-alt)' }} />
 ```
 
-**Always start with a token.** Drop down to a base color (`amber`, `midnight`, `ash`, …) only when no token fits and you genuinely need that specific hue — if you find yourself reaching for a base color often, that's a signal a new token should be added instead.
+**Always start with a token.** Drop down to a base color (`amber`, `midnight`, `ash`, …) only when no token fits and you genuinely need that specific hue - if you find yourself reaching for a base color often, that's a signal a new token should be added instead.
 
 export const SWATCH_SIZE = 48;
 
@@ -212,7 +212,7 @@ Prefer these in components. They carry meaning, so the palette can evolve withou
 
 ## Base colors
 
-Raw hues the tokens resolve to. Avoid using them directly in components — reach for a token first.
+Raw hues the tokens resolve to. Avoid using them directly in components - reach for a token first.
 
 ### Neutrals
 
@@ -321,6 +321,6 @@ Raw hues the tokens resolve to. Avoid using them directly in components — reac
    --color-danger: var(--color-brick);
    ```
 
-   This keeps the palette tight — changing `brick` later updates every semantic token that points at it.
+   This keeps the palette tight - changing `brick` later updates every semantic token that points at it.
 
 3. Register the new token in the relevant `<PaletteGrid>` group above so it shows up in this page. Keep the `value` and `resolvesTo` fields in sync with `./colors.css`.
