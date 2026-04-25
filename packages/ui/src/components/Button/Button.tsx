@@ -1,10 +1,11 @@
 'use client';
 
 import { cva, type VariantProps } from 'class-variance-authority';
+import { type IconName as LucideIconName } from 'lucide-react/dynamic';
 
 import { ReactNode } from 'react';
 
-import IconComponent, { IconName } from './../../icons/Icons';
+import IconComponent from './../../icons/Icons';
 
 const variants = cva(
   ['gap-2 rounded-md hover:cursor-pointer font-body font-medium flex flex-row items-center'],
@@ -58,7 +59,7 @@ const variants = cva(
 
 interface ButtonProps extends VariantProps<typeof variants> {
   children?: ReactNode;
-  icon?: IconName;
+  icon?: LucideIconName;
 }
 
 export const Button = ({
