@@ -2,26 +2,35 @@ import { DynamicIcon, type IconName as LucideIconName } from 'lucide-react/dynam
 
 import { type ComponentType, lazy, Suspense, type SVGProps } from 'react';
 
+import type { LogoTheme } from './custom/logoThemes';
+
+type CustomIconProps = SVGProps<SVGSVGElement> & {
+  theme?: LogoTheme;
+};
+
 const customIcons = {
-  logo: lazy(() => import('./custom/Logo')),
-} satisfies Record<string, ComponentType<SVGProps<SVGSVGElement>>>;
+  'ordre-logo': lazy(() => import('./custom/OrdreLogo')),
+  'ordre-lockup': lazy(() => import('./custom/OrdreLockup')),
+} satisfies Record<string, ComponentType<CustomIconProps>>;
 
 type CustomIconName = keyof typeof customIcons;
 
 export type IconName = CustomIconName | LucideIconName;
 
-type IconProps = SVGProps<SVGSVGElement> & {
-  name: IconName;
+type CommonIconProps = SVGProps<SVGSVGElement> & {
   size?: number | string;
   strokeWidth?: number;
 };
 
-export default function Icon({ name, ...props }: IconProps) {
+type IconProps = CommonIconProps &
+  ({ name: CustomIconName; theme?: LogoTheme } | { name: LucideIconName; theme?: never });
+
+export default function Icon({ name, theme, ...props }: IconProps) {
   if (name in customIcons) {
     const Custom = customIcons[name as CustomIconName];
     return (
       <Suspense fallback={null}>
-        <Custom {...props} />
+        <Custom {...props} theme={theme} />
       </Suspense>
     );
   }

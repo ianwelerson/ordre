@@ -8,7 +8,7 @@ export default function Home(): React.ReactElement {
   return (
     <main className="flex h-screen w-screen flex-col flex-wrap items-center justify-center gap-3">
       <div className="h-8 w-8">
-        <Icon name="logo" />
+        <Icon name="ordre-logo" />
       </div>
       <div className="flex flex-col items-center gap-3">
         <div className="flex flex-col items-center">

@@ -26,6 +26,11 @@ import type { Route } from './+types/root';
 
 export const middleware = [i18nextMiddleware];
 
+export const links: Route.LinksFunction = () => [
+  { rel: 'icon', href: '/icon-white.ico', media: '(prefers-color-scheme: light)' },
+  { rel: 'icon', href: '/icon-dark.ico', media: '(prefers-color-scheme: dark)' },
+];
+
 export async function loader({ context, request }: Route.LoaderArgs) {
   const locale = getLocale(context) as SupportedLanguage;
   const url = new URL(request.url);

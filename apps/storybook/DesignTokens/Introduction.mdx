@@ -1,4 +1,4 @@
-import { Meta } from '@storybook/addon-docs/blocks';
+import { Meta } from "@storybook/addon-docs/blocks";
 
 <Meta title="Design Tokens/Introduction" />
 
@@ -10,7 +10,7 @@ They live as Tailwind v4 CSS variables in `packages/ui/src/styles/tailwind.css`,
 
 - a CSS custom property - `var(--color-amber)`
 - a generated Tailwind utility - `bg-amber`, `text-amber`, `border-amber`, …
-- an `@ordre/ui` export - e.g. `<Icon name="logo" />` for iconography
+- an `@ordre/ui` export - e.g. `<Icon name="ordre-logo" />` for iconography
 
 ## Why tokens
 
@@ -36,7 +36,7 @@ They live as Tailwind v4 CSS variables in `packages/ui/src/styles/tailwind.css`,
 
 // Shared components that already consume tokens
 import Icon from '@ordre/ui/icons';
-<Icon name="logo" />
+<Icon name="ordre-logo" />
 ```
 
 Prefer semantic tokens (`accent`, `accent-deep`, `sage`, `brick`) when the color carries meaning, and raw brand/neutral tokens only when you truly need that specific hue.

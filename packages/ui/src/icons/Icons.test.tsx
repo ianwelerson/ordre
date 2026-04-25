@@ -12,11 +12,19 @@ describe('Icons.tsx', () => {
     });
   });
 
-  it('should render the Logo icon', async () => {
-    const { getByTestId } = render(<Icons name="logo" data-testid="logo" />);
+  it('should render the Ordre Logo icon', async () => {
+    const { getByTestId } = render(<Icons name="ordre-logo" data-testid="logo" />);
 
     await waitFor(() => {
       expect(getByTestId('icon')).toBeInTheDocument();
+    });
+  });
+
+  it('should render the Ordre Lockup icon', async () => {
+    const { getByTestId } = render(<Icons name="ordre-lockup" data-testid="lockup" />);
+
+    await waitFor(() => {
+      expect(getByTestId('lockup')).toBeInTheDocument();
     });
   });
 });
