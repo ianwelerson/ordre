@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "dependencies": {
     "class-variance-authority": "^0.7.1",
-    "lucide-react": "^1.8.0",
+    "lucide-react": "^1.14.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5"
   },
@@ -15,13 +15,13 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
-    "@vitest/browser-playwright": "^4.1.4",
-    "@vitest/coverage-v8": "^4.1.4",
-    "@vitest/ui": "^4.1.4",
-    "eslint": "^10.2.1",
+    "@vitest/browser-playwright": "^4.1.5",
+    "@vitest/coverage-v8": "^4.1.5",
+    "@vitest/ui": "^4.1.5",
+    "eslint": "^10.3.0",
     "playwright": "^1.59.1",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.4"
+    "vitest": "^4.1.5"
   },
   "exports": {
     "./components": "./src/components/index.ts",
@@ -32,8 +32,8 @@
     "./helpers/*": "./src/helpers/*.ts"
   },
   "peerDependencies": {
-    "@storybook/react": "^10.3.5",
-    "tailwindcss": "^4.2.2"
+    "@storybook/react": "^10.3.6",
+    "tailwindcss": "^4.2.4"
   },
   "private": true,
   "scripts": {

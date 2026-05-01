@@ -4,14 +4,14 @@
   "dependencies": {
     "@ordre/i18n": "workspace:*",
     "@ordre/ui": "workspace:*",
-    "@storybook/react": "^10.3.5",
-    "@tailwindcss/postcss": "^4.2.2",
+    "@storybook/react": "^10.3.6",
+    "@tailwindcss/postcss": "^4.2.4",
     "next": "^16.2.4",
-    "next-intl": "^4.9.1",
-    "postcss": "^8.5.10",
+    "next-intl": "^4.11.0",
+    "postcss": "^8.5.13",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
-    "tailwindcss": "^4.2.2"
+    "tailwindcss": "^4.2.4"
   },
   "devDependencies": {
     "@ordre/config": "workspace:*",
@@ -21,13 +21,13 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
-    "@vitest/browser-playwright": "^4.1.4",
-    "@vitest/coverage-v8": "^4.1.4",
-    "@vitest/ui": "^4.1.4",
-    "eslint": "^10.2.1",
+    "@vitest/browser-playwright": "^4.1.5",
+    "@vitest/coverage-v8": "^4.1.5",
+    "@vitest/ui": "^4.1.5",
+    "eslint": "^10.3.0",
     "playwright": "^1.59.1",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.4"
+    "vitest": "^4.1.5"
   },
   "private": true,
   "scripts": {

@@ -3,18 +3,18 @@
   "version": "0.0.0",
   "dependencies": {
     "@ordre/ui": "workspace:*",
-    "postcss": "^8.5.10",
-    "tailwindcss": "^4.2.2"
+    "postcss": "^8.5.13",
+    "tailwindcss": "^4.2.4"
   },
   "devDependencies": {
-    "@storybook/addon-docs": "^10.3.5",
-    "@storybook/react": "^10.3.5",
-    "@storybook/react-vite": "^10.3.5",
-    "@tailwindcss/vite": "^4.2.2",
-    "globals": "^17.5.0",
+    "@storybook/addon-docs": "^10.3.6",
+    "@storybook/react": "^10.3.6",
+    "@storybook/react-vite": "^10.3.6",
+    "@tailwindcss/vite": "^4.2.4",
+    "globals": "^17.6.0",
     "remark-gfm": "^4.0.1",
-    "storybook": "^10.3.5",
-    "vite": "^8.0.8"
+    "storybook": "^10.3.6",
+    "vite": "^8.0.10"
   },
   "private": true,
   "scripts": {
