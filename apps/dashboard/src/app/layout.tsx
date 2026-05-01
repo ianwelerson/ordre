@@ -10,10 +10,7 @@ export async function generateMetadata() {
     title: t('app.name'),
     description: t('app.tagline'),
     icons: {
-      icon: [
-        { url: '/icon-white.ico', media: '(prefers-color-scheme: light)' },
-        { url: '/icon-dark.ico', media: '(prefers-color-scheme: dark)' },
-      ],
+      icon: [{ url: '/favicon.ico' }],
     },
   };
 }
