@@ -7,7 +7,7 @@
     "@storybook/react": "^10.3.5",
     "@tailwindcss/postcss": "^4.2.2",
     "next": "^16.2.4",
-    "next-intl": "^4.9.1",
+    "next-intl": "^4.9.2",
     "postcss": "^8.5.10",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
