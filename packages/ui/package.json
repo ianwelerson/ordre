@@ -3,25 +3,28 @@
   "version": "0.0.0",
   "dependencies": {
     "class-variance-authority": "^0.7.1",
-    "lucide-react": "^1.14.0",
-    "react": "^19.2.5",
-    "react-dom": "^19.2.5"
+    "lucide-react": "^1.16.0",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6"
   },
   "devDependencies": {
     "@ordre/config": "workspace:*",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.3.2",
-    "@types/node": "^25.6.0",
-    "@types/react": "^19.2.14",
+    "@types/node": "^25.9.1",
+    "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.1",
-    "@vitest/browser-playwright": "^4.1.5",
-    "@vitest/coverage-v8": "^4.1.5",
-    "@vitest/ui": "^4.1.5",
-    "eslint": "^10.3.0",
-    "playwright": "^1.59.1",
+    "@vitejs/plugin-react": "^6.0.2",
+    "@vitest/browser-playwright": "^4.1.7",
+    "@vitest/coverage-v8": "^4.1.7",
+    "@vitest/ui": "^4.1.7",
+    "eslint": "^10.4.0",
+    "playwright": "^1.60.0",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.5"
+    "vitest": "^4.1.7"
+  },
+  "engines": {
+    "node": ">=24"
   },
   "exports": {
     "./components": "./src/components/index.ts",
@@ -32,8 +35,8 @@
     "./helpers/*": "./src/helpers/*.ts"
   },
   "peerDependencies": {
-    "@storybook/react": "^10.3.6",
-    "tailwindcss": "^4.2.4"
+    "@storybook/react": "^10.4.1",
+    "tailwindcss": "^4.3.0"
   },
   "private": true,
   "scripts": {
