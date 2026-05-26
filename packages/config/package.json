@@ -18,6 +18,7 @@
     "node": ">=24"
   },
   "exports": {
+    "./eslint/base": "./eslint/base.ts",
     "./eslint/next": "./eslint/next.ts",
     "./eslint/react": "./eslint/react.ts",
     "./typescript/*": "./typescript/*",

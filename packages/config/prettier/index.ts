@@ -1,7 +1,11 @@
+import { createRequire } from 'node:module';
+
+const require = createRequire(import.meta.url);
+
 const config = {
   plugins: [
-    "@trivago/prettier-plugin-sort-imports",
-    "prettier-plugin-tailwindcss",
+    require.resolve('@trivago/prettier-plugin-sort-imports'),
+    require.resolve('prettier-plugin-tailwindcss'),
   ],
   trailingComma: "es5",
   tabWidth: 2,
