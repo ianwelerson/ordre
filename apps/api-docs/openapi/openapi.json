@@ -1,0 +1,44 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Ordre API",
+    "version": "1.0.0",
+    "description": "REST API for the Ordre client communication platform.",
+    "contact": {
+      "name": "Ordre",
+      "url": "https://ordre.app",
+      "email": "devops@ordre.app"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.ordre.app",
+      "description": "Production"
+    },
+    {
+      "url": "https://ordre-api.vercel.app",
+      "description": "Development"
+    }
+  ],
+  "components": {
+    "schemas": {},
+    "parameters": {}
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Check health status",
+        "responses": {
+          "200": {
+            "description": "Board created",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

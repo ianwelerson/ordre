@@ -15,11 +15,19 @@
       "cache": false,
       "persistent": true
     },
-    "dev:api": {
+    "api:dev": {
       "cache": false,
       "persistent": true
     },
-    "start:api": {
+    "api:docs": {
+      "cache": false,
+      "persistent": true
+    },
+    "api:docs:generate": {
+      "cache": false,
+      "persistent": false
+    },
+    "api:start": {
       "cache": false,
       "persistent": true
     },

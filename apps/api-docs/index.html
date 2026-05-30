@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Ordre API Reference</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
+  <body>
+    <!-- This is where the documentation will be rendered -->
+    <div id="app"></div>
+
+    <!-- Load the Scalar script from a CDN or local file -->
+    <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
+
+    <!-- Initialize Scalar with your OpenAPI spec -->
+    <script>
+      Scalar.createApiReference("#app", {
+        url: "./openapi/openapi.json",
+        hideClientButton: true,
+        layout: "modern",
+        showSidebar: true,
+        showDeveloperTools: "never",
+        operationTitleSource: "summary",
+        theme: "default",
+        persistAuth: false,
+        telemetry: false,
+        default: false,
+        isEditable: false,
+        isLoading: false,
+        hideModels: false,
+        documentDownloadType: "both",
+        hideTestRequestButton: true,
+        hideSearch: false,
+        showOperationId: false,
+        hideDarkModeToggle: false,
+        withDefaultFonts: true,
+        defaultOpenFirstTag: true,
+        defaultOpenAllTags: false,
+        expandAllModelSections: false,
+        expandAllResponses: false,
+        orderSchemaPropertiesBy: "alpha",
+        orderRequiredPropertiesFirst: true,
+        metaData: {
+          title: "Ordre API Reference",
+          description:
+            "Interactive reference for the Ordre REST API - the backend that powers the dashboard, the shareable client board, and all background services.",
+        },
+        mcp: {
+          disabled: true,
+        },
+        slug: "ordre-api",
+        title: "Ordre API",
+      });
+    </script>
+  </body>
+</html>

@@ -1,9 +1,10 @@
-import { healthController } from '#controllers/health';
 import { isProd, isTest } from '#env';
 import cors from 'cors';
 import express, { type Express, type NextFunction, type Request, type Response } from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
+
+import healthRoutes from './routes/health/health.routes.ts';
 
 const app: Express = express();
 
@@ -19,10 +20,8 @@ app.use(
   })
 );
 
-app.get('/health', (_req, res) => {
-  const result = healthController();
-  res.status(result.status).json(result.body);
-});
+// Health
+app.use(healthRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ error: 'Not Found' });

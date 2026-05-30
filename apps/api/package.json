@@ -9,6 +9,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@asteasolutions/zod-to-openapi": "^8.5.0",
     "@ordre/config": "workspace:*",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
@@ -21,18 +22,19 @@
     "node": ">=24"
   },
   "imports": {
-    "#env": "./env.ts",
+    "#env": "./src/config/env.ts",
     "#controllers/*": "./src/controllers/*/index.ts",
     "#/*": "./src/*"
   },
   "private": true,
   "scripts": {
+    "api:dev": "node --watch src/adapters/express/index.ts",
+    "api:docs:generate": "node scripts/generate-openapi.ts",
+    "api:start": "node src/adapters/express/index.ts",
     "check-types": "tsc",
-    "dev:api": "node --watch src/adapters/express/index.ts",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
-    "lint": "eslint --max-warnings 0",
-    "start:api": "node src/adapters/express/index.ts"
+    "lint": "eslint --max-warnings 0"
   },
   "type": "module"
 }
