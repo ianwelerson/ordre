@@ -4,8 +4,10 @@
   "dependencies": {
     "http-server": "^14.1.1"
   },
+  "portless": { "name": "api-docs.ordre", "script": "api:docs:app" },
   "scripts": {
-    "api:docs": "http-server ./"
+    "api:docs": "portless",
+    "api:docs:app": "http-server ./"
   },
   "type": "module"
 }

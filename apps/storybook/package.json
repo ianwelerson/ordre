@@ -19,9 +19,11 @@
   "engines": {
     "node": ">=24"
   },
+  "portless": { "name": "storybook.ordre", "script": "storybook:app" },
   "private": true,
   "scripts": {
-    "storybook": "storybook dev -p 6006",
+    "storybook": "portless",
+    "storybook:app": "storybook dev --no-open --port ${PORT:-6006} --host ${HOST:-127.0.0.1}",
     "storybook:build": "storybook build"
   },
   "type": "module"

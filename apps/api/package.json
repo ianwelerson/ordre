@@ -26,9 +26,11 @@
     "#controllers/*": "./src/controllers/*/index.ts",
     "#/*": "./src/*"
   },
+  "portless": { "name": "api.ordre", "script": "api:dev:app" },
   "private": true,
   "scripts": {
-    "api:dev": "node --watch src/adapters/express/index.ts",
+    "api:dev": "portless",
+    "api:dev:app": "node --watch src/adapters/express/index.ts",
     "api:docs:generate": "node scripts/generate-openapi.ts",
     "api:start": "node src/adapters/express/index.ts",
     "check-types": "tsc",

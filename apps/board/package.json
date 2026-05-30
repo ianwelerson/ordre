@@ -39,11 +39,16 @@
   "engines": {
     "node": ">=24"
   },
+  "portless": {
+    "name": "board.ordre",
+    "script": "dev:app"
+  },
   "private": true,
   "scripts": {
     "build": "react-router build",
     "check-types": "react-router typegen && tsc",
-    "dev": "react-router dev --port 3002",
+    "dev": "portless",
+    "dev:app": "react-router dev --port ${PORT:-5173} --host ${HOST:-127.0.0.1}",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "lint": "eslint --max-warnings 0",
