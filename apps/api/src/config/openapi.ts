@@ -24,7 +24,8 @@ export const openApiSpec: ReturnType<OpenApiGeneratorV3['generateDocument']> =
     info: {
       title: 'Ordre API',
       version: '1.0.0',
-      description: 'REST API for the Ordre client communication platform.',
+      description:
+        'REST API for the Ordre client communication platform. It powers the operator dashboard, the shareable client board, and the background services that keep both in sync. Endpoints exchange JSON over HTTPS and follow standard REST conventions. Use the **Production** server for live traffic and the **Development** server for staging or local testing.',
       contact: {
         name: 'Ordre',
         url: 'https://ordre.app',
