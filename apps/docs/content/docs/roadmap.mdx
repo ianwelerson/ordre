@@ -1,0 +1,109 @@
+---
+title: Roadmap
+icon: Map
+description: What is scoped for launch, planned post-launch, and longer-term ideas.
+---
+
+## ✅ Scoped for Launch
+
+These features are committed for the initial release.
+
+### Product
+
+- **Board creation and sharing** - unique link per job, shareable via SMS, email, or WhatsApp
+- **Timeline updates** - text and photo updates posted by workspace members, visible to the client in real time
+- **Photo documentation** - before/during/after shots attached to timeline updates
+- **Approval requests** - formal approve/decline flow for scope or price changes
+- **Built-in chat** - direct messaging between client and workspace members inside the board
+- **Phase tracker** - template-defined progress stages (Full service type only)
+- **Templates** - pre-built templates with Quick and Full service type variants; custom template creation
+- **Identity verification** - sensitive fields blurred until the client verifies via email or phone
+- **Multiple locations** - workspaces can manage boards across more than one physical site
+- **Registration flow** - industry selection, provider type (Individual / Business), user contact info, password via email link; creates a user account and workspace
+
+### Pricing
+
+- **Free tier** - 3 active boards, 1 location, no team members
+- **Premium tier** - up to 20 active boards, up to 3 team members, 1 location
+- **Add-ons** - unlimited boards, unlimited team members, unlimited locations
+- **Founding member pricing** - reduced rate for early adopters, locked in for the lifetime of the subscription
+- **Annual billing** - ~17% discount over monthly, available on both normal and founding pricing
+
+### Infrastructure
+
+- **AWS Lambda + API Gateway + RDS PostgreSQL** - backend compute and data
+- **Vercel** - frontend hosting for all apps
+- **Upstash Redis** - real-time pub/sub and board caching
+- **Auth0** - workspace member authentication (owners, admins, and members only; clients excluded)
+- **Twilio** - SMS and WhatsApp delivery for board links and client verification
+- **Resend** - transactional and notification email
+- **Stripe** - subscription billing with localised pricing (USD, CAD, BRL)
+- **Sentry** - error tracking
+- **S3 + CloudFront** - image storage and CDN
+
+### Apps
+
+- **Marketing site** (`ordre.app`) - Next.js
+- **Dashboard** (`dashboard.ordre.app`) - Next.js, used by workspace members
+- **Client board** (`go.ordre.app`) - React Router v7 in framework mode (SSR)
+- **Storybook** (`storybook.ordre.app`) - Component documentation for `@ordre/ui`
+
+---
+
+## 🔜 Post-Launch
+
+Planned features and infrastructure changes to pursue after launch, roughly in priority order.
+
+### Recurring Service Type
+
+Boards for ongoing service relationships with repeating visits on a schedule (snow removal, lawn care, pool maintenance, cleaning). This is a fundamentally different board model - open-ended rather than linear - and requires dedicated design for scheduling, per-visit timeline entries, and notification logic. Deferred because Quick and Full share enough structure to ship together; Recurring needs focused work.
+
+### OG Tag Handling for Board URLs
+
+Social media link previews (Open Graph tags) require server-side rendering of metadata per board. The board app is already SSR via React Router v7 framework mode, so the groundwork is in place - what's left is a loader that fetches board metadata on the server for `/:token` routes and injects OG tags into the document head. Deferred because it's a polish feature - boards work without it.
+
+### Client Portal (`portal.ordre.app`)
+
+A dedicated app where clients can see all their boards across different providers in one place. Currently out of scope - clients access individual boards via direct links.
+
+### GraphQL API
+
+REST + Lambda is the launch architecture. GraphQL can be layered on top later without touching the `logic/` layer, since all business logic is framework-agnostic. Worth considering once the API surface stabilises and frontend data-fetching patterns reveal where GraphQL would reduce over-fetching.
+
+### Umami Analytics
+
+Privacy-first analytics for page views and events. Free cloud tier covers early usage; self-hosting on a small VPS is the cost-effective path at scale.
+
+### Better Stack (Logging & Uptime)
+
+Centralised logging and uptime monitoring. Sentry + Vercel's built-in logs are sufficient during early production. Revisit once real traffic patterns and debugging needs emerge.
+
+---
+
+## 💡 Future Ideas
+
+Longer-term possibilities. Not committed, not designed - just noted for reference.
+
+### Custom Branding
+
+Allow workspace owners on paid tiers to customise board appearance with their own logo, colours, and domain. Adds perceived value and justifies higher-tier pricing.
+
+### Workspace Analytics Dashboard
+
+Metrics for workspace members: average job duration, client response times, most common phases where jobs stall, board engagement rates. Useful for operational improvement.
+
+### Stripe Direct Meta WhatsApp
+
+At scale, bypass Twilio for WhatsApp delivery and use the Meta Business API directly. Removes the $0.005/msg Twilio markup. Only worth the integration effort at high message volume.
+
+### Plivo as Twilio Alternative
+
+Drop-in SMS alternative with lower per-message pricing. Abstract the messaging layer behind a `NotificationService` interface in `@ordre/services` to make this swap straightforward.
+
+### USD/CAD Currency Retention
+
+Use Wise Business or Nomad to hold foreign currency and avoid automatic BRL conversion at payout. Deferred until there is meaningful USD/CAD volume.
+
+### Post-Launch Infrastructure Migration
+
+Once AWS skills are demonstrated in the portfolio and free tier credits expire, the backend can migrate to Vercel Functions + Neon PostgreSQL for lower ongoing costs. The `logic/` layer isolation makes this a thin-adapter rewrite. See [Infrastructure](/internal-docs/infrastructure) for the full migration plan.

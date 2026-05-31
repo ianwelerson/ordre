@@ -1,0 +1,13 @@
+{
+  "title": "Guides",
+  "root": true,
+  "pages": [
+    "index",
+    "architecture",
+    "specs",
+    "infrastructure",
+    "pricing",
+    "brand",
+    "roadmap"
+  ]
+}

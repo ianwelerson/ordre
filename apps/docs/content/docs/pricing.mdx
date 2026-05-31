@@ -1,0 +1,203 @@
+---
+title: Pricing & Billing
+icon: CreditCard
+description: Pricing tiers, founding member strategy, billing model, and payout constraints.
+---
+
+## 💰 Pricing Tiers
+
+### Free Tier
+
+Available permanently. Functional enough for solo operators with light usage.
+
+| Feature       | Limit            |
+| ------------- | ---------------- |
+| Active boards | 3                |
+| Team members  | None (solo only) |
+| Locations     | 1                |
+| Templates     | All              |
+| Chat          | Included         |
+| Approvals     | Included         |
+| Photo uploads | Included         |
+
+> **Active board** = a board that has not been archived or marked as complete. Completed and archived boards do not count toward the limit.
+
+---
+
+### Premium Tier
+
+Removes limits and adds team and multi-location support.
+
+| Feature       | Included |
+| ------------- | -------- |
+| Active boards | Up to 20 |
+| Team members  | Up to 3  |
+| Locations     | 1        |
+| Templates     | All      |
+| Chat          | Included |
+| Approvals     | Included |
+| Photo uploads | Included |
+
+**Add-ons** (available only on Premium):
+
+| Add-on                 | Effect                     | Price (USD) | Price (CAD) | Price (BRL) |
+| ---------------------- | -------------------------- | ----------- | ----------- | ----------- |
+| Unlimited boards       | Removes the 20-board cap   | $4.99/mo    | $6.99/mo    | R$11.99/mo  |
+| Unlimited team members | Removes the 3-member cap   | $4.99/mo    | $6.99/mo    | R$11.99/mo  |
+| Unlimited locations    | Removes the 1-location cap | $4.99/mo    | $6.99/mo    | R$11.99/mo  |
+
+---
+
+## 🏷️ Founding Member Strategy
+
+Ordre launches with a reduced **founding member** price to incentivise early adoption. The founding period lasts approximately 6 months after launch.
+
+**Rules:**
+
+- New customers during the founding period get the founding rate
+- After the founding period ends, new customers pay the normal (higher) price
+- Existing founding members keep their reduced rate for the lifetime of their subscription
+- Cancelling and re-subscribing after the founding period ends results in the normal price
+
+### Monthly Pricing
+
+| Market | Normal     | Founding member | Discount |
+| ------ | ---------- | --------------- | -------- |
+| USD    | $18.99/mo  | $13.99/mo       | 26% off  |
+| CAD    | $21.99/mo  | $15.99/mo       | 27% off  |
+| BRL    | R$42.99/mo | R$29.99/mo      | 30% off  |
+
+### Annual Pricing (pay for ~10 months, get 12)
+
+| Market | Normal      | Founding member | Discount |
+| ------ | ----------- | --------------- | -------- |
+| USD    | $159.99/yr  | $119.99/yr      | 25% off  |
+| CAD    | $179.99/yr  | $134.99/yr      | 25% off  |
+| BRL    | R$359.99/yr | R$254.99/yr     | 29% off  |
+
+> Annual billing includes a ~17% discount over monthly (on both normal and founding pricing).
+
+### Pricing Rules
+
+- All new workspaces start on the free tier - no trial period, no credit card required
+- Upgrading to Premium is self-serve via the dashboard
+- Downgrading from Premium to Free is allowed; if the workspace exceeds free-tier limits, existing boards/members/locations are preserved but no new ones can be created until the workspace is within limits
+- Add-ons can be added or removed independently
+- Prices for each market are set explicitly (not auto-converted) to account for local expectations
+
+---
+
+## 🏦 Payment Processor - Stripe
+
+**Status:** Chosen, not yet integrated
+
+**Why:**
+
+- Industry-standard developer API with excellent documentation and TypeScript SDK
+- Native subscription billing with full lifecycle support (trials, proration, upgrades, downgrades, cancellations)
+- Accepts payments from 195+ countries across 135+ currencies with a single integration
+- Strong portfolio signal; integrates cleanly with the existing Next.js + Fastify stack
+- No setup or monthly fees - pay-as-you-go per transaction
+
+**Alternatives considered:** Paddle (merchant of record - handles VAT automatically, but 5% + $0.50 per transaction is a higher cost at early stage and the MoR model is unnecessary given Ordre's primary markets), Lemon Squeezy (similar to Paddle, better suited for digital products than service-industry SaaS).
+
+---
+
+## 🌍 Multi-Currency Strategy
+
+Ordre targets three primary markets: Brazil, the United States, and Canada. Each operates in a different currency (BRL, USD, CAD).
+
+**How it works:**
+
+- Stripe accepts card payments from customers in any currency
+- The customer is charged in their local currency (USD for US customers, CAD for Canadian customers, BRL for Brazilian customers)
+- All funds are automatically converted and paid out in BRL to the registered Brazilian bank account
+- Payout currency cannot be held as USD or CAD - Brazilian accounts always settle in BRL
+
+---
+
+## 💸 Stripe Processing Fees
+
+The Stripe account is registered under a Brazilian CPF. Fee rates differ depending on whether the transaction is domestic (BRL) or international (USD/CAD).
+
+### Fee Structure
+
+| Transaction type    | Rate  | Fixed fee | Applies to          |
+| ------------------- | ----- | --------- | ------------------- |
+| International (USD) | 2.9%  | $0.30     | US customers        |
+| International (CAD) | 2.9%  | $0.30     | Canadian customers  |
+| Domestic (BRL)      | 3.99% | R$0.39    | Brazilian customers |
+
+### Net Revenue per Transaction (Founding Member Pricing)
+
+**Monthly subscriptions:**
+
+| Market | Gross   | Stripe fee | Net     | Fee % |
+| ------ | ------- | ---------- | ------- | ----- |
+| USD    | $13.99  | $0.71      | $13.28  | 5.1%  |
+| CAD    | $15.99  | $0.76      | $15.23  | 4.8%  |
+| BRL    | R$29.99 | R$1.59     | R$28.40 | 5.3%  |
+
+**Annual subscriptions:**
+
+| Market | Gross    | Stripe fee | Net      | Fee % |
+| ------ | -------- | ---------- | -------- | ----- |
+| USD    | $119.99  | $3.78      | $116.21  | 3.2%  |
+| CAD    | $134.99  | $4.21      | $130.78  | 3.1%  |
+| BRL    | R$254.99 | R$10.56    | R$244.43 | 4.1%  |
+
+> Annual transactions are significantly more fee-efficient because the fixed per-transaction charge ($0.30 / R$0.39) is amortised across 12 months.
+
+### Add-on Fees
+
+Add-ons are billed as part of the same subscription invoice, not as separate transactions. This means they do not incur an additional fixed fee - only the percentage applies to the added amount.
+
+---
+
+## 🇧🇷 Brazil-Specific Constraints
+
+The Stripe account is registered under an individual CPF (not a CNPJ). This has the following implications:
+
+| Constraint       | Detail                                                                                         |
+| ---------------- | ---------------------------------------------------------------------------------------------- |
+| Payout schedule  | Always automatic and daily - manual payouts are not available for Brazilian accounts           |
+| Payout currency  | Always BRL - funds cannot be held in USD or CAD inside Stripe                                  |
+| Bank account     | Must be a Brazilian checking account under the same CPF registered with Stripe                 |
+| Foreign exchange | All remittances are processed through Stripe's authorized channels under Brazilian legislation |
+
+**IOF (Imposto sobre Operações Financeiras):** When Brazilian customers pay a business domiciled outside Brazil, a 3.5% IOF tax applies on the transaction. Stripe collects and remits this automatically. For Ordre's Brazilian customers, the IOF is passed on to the customer by default. This applies to Brazilian users paying for Ordre subscriptions - not to US or Canadian customers.
+
+---
+
+## 🔁 Subscription Lifecycle
+
+Stripe Billing handles the full subscription lifecycle:
+
+- **No trial period** - the free tier serves as the try-before-you-pay mechanism
+- **Upgrades / downgrades** - prorated automatically by Stripe
+- **Failed payments** - Stripe's built-in dunning retries failed charges on a configurable schedule before cancelling
+- **Cancellations** - access remains until the end of the current billing period
+- **Invoices** - generated automatically per billing cycle and accessible to the workspace owner
+- **Annual ↔ Monthly** - workspace owners can switch billing frequency; Stripe handles proration
+
+---
+
+## 💵 USD Retention (Future Consideration)
+
+Because Brazilian Stripe accounts always pay out in BRL, any USD or CAD revenue is converted at the time of payout. If retaining foreign currency becomes desirable as revenue grows, the following options are available:
+
+- **Wise Business** - multi-currency account; can hold USD, receive transfers from Stripe, and convert at mid-market rates
+- **Nomad** - Brazilian-friendly USD account designed for freelancers and founders receiving foreign income
+
+This is deferred until there is meaningful USD/CAD volume and a clear reason to avoid conversion.
+
+---
+
+## ⚠️ Tax & Compliance Notes
+
+- Ordre does not act as a merchant of record - tax compliance for digital services sold internationally is the responsibility of the operator
+- At the current scale and in the primary target markets (Brazil, US, Canada), cross-border VAT/GST obligations are unlikely to be triggered for an individual operator
+- All foreign income received must be declared to Receita Federal in Brazil according to applicable rules
+- A Brazilian accountant with SaaS and foreign income experience should be consulted before the paid tier goes live
+
+> These notes are for orientation only and do not constitute legal or tax advice.

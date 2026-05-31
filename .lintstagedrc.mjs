@@ -4,6 +4,6 @@ export default {
   "package.json": () => "pnpm packages:lint",
   "apps/api/**": () => [
     "pnpm api:docs:generate",
-    "git add apps/api-docs/openapi/openapi.json",
+    "git add apps/docs/public/openapi.json",
   ],
 };

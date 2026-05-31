@@ -1,0 +1,24 @@
+@import 'tailwindcss';
+@import 'fumadocs-ui/css/neutral.css';
+@import 'fumadocs-ui/css/preset.css';
+@import 'fumadocs-openapi/css/preset.css';
+
+/* Ordre brand accent - Amber (#E0913E), per brand.md */
+:root {
+  --color-fd-primary: #c67a2e;
+  --color-fd-accent-foreground: #c67a2e;
+}
+
+.dark {
+  --color-fd-primary: #e0913e;
+  --color-fd-accent-foreground: #e0913e;
+}
+
+html {
+  scrollbar-gutter: stable;
+}
+
+html > body[data-scroll-locked] {
+  margin-right: 0px !important;
+  --removed-body-scroll-bar-size: 0px !important;
+}

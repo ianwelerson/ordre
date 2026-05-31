@@ -1,0 +1,7 @@
+coverage
+node_modules
+.next
+.source
+content
+public/openapi.json
+next-env.d.ts

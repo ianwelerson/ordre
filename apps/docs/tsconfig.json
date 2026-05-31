@@ -1,0 +1,28 @@
+{
+  "extends": "@ordre/config/typescript/nextjs.json",
+  "compilerOptions": {
+    "strictNullChecks": true,
+    // App, not a library: no declaration emit (fumadocs' zod-inferred exports
+    // in source.config.ts aren't portable for .d.ts generation).
+    "declaration": false,
+    "declarationMap": false,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./src/*"],
+      "collections/*": ["./.source/*"]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "next-env.d.ts",
+    "next.config.ts",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
+  ],
+  "exclude": ["node_modules", "coverage"]
+}

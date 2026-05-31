@@ -1,0 +1,76 @@
+---
+title: Overview
+icon: BookOpen
+description: Internal documentation for Ordre - a client communication platform that gives every job a private, shareable status board clients can follow in real time.
+---
+
+Ordre is a client communication platform for service providers. It gives every
+job a private, shareable status board that clients can follow in real time - no
+app download, no account creation, just a link.
+
+This is the internal documentation: how the product works, how the codebase is
+organized, the infrastructure behind it, and how it is priced. The
+[API Reference](/api-docs) is generated from the live OpenAPI spec.
+
+## Start here
+
+<Cards>
+  <Card
+    title="Architecture"
+    href="/internal-docs/architecture"
+    description="Monorepo structure, package responsibilities, app conventions, and the API folder model."
+  />
+  <Card
+    title="Specifications"
+    href="/internal-docs/specs"
+    description="How individual features work - board access, identity verification, service types, and registration."
+  />
+  <Card
+    title="Infrastructure"
+    href="/internal-docs/infrastructure"
+    description="Hosting, database, storage, auth, messaging, and the rest of the service stack."
+  />
+  <Card
+    title="Pricing & Billing"
+    href="/internal-docs/pricing"
+    description="Tiers, founding member strategy, the Stripe billing model, and payout constraints."
+  />
+  <Card
+    title="Brand"
+    href="/internal-docs/brand"
+    description="Positioning, color system, typography, and the component patterns that define the look."
+  />
+  <Card
+    title="Roadmap"
+    href="/internal-docs/roadmap"
+    description="What is scoped for launch, what is planned post-launch, and longer-term ideas."
+  />
+</Cards>
+
+## API Reference
+
+The [API Reference](/api-docs) documents every endpoint of the Ordre REST API,
+with an interactive playground for trying requests. It is generated from the
+OpenAPI spec that `apps/api` produces, so it always matches the deployed
+contract.
+
+## The product in one minute
+
+A workspace member creates a **board** for each job, picks a template for their
+industry, and shares a unique link. The client opens it - no login - and sees a
+live timeline of updates, photos, approvals, and chat. Sensitive fields stay
+blurred until the client verifies their identity. Everything about the job lives
+in one place.
+
+<Cards>
+  <Card
+    title="Who it's for"
+    href="/internal-docs/specs"
+    description="Service operations - repair shops, contractors, mechanics, freelancers - and their clients."
+  />
+  <Card
+    title="Design principles"
+    href="/internal-docs/brand"
+    description="Zero friction for the client, professional by default, and useful across any service type."
+  />
+</Cards>

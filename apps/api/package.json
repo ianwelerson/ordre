@@ -26,7 +26,10 @@
     "#controllers/*": "./src/controllers/*/index.ts",
     "#/*": "./src/*"
   },
-  "portless": { "name": "api.ordre", "script": "api:dev:app" },
+  "portless": {
+    "name": "api.ordre",
+    "script": "api:dev:app"
+  },
   "private": true,
   "scripts": {
     "api:dev": "portless",

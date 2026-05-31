@@ -1,0 +1,158 @@
+---
+title: Specifications
+icon: ListChecks
+description: Detailed feature specifications, behaviour rules, and edge cases.
+---
+
+## 🔐 Board Access & Identity Verification
+
+### Overview
+
+Each board is accessible via a unique link containing an embedded token. The token identifies the board and allows the client to view it without any login or account creation. Sensitive information on the board is blurred by default and revealed only after the client verifies their identity.
+
+---
+
+### Access Flow
+
+1. A workspace member creates a board and registers the client's email or phone number - required to share the board link
+2. Ordre generates a unique link with an embedded token (e.g. `go.ordre.app/XYZ`)
+3. The member shares the link via SMS, email, or WhatsApp using the registered contact
+4. Client opens the link and lands on the board immediately - no login, no account required
+5. Most board content is visible straight away
+6. Sensitive fields are blurred with a prompt to verify identity
+7. Client enters the email or phone number the member used to send them the link
+8. The entered value is matched against what the member registered
+9. On match, sensitive fields are revealed for the session
+
+---
+
+### Sensitive vs Non-Sensitive Information
+
+| Content                     | Visibility              |
+| --------------------------- | ----------------------- |
+| Job status and phase        | Always visible          |
+| Timeline updates (text)     | Always visible          |
+| Photos                      | Disabled until validate |
+| Workspace name and business | Always visible          |
+| Approval requests           | Disabled until validate |
+| Chat messages               | Disabled until validate |
+| Client name                 | Blurred                 |
+| Client email                | Blurred                 |
+| Client phone number         | Blurred                 |
+| Client address              | Blurred                 |
+| Serial number / plate       | Blurred                 |
+
+> The sensitive fields above are fixed across all templates. They are always blurred regardless of industry or template type.
+
+---
+
+### Verification Rules
+
+- The client may attempt verification at any time - it is never mandatory to view the board
+- Verification is session-based - closing the browser requires re-verification on next visit
+- The verification input is matched case-insensitively and trimmed of whitespace
+- If the match fails, an error is shown and the client may try again - no lockout at this stage
+- A contact (email or phone) is always present - it is required when creating the client record in order to share the board link
+
+---
+
+### Edge Cases
+
+- **No sensitive fields on the board** - verification prompt is never shown; the full board is visible
+- **Token is invalid or expired** - client sees a generic error page; no board content is shown
+- **Link is shared publicly** - non-sensitive content is visible to anyone with the link; sensitive content remains protected by verification
+
+---
+
+## 🧩 Service Types
+
+### Overview
+
+Each template defines a **service type** that determines the board's structure, expected lifecycle, and available features. The service type is a property of the template - when a member picks a template, the type comes with it. A single industry template (e.g. "Bike Shop") can offer both Quick and Full variants.
+
+---
+
+### Quick
+
+For jobs completed in a single visit or within the same day. Minimal status tracking.
+
+**Characteristics:**
+
+- Simplified timeline - few updates expected (received → in progress → done)
+- No phase tracker - the job doesn't pass through enough stages to justify one
+- Lightweight board UI - optimised for fast creation and fast completion
+- Board auto-archives after completion (configurable grace period)
+
+**Examples:** bike wash, key cutting, phone screen protector, shoe shine, watch battery replacement, basic oil change.
+
+---
+
+### Full
+
+The default type. For jobs that span multiple days and involve meaningful progress communication.
+
+**Characteristics:**
+
+- Full timeline with text, photo, and approval updates
+- Phase tracker with template-defined stages (e.g. assessment → repair → quality check → ready)
+- All board features available: chat, approvals, photo documentation
+- Board remains active until explicitly completed or archived by a workspace member
+
+**Examples:** watch repair, home renovation, bike overhaul, appliance repair, freelance design project.
+
+---
+
+## 🏢 Workspace Locations
+
+### Overview
+
+A workspace can have one or more physical locations. Each board is associated with a location, allowing clients to see where their job is being handled and workspace members to organise work across multiple sites.
+
+---
+
+### Rules
+
+- Every workspace has at least one location, created during registration
+- Each board belongs to exactly one location
+- Locations have a name and address - displayed on the board and in the dashboard
+- The dashboard supports filtering boards by location
+- Free tier: 1 location only. Additional locations available on the Premium tier via the Unlimited Locations add-on. See [Pricing & Billing](/internal-docs/pricing) for tier details.
+
+---
+
+## 📝 Registration
+
+### Overview
+
+The registration flow creates a new user account and a workspace. The person registering becomes the workspace owner. No payment is required - all new workspaces start on the free tier.
+
+---
+
+### Flow
+
+1. **Select industry** - choose from a predefined list that determines which templates are recommended during onboarding:
+   - Automotive
+   - Home Services
+   - Personal Items & Repair (watches, jewellery, electronics, etc.)
+   - Construction & Renovation
+   - Creative & Design
+   - Technology
+   - Other
+2. **Select provider type** - describes the workspace's setup:
+   - Individual (solo operator, no registered business)
+   - Business (registered entity, any size)
+3. **Enter person name** - the name of the person creating the account (always required)
+4. **Enter business name** _(optional)_ - if left blank, the person name is used as the workspace display name
+5. **Enter contact info** - email (required) and phone number (optional). This is the user's personal contact info; workspace-level contact info can be configured later in settings.
+6. **Review and submit**
+7. **Set password** - a password creation link is sent to the registered email
+
+---
+
+### Rules
+
+- Email is the primary user account identifier and must be unique
+- Industry selection is used for template recommendations only - it does not lock the workspace into a category; any template can be used regardless of selected industry
+- Provider type (Individual / Business) is stored for future use (invoicing, branding) but does not affect available features at this stage
+- The password creation link expires after 24 hours; the user can request a new one from the login page
+- The workspace owner can later invite additional members (admin or member roles) from the dashboard
