@@ -68,7 +68,11 @@ Or from this directory:
 pnpm storybook
 ```
 
-The Storybook dev server is served at **http://localhost:6006** by default.
+`pnpm storybook` proxies Storybook through **[portless](https://www.npmjs.com/package/portless)**, which serves it over HTTPS at a stable local hostname:
+
+**https://storybook.ordre.localhost**
+
+Run `pnpm storybook:app` to start the raw Storybook dev server without portless (defaults to `http://localhost:6006`).
 
 ---
 
@@ -76,8 +80,9 @@ The Storybook dev server is served at **http://localhost:6006** by default.
 
 | Command                | Description                                            |
 | ---------------------- | ------------------------------------------------------ |
-| `pnpm storybook`       | Start Storybook in dev mode on port 6006               |
-| `pnpm storybook:build` | Build the static Storybook site to `storybook-static/` |
+| `pnpm storybook`       | Start Storybook in dev mode via portless (HTTPS proxy)  |
+| `pnpm storybook:app`   | Start the raw Storybook dev server (no portless)        |
+| `pnpm storybook:build` | Build the static Storybook site to `storybook-static/`  |
 
 ---
 

@@ -80,7 +80,11 @@ Or from this directory:
 pnpm dev
 ```
 
-The app is served at **http://localhost:3000** by default.
+`pnpm dev` proxies the app through **[portless](https://www.npmjs.com/package/portless)**, which serves it over HTTPS at a stable local hostname:
+
+**https://dashboard.ordre.localhost**
+
+Run `pnpm dev:app` to start the raw Next.js dev server without portless (defaults to `http://localhost:3000`).
 
 ---
 
@@ -88,8 +92,9 @@ The app is served at **http://localhost:3000** by default.
 
 | Command             | Description                     |
 | ------------------- | ------------------------------- |
-| `pnpm dev`          | Start Next.js on port 3000      |
-| `pnpm build`        | Build for production            |
+| `pnpm dev`          | Start the dev server via portless |
+| `pnpm dev:app`      | Start the raw Next.js dev server  |
+| `pnpm build`        | Build for production              |
 | `pnpm start`        | Run the production build        |
 | `pnpm check-types`  | `next typegen` + `tsc --noEmit` |
 | `pnpm lint`         | ESLint (fails on warnings)      |

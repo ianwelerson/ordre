@@ -102,13 +102,16 @@ pnpm install
 pnpm dev
 ```
 
-Default dev ports:
+Dev URLs - each app is served over HTTPS via [portless](https://www.npmjs.com/package/portless):
 
-| App       | URL                   |
-| --------- | --------------------- |
-| Dashboard | http://localhost:3000 |
-| Marketing | http://localhost:3001 |
-| Board     | http://localhost:5173 |
+| App       | Command          | Dev URL                             |
+| --------- | ---------------- | ----------------------------------- |
+| Marketing | `pnpm dev`       | https://ordre.localhost             |
+| Dashboard | `pnpm dev`       | https://dashboard.ordre.localhost   |
+| Board     | `pnpm dev`       | https://board.ordre.localhost       |
+| API       | `pnpm api:dev`   | https://api.ordre.localhost         |
+| Docs      | `pnpm docs:dev`  | https://docs.ordre.localhost        |
+| Storybook | `pnpm storybook` | https://storybook.ordre.localhost   |
 
 Each app also has its own README with app-specific instructions.
 

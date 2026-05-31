@@ -83,7 +83,11 @@ Or from this directory:
 pnpm dev
 ```
 
-The app is served at **http://localhost:5173** by default.
+`pnpm dev` proxies the app through **[portless](https://www.npmjs.com/package/portless)**, which serves it over HTTPS at a stable local hostname:
+
+**https://board.ordre.localhost**
+
+Run `pnpm dev:app` to start the raw dev server without portless (defaults to `http://localhost:5173`).
 
 ---
 
@@ -91,7 +95,8 @@ The app is served at **http://localhost:5173** by default.
 
 | Command             | Description                             |
 | ------------------- | --------------------------------------- |
-| `pnpm dev`          | Start the dev server (HMR)              |
+| `pnpm dev`          | Start the dev server via portless (HMR) |
+| `pnpm dev:app`      | Start the raw dev server (no portless)  |
 | `pnpm build`        | Build for production                    |
 | `pnpm start`        | Run the production server from `build/` |
 | `pnpm check-types`  | Typegen + `tsc`                         |

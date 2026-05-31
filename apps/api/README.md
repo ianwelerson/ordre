@@ -100,17 +100,21 @@ From the repo root:
 
 ```bash
 pnpm install
-pnpm --filter api dev:api
+pnpm --filter api api:dev
 ```
 
 Or from this directory:
 
 ```bash
 cp .env.example .env
-pnpm dev:api
+pnpm api:dev
 ```
 
-The server listens on **http://localhost:3000** by default (override with `PORT` in `.env`).
+`pnpm api:dev` proxies the server through **[portless](https://www.npmjs.com/package/portless)**, which serves it over HTTPS at a stable local hostname:
+
+**https://api.ordre.localhost**
+
+Run `pnpm api:dev:app` to start the raw server without portless - it listens on **http://localhost:3000** by default (override with `PORT` in `.env`).
 
 Health check: `GET /health`.
 
@@ -120,8 +124,9 @@ Health check: `GET /health`.
 
 | Command             | Description                                    |
 | ------------------- | ---------------------------------------------- |
-| `pnpm dev:api`      | Start the server with `--watch` (auto-reload)  |
-| `pnpm start:api`    | Run the server without watch (production-like) |
+| `pnpm api:dev`      | Start the server via portless (HTTPS proxy)       |
+| `pnpm api:dev:app`  | Start the raw server with `--watch` (auto-reload) |
+| `pnpm api:start`    | Run the server without watch (production-like)    |
 | `pnpm check-types`  | `tsc --noEmit`                                 |
 | `pnpm lint`         | ESLint (fails on warnings)                     |
 | `pnpm format`       | Prettier write                                 |
