@@ -90,19 +90,19 @@ Run `pnpm dev:app` to start the raw Next.js dev server without portless (default
 
 ## 🔍 Scripts
 
-| Command             | Description                     |
-| ------------------- | ------------------------------- |
+| Command             | Description                       |
+| ------------------- | --------------------------------- |
 | `pnpm dev`          | Start the dev server via portless |
 | `pnpm dev:app`      | Start the raw Next.js dev server  |
 | `pnpm build`        | Build for production              |
-| `pnpm start`        | Run the production build        |
-| `pnpm check-types`  | `next typegen` + `tsc --noEmit` |
-| `pnpm lint`         | ESLint (fails on warnings)      |
-| `pnpm format`       | Prettier write                  |
-| `pnpm format:check` | Prettier check                  |
-| `pnpm test:unit`    | Vitest with coverage            |
-| `pnpm test:unit:ci` | Vitest run once (CI)            |
-| `pnpm test:unit:ui` | Vitest UI                       |
+| `pnpm start`        | Run the production build          |
+| `pnpm check-types`  | `next typegen` + `tsc --noEmit`   |
+| `pnpm lint`         | ESLint (fails on warnings)        |
+| `pnpm format`       | Prettier write                    |
+| `pnpm format:check` | Prettier check                    |
+| `pnpm test:unit`    | Vitest with coverage              |
+| `pnpm test:unit:ci` | Vitest run once (CI)              |
+| `pnpm test:unit:ui` | Vitest UI                         |
 
 ---
 

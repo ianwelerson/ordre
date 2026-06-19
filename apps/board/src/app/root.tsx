@@ -70,7 +70,9 @@ export default function App({ loaderData }: Route.ComponentProps) {
   const { locale } = loaderData;
 
   useEffect(() => {
-    if (i18n.language !== locale) i18n.changeLanguage(locale);
+    if (i18n.language !== locale) {
+      i18n.changeLanguage(locale);
+    }
   }, [locale, i18n]);
 
   return <Outlet />;

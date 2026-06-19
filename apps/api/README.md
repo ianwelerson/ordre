@@ -122,15 +122,15 @@ Health check: `GET /health`.
 
 ## 🔍 Scripts
 
-| Command             | Description                                    |
-| ------------------- | ---------------------------------------------- |
+| Command             | Description                                       |
+| ------------------- | ------------------------------------------------- |
 | `pnpm api:dev`      | Start the server via portless (HTTPS proxy)       |
 | `pnpm api:dev:app`  | Start the raw server with `--watch` (auto-reload) |
 | `pnpm api:start`    | Run the server without watch (production-like)    |
-| `pnpm check-types`  | `tsc --noEmit`                                 |
-| `pnpm lint`         | ESLint (fails on warnings)                     |
-| `pnpm format`       | Prettier write                                 |
-| `pnpm format:check` | Prettier check                                 |
+| `pnpm check-types`  | `tsc --noEmit`                                    |
+| `pnpm lint`         | ESLint (fails on warnings)                        |
+| `pnpm format`       | Prettier write                                    |
+| `pnpm format:check` | Prettier check                                    |
 
 ---
 

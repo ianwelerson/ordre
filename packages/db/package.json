@@ -1,0 +1,33 @@
+{
+  "name": "@ordre/db",
+  "version": "0.1.0",
+  "dependencies": {
+    "drizzle-orm": "^0.45.2",
+    "pg": "^8.21.0"
+  },
+  "devDependencies": {
+    "@ordre/config": "workspace:*",
+    "@types/node": "^25.9.3",
+    "@types/pg": "^8.20.0",
+    "drizzle-kit": "^0.31.10",
+    "eslint": "^10.5.0",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3"
+  },
+  "exports": {
+    "./connection": "./src/connection.ts",
+    "./schemas": "./src/schemas/index.ts"
+  },
+  "private": true,
+  "scripts": {
+    "check-types": "tsc",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "lint": "eslint --max-warnings 0"
+  },
+  "type": "module"
+}

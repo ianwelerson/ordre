@@ -2,10 +2,13 @@
   "name": "api",
   "version": "0.1.0",
   "dependencies": {
+    "@ordre/core": "workspace:*",
+    "@ordre/db": "workspace:*",
+    "@ordre/monitoring": "workspace:*",
+    "better-auth": "^1.6.18",
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "helmet": "^8.2.0",
-    "morgan": "^1.10.1",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -14,9 +17,13 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/morgan": "^1.9.10",
-    "@types/node": "^25.9.1",
-    "eslint": "^10.4.0",
-    "typescript": "^6.0.3"
+    "@types/node": "^25.9.3",
+    "@types/supertest": "^7.2.0",
+    "@vitest/coverage-v8": "^4.1.8",
+    "eslint": "^10.5.0",
+    "supertest": "^7.2.2",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.8"
   },
   "engines": {
     "node": ">=24"
@@ -36,10 +43,15 @@
     "api:dev:app": "node --watch src/adapters/express/index.ts",
     "api:docs:generate": "node scripts/generate-openapi.ts",
     "api:start": "node src/adapters/express/index.ts",
+    "auth:generate": "pnpm dlx auth@latest generate --config ./src/config/auth.ts --output ../../packages/db/src/schemas/better-auth.ts -y",
     "check-types": "tsc",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
-    "lint": "eslint --max-warnings 0"
+    "lint": "eslint --max-warnings 0",
+    "test:unit": "APP_STAGE=test vitest --coverage",
+    "test:unit:ci": "APP_STAGE=test vitest run --coverage",
+    "test:unit:integration": "APP_STAGE=test vitest --project integration --coverage",
+    "test:unit:unit": "APP_STAGE=test vitest --project unit --coverage"
   },
   "type": "module"
 }

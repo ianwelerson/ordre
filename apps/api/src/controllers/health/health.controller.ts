@@ -1,7 +1,7 @@
 type HealthResponse = {
   status: number;
   body: {
-    status: 'OK';
+    ok: true;
     timestamp: string;
   };
 };
@@ -9,7 +9,7 @@ type HealthResponse = {
 export const healthController = (): HealthResponse => ({
   status: 200,
   body: {
-    status: 'OK',
+    ok: true,
     timestamp: new Date().toISOString(),
   },
 });

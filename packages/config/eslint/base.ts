@@ -26,6 +26,8 @@ export const config: Linter.Config[] = [
     },
     rules: {
       "turbo/no-undeclared-env-vars": "warn",
+      // Always require curly braces - no `if (condition) return` one-liners.
+      curly: ["error", "all"],
     },
   },
   {

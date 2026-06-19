@@ -1,36 +1,33 @@
-import { isProd, isTest } from '#env';
+import { logger } from '#/config/logger.ts';
+import { isTest } from '#env';
 import cors from 'cors';
 import express, { type Express, type NextFunction, type Request, type Response } from 'express';
 import helmet from 'helmet';
-import morgan from 'morgan';
 
-import healthRoutes from './routes/health/health.routes.ts';
+import { httpLogger } from '@ordre/monitoring/server';
+
+import routes from './routes/index.ts';
 
 const app: Express = express();
+const BASE_PATH = '/api';
 
 app.set('trust proxy', true);
 
 app.use(helmet());
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(
-  morgan(isProd() ? 'combined' : 'dev', {
-    skip: () => isTest(),
-  })
-);
+app.use(httpLogger('api', !isTest()));
 
-// Health
-app.use(healthRoutes);
+// All API routes live under /api (body parsers are wired inside this router).
+app.use(BASE_PATH, routes);
 
 app.use((_req, res) => {
   res.status(404).json({ error: 'Not Found' });
 });
 
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-  console.error(err);
+  logger.error({ err }, 'Unhandled error');
   res.status(500).json({ error: 'Internal Server Error' });
 });
 
-export { app };
+export { app, BASE_PATH };
 export default app;

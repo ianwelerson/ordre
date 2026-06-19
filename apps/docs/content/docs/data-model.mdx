@@ -1,0 +1,668 @@
+---
+title: Data Model
+icon: Database
+description: Every entity and field behind the Ordre screens - workspaces, boards, the activity feed, recurring contracts, clients, and billing.
+---
+
+This is the field-level map of the Ordre database, derived from every product
+screen (registration, dashboard, boards, the public client board, and settings).
+It exists so tables can be created by hand with a complete picture of what each
+screen needs.
+
+Two modelling decisions are baked in:
+
+- **Custom tables for workspace / member / invitation** - Ordre does not use the
+  Better Auth organization plugin. Those are first-class tables here. Better Auth
+  still owns `user`, `session`, `account`, and `verification`.
+- **One table per activity-feed type** - the board feed is not a single
+  polymorphic table. Each event kind (update, approval, milestone, internal note,
+  visit report, stage transition, system event) is its own table.
+
+> `[derived]` marks values computed at read time - do not store them.
+> `[sensitive]` marks fields blurred on the client board until identity is verified
+> (see [Board Access & Identity Verification](/internal-docs/specs)).
+
+---
+
+## 🔐 Better Auth Tables
+
+> **Managed by Better Auth.** These four tables (`user`, `session`, `account`,
+> `verification`) are generated and owned by Better Auth - do not hand-edit their
+> schema. The structure below mirrors the generated definition; profile and
+> registration extras that used to live here now sit on the **`member`** table.
+
+### `user`
+
+| Field           | Type           | Notes                       |
+| --------------- | -------------- | --------------------------- |
+| `id`            | uuid           |                             |
+| `name`          | text           |                             |
+| `email`         | text, unique   |                             |
+| `emailVerified` | boolean        |                             |
+| `image`         | text, nullable | Avatar URL                  |
+| `createdAt`     | timestamp      |                             |
+| `updatedAt`     | timestamp      |                             |
+
+### `session`
+
+| Field       | Type           | Notes              |
+| ----------- | -------------- | ------------------ |
+| `id`        | uuid           |                    |
+| `userId`    | fk → user      |                    |
+| `token`     | text, unique   |                    |
+| `expiresAt` | timestamp      |                    |
+| `ipAddress` | text, nullable |                    |
+| `userAgent` | text, nullable |                    |
+| `createdAt` | timestamp      |                    |
+| `updatedAt` | timestamp      |                    |
+
+### `account`
+
+Credentials and linked OAuth providers per user.
+
+| Field                   | Type                | Notes                          |
+| ----------------------- | ------------------- | ------------------------------ |
+| `id`                    | uuid                |                                |
+| `userId`                | fk → user           |                                |
+| `accountId`             | text                | Provider's account id          |
+| `providerId`            | text                | e.g. `credential`, `google`    |
+| `accessToken`           | text, nullable      |                                |
+| `refreshToken`          | text, nullable      |                                |
+| `idToken`               | text, nullable      |                                |
+| `accessTokenExpiresAt`  | timestamp, nullable |                                |
+| `refreshTokenExpiresAt` | timestamp, nullable |                                |
+| `scope`                 | text, nullable      |                                |
+| `password`              | text, nullable      | Hashed - credential accounts   |
+| `createdAt`             | timestamp           |                                |
+| `updatedAt`             | timestamp           |                                |
+
+### `verification`
+
+Email/identity verification tokens.
+
+| Field        | Type      | Notes                          |
+| ------------ | --------- | ------------------------------ |
+| `id`         | uuid      |                                |
+| `identifier` | text      | What's being verified          |
+| `value`      | text      | Token value                    |
+| `expiresAt`  | timestamp |                                |
+| `createdAt`  | timestamp |                                |
+| `updatedAt`  | timestamp |                                |
+
+---
+
+## 🏢 Workspace
+
+The top-level tenant. Created during registration; configured in Workspace
+Settings.
+
+| Field               | Type                          | Notes                                                       |
+| ------------------- | ----------------------------- | ----------------------------------------------------------- |
+| `id`                | uuid                          |                                                             |
+| `name`              | text                          | Workspace / business display name                           |
+| `slug`              | text, unique                  | Public handle - `ordre.app/<slug>`                          |
+| `industry`          | enum                          | `automotive \| home \| personal \| construction \| creative \| technology \| other` |
+| `providerType`      | enum `individual \| business` | Stored for invoicing / branding                             |
+| `businessType`      | text, nullable                | Free label, e.g. "Watchmaker · Repair atelier"              |
+| `publicDescription` | text, nullable                | Shown on the public page                                    |
+| `primaryTimezone`   | text                          | e.g. `Europe/Zurich`                                        |
+| `logoUrl`           | text, nullable                |                                                             |
+| `brandAccentColor`  | text                          | Hex - buttons, progress rings, brand bar                    |
+| `brandVoice`        | text, nullable                | Affects auto-reply suggestions                              |
+| `workshopPhone`     | text, nullable                | Public contact number shown on boards                       |
+| `workshopEmail`     | text, nullable                | Public contact email                                        |
+| `billingEmail`      | text, nullable                |                                                             |
+| `ownerId`           | fk → user                     |                                                             |
+| `createdAt`         | timestamp                     |                                                             |
+| `closeScheduledAt`  | timestamp, nullable           | Set on close request; 30-day grace before deletion          |
+
+---
+
+## 👥 Member
+
+A user's membership in a workspace. (Custom table - not the Better Auth org plugin.)
+
+| Field          | Type                            | Notes                                  |
+| -------------- | ------------------------------- | -------------------------------------- |
+| `id`           | uuid                            |                                        |
+| `workspaceId`  | fk → workspace                  |                                        |
+| `userId`       | fk → user                       |                                        |
+| `role`         | enum `owner \| admin \| member` |                                        |
+| `locationId`   | fk → location, nullable         | Which location they work from          |
+| `status`       | enum `active \| disabled`       |                                        |
+| `createdAt`    | timestamp                       |                                        |
+| `phone`              | text, nullable              | Personal account contact (Register step 4, Profile)        |
+| `phoneVerified`      | boolean                     |                                                            |
+| `displayName`        | text                        | Name shown to clients on boards (first name works well)    |
+| `title`              | text, nullable              | Role label under the name on the client board              |
+| `autoReplyAfterHours`| boolean                     | Auto-reply outside working hours                           |
+
+`[derived]`: open-board count, last active (from sessions).
+
+---
+
+## ✉️ Invitation
+
+Pending teammate invites (Team → Invite modal).
+
+| Field          | Type                            | Notes                          |
+| -------------- | ------------------------------- | ------------------------------ |
+| `id`           | uuid                            |                                |
+| `workspaceId`  | fk → workspace                  |                                |
+| `email`        | text                            |                                |
+| `role`         | enum `admin \| member`          |                                |
+| `locationId`   | fk → location, nullable         |                                |
+| `inviteMethod` | enum `email \| link`            |                                |
+| `status`       | enum `pending \| accepted \| cancelled` |                        |
+| `invitedById`  | fk → member                     |                                |
+| `expiresAt`    | timestamp                       |                                |
+| `createdAt`    | timestamp                       |                                |
+
+---
+
+## 📍 Location
+
+A physical site. Every workspace has at least one; every board belongs to one.
+
+| Field         | Type                  | Notes                       |
+| ------------- | --------------------- | --------------------------- |
+| `id`          | uuid                  |                             |
+| `workspaceId` | fk → workspace        |                             |
+| `name`        | text                  | "Geneva · Grand-Rue"        |
+| `address`     | text                  |                             |
+| `mapUrl`      | text, nullable        |                             |
+| `phone`       | text, nullable        | Board "Workshop phone"      |
+| `isDefault`   | boolean               |                             |
+| `createdAt`   | timestamp             |                             |
+
+---
+
+## 🧑 Client
+
+Someone the workspace does jobs for (Clients page, New Board → Client step).
+
+| Field                      | Type                              | Notes                                    |
+| -------------------------- | --------------------------------- | ---------------------------------------- |
+| `id`                       | uuid                              |                                          |
+| `workspaceId`              | fk → workspace                    |                                          |
+| `name`                     | text                              | `[sensitive]`                            |
+| `companyName`              | text, nullable                    | "North Studio"                           |
+| `internalNote`             | text, nullable                    | Team-only, never shown to client         |
+| `preferredContactChannel`  | enum `phone \| email \| whatsapp` |                                          |
+| `status`                   | enum `active \| inactive`         |                                          |
+| `createdAt`                | timestamp                         | Drives the "since 2023" label            |
+
+`[derived]`: board count, active boards, lifetime spend, average turnaround.
+
+### `client_contact`
+
+A client has one primary contact and an optional second. The contact is what's
+matched during board identity verification, and is required to create a client.
+
+| Field             | Type                  | Notes                          |
+| ----------------- | --------------------- | ------------------------------ |
+| `id`              | uuid                  |                                |
+| `clientId`        | fk → client           |                                |
+| `type`            | enum `phone \| email` |                                |
+| `value`           | text                  | `[sensitive]`                  |
+| `isPrimary`       | boolean               |                                |
+| `whatsappEnabled` | boolean               | Same number reachable on WhatsApp |
+| `verified`        | boolean               |                                |
+
+### `client_follow_up`
+
+Scheduled reminder against a client (Clients detail → Follow-up).
+
+| Field         | Type                                 | Notes                          |
+| ------------- | ------------------------------------ | ------------------------------ |
+| `id`          | uuid                                 |                                |
+| `clientId`    | fk → client                          |                                |
+| `workspaceId` | fk → workspace                       |                                |
+| `dueDate`     | date                                 |                                |
+| `reason`      | text                                 | "12-month service reminder"    |
+| `note`        | text, nullable                       |                                |
+| `channel`     | enum `whatsapp \| email \| sms`      |                                |
+| `sendTime`    | time                                 | Auto-send time of day          |
+| `autoSend`    | boolean                              |                                |
+| `status`      | enum `scheduled \| sent \| cancelled`|                                |
+
+---
+
+## 🧩 Template
+
+Defines a board's structure and service type (New Board step 1).
+
+| Field         | Type                              | Notes                                  |
+| ------------- | --------------------------------- | -------------------------------------- |
+| `id`          | uuid                              |                                        |
+| `workspaceId` | fk → workspace, nullable          | Null for built-in/system templates     |
+| `name`        | text                              | "Watch & Jewellery"                    |
+| `subtitle`    | text                              | "Repair & servicing"                   |
+| `industry`    | enum                              | For onboarding recommendations         |
+| `serviceType` | enum `quick \| full \| recurring` |                                        |
+| `icon`        | text                              | Icon key                               |
+| `isSystem`    | boolean                           |                                        |
+| `isCustom`    | boolean                           |                                        |
+
+### `template_phase`
+
+Default phases a template ships with.
+
+| Field        | Type            | Notes |
+| ------------ | --------------- | ----- |
+| `id`         | uuid            |       |
+| `templateId` | fk → template   |       |
+| `name`       | text            |       |
+| `order`      | int             |       |
+
+---
+
+## 📋 Board
+
+The core job entity (Boards list, Board Detail, New Board).
+
+| Field                | Type                                 | Notes                                            |
+| -------------------- | ------------------------------------ | ------------------------------------------------ |
+| `id`                 | text/uuid                            | Display id like "ORD-0041"                        |
+| `workspaceId`        | fk → workspace                       |                                                  |
+| `locationId`         | fk → location                        |                                                  |
+| `clientId`           | fk → client                          |                                                  |
+| `templateId`         | fk → template                        |                                                  |
+| `assignedMemberId`   | fk → member                          |                                                  |
+| `createdByMemberId`  | fk → member                          |                                                  |
+| `serviceType`        | enum `quick \| full \| recurring`    |                                                  |
+| `serviceLabel`       | text                                 | "Watch Repair", "Quick · Bike"                   |
+| `title`              | text                                 | "Rolex Submariner"                               |
+| `subtitle`           | text, nullable                       | "Crystal Replacement"                            |
+| `reference`          | text, nullable                       | Invoice #, serial, plate - `[sensitive]`         |
+| `token`              | text, unique                         | Share-link slug (`go.ordre.app/K7F-RM2`)         |
+| `status`             | enum `draft \| active \| done \| archived` |                                            |
+| `currentPhase`       | fk → board_phase, nullable           |                                                  |
+| `dueDate`            | date, nullable                       |                                                  |
+| `heroMediaUrl`       | text, nullable                       | Cover image                                      |
+| `heroMediaCaption`   | text, nullable                       |                                                  |
+| `createdAt`          | timestamp                            |                                                  |
+| `completedAt`        | timestamp, nullable                  |                                                  |
+| `archivedAt`         | timestamp, nullable                  | Quick boards auto-archive after a grace period   |
+
+`[derived]`: overdue state, unread messages, pending approvals, board age,
+unread-updates-since-last-visit.
+
+### `board_fact`
+
+The hero "facts" grid - flexible key/value rows, some blurred until verified.
+
+| Field          | Type                              | Notes                               |
+| -------------- | --------------------------------- | ----------------------------------- |
+| `id`           | uuid                              |                                     |
+| `boardId`      | fk → board                        |                                     |
+| `label`        | text                              | "Serial number", "Address"          |
+| `value`        | text                              |                                     |
+| `isSensitive`  | boolean                           | Blurred until verified              |
+| `displayOrder` | int                               |                                     |
+| `size`         | enum `normal \| big \| fullWidth` |                                     |
+
+### `board_phase`
+
+Per-board phase instances (full boards - phase tracker / schedule rail).
+
+| Field     | Type                              | Notes                  |
+| --------- | --------------------------------- | ---------------------- |
+| `id`      | uuid                              |                        |
+| `boardId` | fk → board                        |                        |
+| `name`    | text                              |                        |
+| `order`   | int                               |                        |
+| `status`  | enum `pending \| active \| done`  |                        |
+| `date`    | date, nullable                    |                        |
+| `detail`  | text, nullable                    |                        |
+
+---
+
+## 🔁 Recurring Service
+
+Backs `serviceType = recurring` boards (Snow Removal, Garden Care).
+
+### `recurrence`
+
+One per recurring board - the contract + cadence config.
+
+| Field              | Type                                                  | Notes                                |
+| ------------------ | ----------------------------------------------------- | ------------------------------------ |
+| `id`               | uuid                                                  |                                      |
+| `boardId`          | fk → board                                            |                                      |
+| `cadence`          | enum `weekly \| biweekly \| monthly \| trigger \| custom` |                                  |
+| `visitDay`         | enum `mon…sun`, nullable                              | When cadence is fixed                |
+| `visitTime`        | time, nullable                                        |                                      |
+| `triggerCondition` | text, nullable                                        | "Snowfall ≥ 5 cm"                    |
+| `customSchedule`   | text, nullable                                        | Free-text pattern                    |
+| `contractStart`    | date                                                  |                                      |
+| `contractEnd`      | date, nullable                                        | Null = open-ended                    |
+| `serviceWindow`    | text, nullable                                        | "04:00 — 11:00 AM"                   |
+| `status`           | enum `active \| paused`                               |                                      |
+| `seasonLabel`      | text, nullable                                        | "2025/26"                            |
+
+`[derived]`: visits expected, visits completed, % of season.
+
+### `visit`
+
+A single scheduled service occurrence (schedule list + visit report modal).
+
+| Field              | Type                                                                          | Notes               |
+| ------------------ | ----------------------------------------------------------------------------- | ------------------- |
+| `id`               | uuid                                                                          |                     |
+| `boardId`          | fk → board                                                                    |                     |
+| `recurrenceId`     | fk → recurrence                                                               |                     |
+| `num`              | int                                                                           | Sequence number     |
+| `scheduledDate`    | date                                                                          |                     |
+| `window`           | text                                                                          |                     |
+| `status`           | enum `next \| scheduled \| upcoming \| complete \| rescheduled \| missed \| skipped` |              |
+| `assignedMemberId` | fk → member                                                                   | The technician      |
+| `arrivedAt`        | time, nullable                                                                |                     |
+| `finishedAt`       | time, nullable                                                                |                     |
+| `notes`            | text, nullable                                                                |                     |
+| `forecast`         | text, nullable                                                                |                     |
+| `visibility`       | enum `client \| team`                                                         |                     |
+| `reportPostedAt`   | timestamp, nullable                                                           |                     |
+
+`[derived]`: photo count.
+
+### `schedule_change_request`
+
+Reschedule proposals in either direction (provider ↔ client).
+
+| Field                  | Type                                                          | Notes                          |
+| ---------------------- | ------------------------------------------------------------ | ------------------------------ |
+| `id`                   | uuid                                                         |                                |
+| `boardId`              | fk → board                                                   |                                |
+| `visitId`              | fk → visit                                                   |                                |
+| `direction`            | enum `client-to-provider \| provider-to-client`             |                                |
+| `requestedByType`      | enum `client \| member`                                     |                                |
+| `requestedByMemberId`  | fk → member, nullable                                       |                                |
+| `proposedFrom`         | text                                                        | Current slot                   |
+| `proposedTo`           | text                                                        | New date/time                  |
+| `reason`               | text                                                        |                                |
+| `status`               | enum `pending \| client-pending \| approved \| declined \| withdrawn` |                      |
+| `verifiedVia`          | enum `email \| phone`, nullable                            | Client must verify to request  |
+| `verifiedAt`           | timestamp, nullable                                        |                                |
+| `sentAt`               | timestamp                                                  |                                |
+| `resolvedAt`           | timestamp, nullable                                       |                                |
+
+---
+
+## 📰 Activity Feed (one table per type)
+
+Each card in the board feed is its own table. They share a common shape -
+`boardId`, an author, `createdAt`, and a `visibility` - then add their own fields.
+
+**Shared columns** (on every feed table):
+
+| Field          | Type                              | Notes                                  |
+| -------------- | --------------------------------- | -------------------------------------- |
+| `id`           | uuid                              |                                        |
+| `boardId`      | fk → board                        |                                        |
+| `authorType`   | enum `member \| client \| system` |                                        |
+| `authorMemberId` | fk → member, nullable           | Null for client/system                 |
+| `visibility`   | enum `client \| team \| internal` |                                        |
+| `createdAt`    | timestamp                         |                                        |
+
+### `feed_update` — status update
+
+| Field  | Type | Notes |
+| ------ | ---- | ----- |
+| `body` | text | The update text |
+
+### `feed_internal_note` — team-only note
+
+| Field  | Type | Notes |
+| ------ | ---- | ----- |
+| `body` | text | `visibility` is always `internal` |
+
+### `feed_milestone`
+
+| Field  | Type           | Notes               |
+| ------ | -------------- | ------------------- |
+| `title`| text           | Milestone name      |
+| `body` | text, nullable | What it means       |
+
+### `feed_stage_transition`
+
+| Field       | Type | Notes              |
+| ----------- | ---- | ------------------ |
+| `fromPhase` | text | Previous phase     |
+| `toPhase`   | text | New phase          |
+
+### `feed_system_event`
+
+| Field  | Type | Notes                                                   |
+| ------ | ---- | ------------------------------------------------------- |
+| `text` | text | "Board created · Client link sent to M. Delacroix"      |
+
+> `authorType` is `system` for these rows.
+
+### `feed_approval` — approval request
+
+| Field                       | Type                                  | Notes                       |
+| --------------------------- | ------------------------------------- | --------------------------- |
+| `description`               | text                                  | "Crown tube replacement"    |
+| `body`                      | text, nullable                        | Why it needs approval       |
+| `amount`                    | decimal, nullable                     |                             |
+| `currency`                  | text                                  | e.g. CHF                    |
+| `status`                    | enum `pending \| approved \| declined`|                             |
+| `respondedAt`               | timestamp, nullable                   |                             |
+| `respondedByClientContactId`| fk → client_contact, nullable         |                             |
+
+#### `feed_approval_line_item`
+
+Multi-item cost breakdowns (optional).
+
+| Field        | Type          | Notes |
+| ------------ | ------------- | ----- |
+| `id`         | uuid          |       |
+| `approvalId` | fk → feed_approval |  |
+| `label`      | text          |       |
+| `price`      | decimal       |       |
+| `order`      | int           |       |
+
+### `feed_visit_report` — recurring boards
+
+| Field    | Type        | Notes                              |
+| -------- | ----------- | ---------------------------------- |
+| `visitId`| fk → visit  | The visit this report documents    |
+| `body`   | text        | What was done                      |
+
+> Photos attach to any feed row via the shared **`media`** table below.
+
+---
+
+## 🖼️ Media
+
+Photos, videos, and files attached to feed rows, visits, or messages.
+
+| Field            | Type                          | Notes                                  |
+| ---------------- | ----------------------------- | -------------------------------------- |
+| `id`             | uuid                          |                                        |
+| `boardId`        | fk → board                    |                                        |
+| `attachedToType` | enum `update \| approval \| visit_report \| visit \| message` | Which feed row owns it |
+| `attachedToId`   | uuid                          | Row id within that table               |
+| `type`           | enum `photo \| video \| file` |                                        |
+| `url`            | text                          |                                        |
+| `caption`        | text, nullable                |                                        |
+| `isSensitive`    | boolean                       | Photos disabled until verify           |
+| `capturedDate`   | date, nullable                |                                        |
+| `uploadedByType` | enum `member \| client`       |                                        |
+| `order`          | int                           |                                        |
+| `createdAt`      | timestamp                     |                                        |
+
+---
+
+## 💬 Messaging
+
+The secure chat between client and workspace (Messages page, board chat).
+
+### `thread`
+
+| Field          | Type                                            | Notes                          |
+| -------------- | ----------------------------------------------- | ------------------------------ |
+| `id`           | uuid                                            |                                |
+| `workspaceId`  | fk → workspace                                  |                                |
+| `clientId`     | fk → client                                     |                                |
+| `boardId`      | fk → board, nullable                            | Linked board                   |
+| `channel`      | enum `portal \| whatsapp \| sms \| email \| telegram` |                          |
+| `lastMessageAt`| timestamp                                       |                                |
+
+`[derived]`: unread count.
+
+### `message`
+
+| Field            | Type                              | Notes                              |
+| ---------------- | --------------------------------- | ---------------------------------- |
+| `id`             | uuid                              |                                    |
+| `threadId`       | fk → thread                       |                                    |
+| `boardId`        | fk → board, nullable              |                                    |
+| `senderType`     | enum `client \| member \| system` |                                    |
+| `senderMemberId` | fk → member, nullable             |                                    |
+| `body`           | text                              | System rows hold event text        |
+| `channel`        | enum `portal \| whatsapp \| sms \| email \| telegram` | Channel it was sent over |
+| `sentAt`         | timestamp                         |                                    |
+| `readAt`         | timestamp, nullable               |                                    |
+
+---
+
+## ✅ Client Verification
+
+Identity verification is **session-based** - the entered email/phone is matched
+and **not stored** (see [Specs](/internal-docs/specs)). The "verified" state lives
+in the client's session, not the database. Optionally keep an audit log:
+
+### `verification_attempt` (optional, audit only)
+
+| Field         | Type                  | Notes                                 |
+| ------------- | --------------------- | ------------------------------------- |
+| `id`          | uuid                  |                                       |
+| `boardId`     | fk → board            |                                       |
+| `matched`     | boolean               |                                       |
+| `via`         | enum `email \| phone` |                                       |
+| `attemptedAt` | timestamp             | Do **not** store the entered value    |
+
+---
+
+## 📡 Communication Channels
+
+Workspace-level channel config (Settings → Channels).
+
+| Field        | Type                                            | Notes                              |
+| ------------ | ----------------------------------------------- | ---------------------------------- |
+| `id`         | uuid                                            |                                    |
+| `workspaceId`| fk → workspace                                  |                                    |
+| `type`       | enum `portal \| whatsapp \| sms \| email \| telegram` |                              |
+| `enabled`    | boolean                                         |                                    |
+| `isRequired` | boolean                                         | Portal is always on                |
+| `config`     | jsonb                                           | Connected number, from-address, last sync, provider |
+
+---
+
+## 🔔 User Preferences
+
+### `notification_setting`
+
+Per-user notification matrix (User Settings → Notifications).
+
+| Field          | Type    | Notes                                                                                          |
+| -------------- | ------- | ---------------------------------------------------------------------------------------------- |
+| `id`           | uuid    |                                                                                                |
+| `userId`       | fk → user |                                                                                              |
+| `key`          | enum    | `new_client_message \| approval_received \| approval_declined \| new_board_assigned \| daily_summary \| weekly_recap \| product_updates` |
+| `emailEnabled` | boolean |                                                                                                |
+| `pushEnabled`  | boolean |                                                                                                |
+
+### `working_hours`
+
+Per-user weekly availability (User Settings → Working hours).
+
+| Field       | Type                | Notes                  |
+| ----------- | ------------------- | ---------------------- |
+| `id`        | uuid                |                        |
+| `userId`    | fk → user           |                        |
+| `dayOfWeek` | enum `mon…sun`      |                        |
+| `openTime`  | time, nullable      |                        |
+| `closeTime` | time, nullable      |                        |
+| `isClosed`  | boolean             |                        |
+
+---
+
+## 💳 Billing
+
+### `subscription`
+
+One per workspace (Settings → Plan & usage, Team seats).
+
+| Field                  | Type                                          | Notes                          |
+| ---------------------- | --------------------------------------------- | ------------------------------ |
+| `id`                   | uuid                                          |                                |
+| `workspaceId`          | fk → workspace                                |                                |
+| `plan`                 | enum `free \| workshop \| premium`            |                                |
+| `status`               | enum `trial \| active \| past_due \| cancelled` |                              |
+| `seatLimit`            | int                                           |                                |
+| `boardLimit`           | int                                           |                                |
+| `stripeCustomerId`     | text, nullable                                |                                |
+| `stripeSubscriptionId` | text, nullable                                |                                |
+| `nextInvoiceDate`      | date, nullable                                |                                |
+| `addons`               | jsonb                                         | e.g. `unlimited_locations`     |
+
+`[derived]`: seats used, active boards, messages this month.
+
+### `invoice`
+
+| Field         | Type     | Notes |
+| ------------- | -------- | ----- |
+| `id`          | uuid     |       |
+| `workspaceId` | fk → workspace |  |
+| `amount`      | decimal  |       |
+| `currency`    | text     |       |
+| `issuedAt`    | timestamp|       |
+| `status`      | enum `paid \| due \| void` | |
+| `pdfUrl`      | text, nullable |  |
+
+---
+
+## 🤖 Message Templates & Automations (optional)
+
+Surfaced under Settings → Automations / Templates. Build when needed.
+
+| Field        | Type           | Notes                          |
+| ------------ | -------------- | ------------------------------ |
+| `id`         | uuid           |                                |
+| `workspaceId`| fk → workspace |                                |
+| `name`       | text           |                                |
+| `trigger`    | text           | Event that fires it            |
+| `channel`    | enum           | Channel to send over           |
+| `body`       | text           |                                |
+| `enabled`    | boolean        |                                |
+
+---
+
+## 🗺️ Entity Relationships at a Glance
+
+```
+workspace ─┬─ member ── user (Better Auth)
+           ├─ invitation
+           ├─ location
+           ├─ client ─┬─ client_contact
+           │          └─ client_follow_up
+           ├─ template ── template_phase
+           ├─ subscription ── invoice
+           ├─ channel
+           └─ board ─┬─ board_fact
+                     ├─ board_phase
+                     ├─ recurrence ── visit ── schedule_change_request
+                     ├─ feed_update / feed_internal_note / feed_milestone
+                     ├─ feed_stage_transition / feed_system_event
+                     ├─ feed_approval ── feed_approval_line_item
+                     ├─ feed_visit_report
+                     ├─ media
+                     └─ verification_attempt
+
+thread ── message            (thread → client, board; message → member)
+user ─┬─ notification_setting
+      └─ working_hours
+```

@@ -18,7 +18,9 @@ import { getPageImage, getPageMarkdownUrl, source } from '@/lib/source';
 export default async function Page(props: PageProps<'/internal-docs/[[...slug]]'>) {
   const params = await props.params;
   const page = source.getPage(params.slug);
-  if (!page) notFound();
+  if (!page) {
+    notFound();
+  }
 
   const MDX = page.data.body;
   const markdownUrl = getPageMarkdownUrl(page).url;
@@ -52,7 +54,9 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const params = await props.params;
   const page = source.getPage(params.slug);
-  if (!page) notFound();
+  if (!page) {
+    notFound();
+  }
 
   return {
     title: page.data.title,

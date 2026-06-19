@@ -5,10 +5,12 @@ node_modules
 .pnp
 .pnp.js
 
+
 # Local env files
 .env
 .env.local
 .env.development.local
+.env.test
 .env.test.local
 .env.production.local
 
@@ -41,3 +43,4 @@ yarn-error.log*
 # Test
 **/__screenshots__/**
 **/.vitest-attachments/**
+**/.vitest-attachments

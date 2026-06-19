@@ -5,6 +5,8 @@
 .source
 # API reference pages generated from public/openapi.json
 /content/api-docs
+# Error code reference generated from @ordre/core/errors
+/content/docs/error-codes.mdx
 
 # test & build
 /coverage

@@ -1,6 +1,7 @@
 {
   "extends": "@ordre/config/typescript/nextjs.json",
   "compilerOptions": {
+    "allowImportingTsExtensions": true,
     "strictNullChecks": true,
     // App, not a library: no declaration emit (fumadocs' zod-inferred exports
     // in source.config.ts aren't portable for .d.ts generation).

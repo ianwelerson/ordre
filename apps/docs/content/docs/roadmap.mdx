@@ -74,9 +74,9 @@ REST + Lambda is the launch architecture. GraphQL can be layered on top later wi
 
 Privacy-first analytics for page views and events. Free cloud tier covers early usage; self-hosting on a small VPS is the cost-effective path at scale.
 
-### Better Stack (Logging & Uptime)
+### Better Stack (Log Platform & Uptime)
 
-Centralised logging and uptime monitoring. Sentry + Vercel's built-in logs are sufficient during early production. Revisit once real traffic patterns and debugging needs emerge.
+Structured logging is already in place via pino in `@ordre/monitoring`; what's deferred is shipping those logs to a managed platform (Better Stack or Axiom) for centralised retention, search, and uptime alerts. Railway/Vercel built-in logs plus Sentry are sufficient during early production. Because logs are already structured JSON, adopting a platform is a config change in `@ordre/monitoring`. Revisit once real traffic patterns and debugging needs emerge.
 
 ---
 

@@ -2,6 +2,15 @@ import { z } from 'zod';
 
 const stage = process.env.APP_STAGE ?? process.env.NODE_ENV ?? 'development';
 
+if (stage === 'development' || stage === 'test') {
+  // Shared infra env (e.g. DATABASE_URL) lives at the workspace root.
+  try {
+    process.loadEnvFile('../../.env');
+  } catch {
+    // root .env is optional - ambient env vars are used in CI/prod
+  }
+}
+
 if (stage === 'development') {
   try {
     process.loadEnvFile('.env');
@@ -16,11 +25,12 @@ if (stage === 'development') {
   }
 }
 
-const envSchema = z
+export const envSchema = z
   .object({
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
     APP_STAGE: z.enum(['development', 'test', 'production']).default('development'),
     PORT: z.coerce.number().positive().default(3000),
+    DATABASE_URL: z.string().startsWith('postgresql://'),
   })
   .refine((data) => data.NODE_ENV === data.APP_STAGE, {
     message: 'NODE_ENV and APP_STAGE must match',

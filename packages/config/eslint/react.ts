@@ -32,4 +32,11 @@ export const reactConfig: Linter.Config[] = [
       ...pluginReactHooks.configs.recommended.rules,
     },
   },
+  {
+    // Re-enable after the prettier preset above, which turns `curly` off.
+    // `"all"` never conflicts with Prettier formatting.
+    rules: {
+      curly: ["error", "all"],
+    },
+  },
 ];

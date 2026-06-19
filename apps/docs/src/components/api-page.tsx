@@ -1,6 +1,9 @@
-import { createAPIPage } from 'fumadocs-openapi/ui';
+'use client';
 
-import { openapi } from '@/lib/openapi';
+import { createOpenAPIPage } from 'fumadocs-openapi/ui';
 
 // The `APIPage` component used by the generated API reference MDX pages.
-export const APIPage = createAPIPage(openapi);
+// In fumadocs-openapi v11, `createOpenAPIPage` takes render options (not the
+// server) and returns a client component, so the factory must run in a client
+// module. Each page's `document`/`operations` are supplied by the generated MDX.
+export const APIPage = createOpenAPIPage();
