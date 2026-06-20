@@ -93,87 +93,102 @@ Email/identity verification tokens.
 
 ## 🏢 Workspace
 
-The top-level tenant. Created during registration; configured in Workspace
-Settings.
+The top-level tenant (`Workspace`). Created during registration; configured in
+Workspace Settings.
 
-| Field               | Type                          | Notes                                                       |
-| ------------------- | ----------------------------- | ----------------------------------------------------------- |
-| `id`                | uuid                          |                                                             |
-| `name`              | text                          | Workspace / business display name                           |
-| `slug`              | text, unique                  | Public handle - `ordre.app/<slug>`                          |
-| `industry`          | enum                          | `automotive \| home \| personal \| construction \| creative \| technology \| other` |
-| `providerType`      | enum `individual \| business` | Stored for invoicing / branding                             |
-| `businessType`      | text, nullable                | Free label, e.g. "Watchmaker · Repair atelier"              |
-| `publicDescription` | text, nullable                | Shown on the public page                                    |
-| `primaryTimezone`   | text                          | e.g. `Europe/Zurich`                                        |
-| `logoUrl`           | text, nullable                |                                                             |
-| `brandAccentColor`  | text                          | Hex - buttons, progress rings, brand bar                    |
-| `brandVoice`        | text, nullable                | Affects auto-reply suggestions                              |
-| `workshopPhone`     | text, nullable                | Public contact number shown on boards                       |
-| `workshopEmail`     | text, nullable                | Public contact email                                        |
-| `billingEmail`      | text, nullable                |                                                             |
-| `ownerId`           | fk → user                     |                                                             |
-| `createdAt`         | timestamp                     |                                                             |
-| `closeScheduledAt`  | timestamp, nullable           | Set on close request; 30-day grace before deletion          |
+| Field          | Type                          | Notes                                                              |
+| -------------- | ----------------------------- | ----------------------------------------------------------------- |
+| `id`           | uuid                          |                                                                   |
+| `name`         | text                          | Workspace / business display name                                 |
+| `slug`         | text, unique                  | Public handle - `ordre.app/<slug>`                                |
+| `type`         | enum `individual \| business` | Provider type - invoicing / branding                              |
+| `industry`     | text                          | `automotive \| home \| personal \| construction \| creative \| technology \| other` |
+| `description`  | text, nullable                | Shown on the public page                                          |
+| `logo`         | text, nullable                | Logo URL                                                          |
+| `billingEmail` | text, nullable                |                                                                   |
+| `createdAt`    | timestamp                     |                                                                   |
+| `updatedAt`    | timestamp                     |                                                                   |
 
 ---
 
 ## 👥 Member
 
-A user's membership in a workspace. (Custom table - not the Better Auth org plugin.)
+A user's membership in a workspace (`Workspace_Member`). Custom table - not the
+Better Auth org plugin.
 
-| Field          | Type                            | Notes                                  |
-| -------------- | ------------------------------- | -------------------------------------- |
-| `id`           | uuid                            |                                        |
-| `workspaceId`  | fk → workspace                  |                                        |
-| `userId`       | fk → user                       |                                        |
-| `role`         | enum `owner \| admin \| member` |                                        |
-| `locationId`   | fk → location, nullable         | Which location they work from          |
-| `status`       | enum `active \| disabled`       |                                        |
-| `createdAt`    | timestamp                       |                                        |
-| `phone`              | text, nullable              | Personal account contact (Register step 4, Profile)        |
-| `phoneVerified`      | boolean                     |                                                            |
-| `displayName`        | text                        | Name shown to clients on boards (first name works well)    |
-| `title`              | text, nullable              | Role label under the name on the client board              |
-| `autoReplyAfterHours`| boolean                     | Auto-reply outside working hours                           |
+| Field         | Type                            | Notes                                                   |
+| ------------- | ------------------------------- | ------------------------------------------------------- |
+| `id`          | uuid                            |                                                         |
+| `userId`      | fk → user                       |                                                         |
+| `workspaceId` | fk → Workspace                  |                                                         |
+| `displayName` | text, nullable                  | Name shown to clients on boards (first name works well) |
+| `title`       | text, nullable                  | Role label under the name on the client board           |
+| `role`        | enum `owner \| admin \| member` |                                                         |
+| `status`      | enum `active \| disabled`       |                                                         |
+| `phone`       | text, nullable                  | Personal account contact (Register step 4, Profile)     |
+| `createdAt`   | timestamp                       |                                                         |
+| `updatedAt`   | timestamp                       |                                                         |
+
+Unique: (`userId`, `workspaceId`).
 
 `[derived]`: open-board count, last active (from sessions).
+
+### `Workspace_Member_Location`
+
+Which locations a member works from - a member can cover many locations and a
+location many members.
+
+| Field                 | Type                    | Notes |
+| --------------------- | ----------------------- | ----- |
+| `id`                  | uuid                    |       |
+| `workspaceMemberId`   | fk → Workspace_Member   |       |
+| `workspaceLocationId` | fk → Workspace_Location |       |
+| `createdAt`           | timestamp               |       |
+| `updatedAt`           | timestamp               |       |
+
+Unique: (`workspaceMemberId`, `workspaceLocationId`).
 
 ---
 
 ## ✉️ Invitation
 
-Pending teammate invites (Team → Invite modal).
+Pending teammate invites (`Workspace_Member_Invitation`; Team → Invite modal).
 
-| Field          | Type                            | Notes                          |
-| -------------- | ------------------------------- | ------------------------------ |
-| `id`           | uuid                            |                                |
-| `workspaceId`  | fk → workspace                  |                                |
-| `email`        | text                            |                                |
-| `role`         | enum `admin \| member`          |                                |
-| `locationId`   | fk → location, nullable         |                                |
-| `inviteMethod` | enum `email \| link`            |                                |
-| `status`       | enum `pending \| accepted \| cancelled` |                        |
-| `invitedById`  | fk → member                     |                                |
-| `expiresAt`    | timestamp                       |                                |
-| `createdAt`    | timestamp                       |                                |
+| Field                 | Type                                    | Notes                          |
+| --------------------- | --------------------------------------- | ------------------------------ |
+| `id`                  | uuid                                    |                                |
+| `email`               | text                                    |                                |
+| `role`                | enum `admin \| member`                  |                                |
+| `workspaceId`         | fk → Workspace                          |                                |
+| `workspaceLocationId` | fk → Workspace_Location, nullable       | Location they're invited to    |
+| `invitedByMemberId`   | fk → Workspace_Member, nullable         | Null for system/seed invites   |
+| `token`               | text                                    | Invite-link token              |
+| `status`              | enum `pending \| accepted \| cancelled` |                                |
+| `expiresAt`           | timestamp                               |                                |
+| `createdAt`           | timestamp                               |                                |
+| `updatedAt`           | timestamp                               |                                |
+
+Unique: (`workspaceId`, `email`).
 
 ---
 
 ## 📍 Location
 
-A physical site. Every workspace has at least one; every board belongs to one.
+A physical site (`Workspace_Location`). Every workspace has at least one; every
+board belongs to one.
 
 | Field         | Type                  | Notes                       |
 | ------------- | --------------------- | --------------------------- |
 | `id`          | uuid                  |                             |
-| `workspaceId` | fk → workspace        |                             |
+| `workspaceId` | fk → Workspace        |                             |
 | `name`        | text                  | "Geneva · Grand-Rue"        |
-| `address`     | text                  |                             |
+| `address`     | text, nullable        |                             |
 | `mapUrl`      | text, nullable        |                             |
 | `phone`       | text, nullable        | Board "Workshop phone"      |
+| `email`       | text, nullable        |                             |
 | `isDefault`   | boolean               |                             |
 | `createdAt`   | timestamp             |                             |
+| `updatedAt`   | timestamp             |                             |
 
 ---
 
@@ -184,7 +199,7 @@ Someone the workspace does jobs for (Clients page, New Board → Client step).
 | Field                      | Type                              | Notes                                    |
 | -------------------------- | --------------------------------- | ---------------------------------------- |
 | `id`                       | uuid                              |                                          |
-| `workspaceId`              | fk → workspace                    |                                          |
+| `workspaceId`              | fk → Workspace                    |                                          |
 | `name`                     | text                              | `[sensitive]`                            |
 | `companyName`              | text, nullable                    | "North Studio"                           |
 | `internalNote`             | text, nullable                    | Team-only, never shown to client         |
@@ -217,7 +232,7 @@ Scheduled reminder against a client (Clients detail → Follow-up).
 | ------------- | ------------------------------------ | ------------------------------ |
 | `id`          | uuid                                 |                                |
 | `clientId`    | fk → client                          |                                |
-| `workspaceId` | fk → workspace                       |                                |
+| `workspaceId` | fk → Workspace                       |                                |
 | `dueDate`     | date                                 |                                |
 | `reason`      | text                                 | "12-month service reminder"    |
 | `note`        | text, nullable                       |                                |
@@ -235,7 +250,7 @@ Defines a board's structure and service type (New Board step 1).
 | Field         | Type                              | Notes                                  |
 | ------------- | --------------------------------- | -------------------------------------- |
 | `id`          | uuid                              |                                        |
-| `workspaceId` | fk → workspace, nullable          | Null for built-in/system templates     |
+| `workspaceId` | fk → Workspace, nullable          | Null for built-in/system templates     |
 | `name`        | text                              | "Watch & Jewellery"                    |
 | `subtitle`    | text                              | "Repair & servicing"                   |
 | `industry`    | enum                              | For onboarding recommendations         |
@@ -264,12 +279,12 @@ The core job entity (Boards list, Board Detail, New Board).
 | Field                | Type                                 | Notes                                            |
 | -------------------- | ------------------------------------ | ------------------------------------------------ |
 | `id`                 | text/uuid                            | Display id like "ORD-0041"                        |
-| `workspaceId`        | fk → workspace                       |                                                  |
-| `locationId`         | fk → location                        |                                                  |
+| `workspaceId`        | fk → Workspace                       |                                                  |
+| `locationId`         | fk → Workspace_Location                        |                                                  |
 | `clientId`           | fk → client                          |                                                  |
 | `templateId`         | fk → template                        |                                                  |
-| `assignedMemberId`   | fk → member                          |                                                  |
-| `createdByMemberId`  | fk → member                          |                                                  |
+| `assignedMemberId`   | fk → Workspace_Member                          |                                                  |
+| `createdByMemberId`  | fk → Workspace_Member                          |                                                  |
 | `serviceType`        | enum `quick \| full \| recurring`    |                                                  |
 | `serviceLabel`       | text                                 | "Watch Repair", "Quick · Bike"                   |
 | `title`              | text                                 | "Rolex Submariner"                               |
@@ -356,7 +371,7 @@ A single scheduled service occurrence (schedule list + visit report modal).
 | `scheduledDate`    | date                                                                          |                     |
 | `window`           | text                                                                          |                     |
 | `status`           | enum `next \| scheduled \| upcoming \| complete \| rescheduled \| missed \| skipped` |              |
-| `assignedMemberId` | fk → member                                                                   | The technician      |
+| `assignedMemberId` | fk → Workspace_Member                                                                   | The technician      |
 | `arrivedAt`        | time, nullable                                                                |                     |
 | `finishedAt`       | time, nullable                                                                |                     |
 | `notes`            | text, nullable                                                                |                     |
@@ -377,7 +392,7 @@ Reschedule proposals in either direction (provider ↔ client).
 | `visitId`              | fk → visit                                                   |                                |
 | `direction`            | enum `client-to-provider \| provider-to-client`             |                                |
 | `requestedByType`      | enum `client \| member`                                     |                                |
-| `requestedByMemberId`  | fk → member, nullable                                       |                                |
+| `requestedByMemberId`  | fk → Workspace_Member, nullable                                       |                                |
 | `proposedFrom`         | text                                                        | Current slot                   |
 | `proposedTo`           | text                                                        | New date/time                  |
 | `reason`               | text                                                        |                                |
@@ -401,7 +416,7 @@ Each card in the board feed is its own table. They share a common shape -
 | `id`           | uuid                              |                                        |
 | `boardId`      | fk → board                        |                                        |
 | `authorType`   | enum `member \| client \| system` |                                        |
-| `authorMemberId` | fk → member, nullable           | Null for client/system                 |
+| `authorMemberId` | fk → Workspace_Member, nullable           | Null for client/system                 |
 | `visibility`   | enum `client \| team \| internal` |                                        |
 | `createdAt`    | timestamp                         |                                        |
 
@@ -504,7 +519,7 @@ The secure chat between client and workspace (Messages page, board chat).
 | Field          | Type                                            | Notes                          |
 | -------------- | ----------------------------------------------- | ------------------------------ |
 | `id`           | uuid                                            |                                |
-| `workspaceId`  | fk → workspace                                  |                                |
+| `workspaceId`  | fk → Workspace                                  |                                |
 | `clientId`     | fk → client                                     |                                |
 | `boardId`      | fk → board, nullable                            | Linked board                   |
 | `channel`      | enum `portal \| whatsapp \| sms \| email \| telegram` |                          |
@@ -520,7 +535,7 @@ The secure chat between client and workspace (Messages page, board chat).
 | `threadId`       | fk → thread                       |                                    |
 | `boardId`        | fk → board, nullable              |                                    |
 | `senderType`     | enum `client \| member \| system` |                                    |
-| `senderMemberId` | fk → member, nullable             |                                    |
+| `senderMemberId` | fk → Workspace_Member, nullable             |                                    |
 | `body`           | text                              | System rows hold event text        |
 | `channel`        | enum `portal \| whatsapp \| sms \| email \| telegram` | Channel it was sent over |
 | `sentAt`         | timestamp                         |                                    |
@@ -553,7 +568,7 @@ Workspace-level channel config (Settings → Channels).
 | Field        | Type                                            | Notes                              |
 | ------------ | ----------------------------------------------- | ---------------------------------- |
 | `id`         | uuid                                            |                                    |
-| `workspaceId`| fk → workspace                                  |                                    |
+| `workspaceId`| fk → Workspace                                  |                                    |
 | `type`       | enum `portal \| whatsapp \| sms \| email \| telegram` |                              |
 | `enabled`    | boolean                                         |                                    |
 | `isRequired` | boolean                                         | Portal is always on                |
@@ -592,36 +607,73 @@ Per-user weekly availability (User Settings → Working hours).
 
 ## 💳 Billing
 
-### `subscription`
+### `Plan`
 
-One per workspace (Settings → Plan & usage, Team seats).
+The plan catalog - the subscribable tiers and their limits. Global, not
+workspace-scoped.
 
-| Field                  | Type                                          | Notes                          |
-| ---------------------- | --------------------------------------------- | ------------------------------ |
-| `id`                   | uuid                                          |                                |
-| `workspaceId`          | fk → workspace                                |                                |
-| `plan`                 | enum `free \| workshop \| premium`            |                                |
-| `status`               | enum `trial \| active \| past_due \| cancelled` |                              |
-| `seatLimit`            | int                                           |                                |
-| `boardLimit`           | int                                           |                                |
-| `stripeCustomerId`     | text, nullable                                |                                |
-| `stripeSubscriptionId` | text, nullable                                |                                |
-| `nextInvoiceDate`      | date, nullable                                |                                |
-| `addons`               | jsonb                                         | e.g. `unlimited_locations`     |
+| Field           | Type           | Notes                                 |
+| --------------- | -------------- | ------------------------------------- |
+| `id`            | uuid           |                                       |
+| `code`          | text, unique   | Stable key, e.g. `free`, `workshop`   |
+| `name`          | text           | Display name                          |
+| `description`   | text           |                                       |
+| `boardLimit`    | int, nullable  | Null = unlimited                      |
+| `seatLimit`     | int, nullable  | Null = unlimited                      |
+| `locationLimit` | int, nullable  | Null = unlimited                      |
+| `createdAt`     | timestamp      |                                       |
+| `updatedAt`     | timestamp      |                                       |
+
+### `Addon`
+
+The add-on catalog - optional extras a subscription can attach. Global.
+
+| Field         | Type         | Notes                              |
+| ------------- | ------------ | ---------------------------------- |
+| `id`          | uuid         |                                    |
+| `code`        | text, unique | Stable key, e.g. `unlimited_locations` |
+| `name`        | text         |                                    |
+| `description` | text         |                                    |
+| `createdAt`   | timestamp    |                                    |
+| `updatedAt`   | timestamp    |                                    |
+
+### `Workspace_Subscription`
+
+One per workspace (Settings → Plan & usage, Team seats). Limits come from the
+linked `Plan`.
+
+| Field                  | Type                | Notes                          |
+| ---------------------- | ------------------- | ------------------------------ |
+| `id`                   | uuid                |                                |
+| `workspaceId`          | fk → Workspace      |                                |
+| `planId`               | fk → Plan           |                                |
+| `status`               | enum `trial \| active \| past_due \| cancelled` |  |
+| `stripeCustomerId`     | text, nullable      |                                |
+| `stripeSubscriptionId` | text, nullable      |                                |
+| `currentPeriodStart`   | timestamp, nullable |                                |
+| `currentPeriodEnd`     | timestamp, nullable |                                |
+| `cancelAtPeriodEnd`    | boolean             |                                |
+| `createdAt`            | timestamp           |                                |
+| `updatedAt`            | timestamp           |                                |
+
+Unique: (`workspaceId`).
 
 `[derived]`: seats used, active boards, messages this month.
 
-### `invoice`
+### `Workspace_Subscription_Addon`
 
-| Field         | Type     | Notes |
-| ------------- | -------- | ----- |
-| `id`          | uuid     |       |
-| `workspaceId` | fk → workspace |  |
-| `amount`      | decimal  |       |
-| `currency`    | text     |       |
-| `issuedAt`    | timestamp|       |
-| `status`      | enum `paid \| due \| void` | |
-| `pdfUrl`      | text, nullable |  |
+Add-ons attached to a subscription.
+
+| Field                      | Type                          | Notes                       |
+| -------------------------- | ----------------------------- | --------------------------- |
+| `id`                       | uuid                          |                             |
+| `subscriptionId`           | fk → Workspace_Subscription   |                             |
+| `addonId`                  | fk → Addon                    |                             |
+| `stripeSubscriptionItemId` | text                          |                             |
+| `createdAt`                | timestamp                     |                             |
+| `updatedAt`                | timestamp                     |                             |
+
+Unique: (`subscriptionId`, `addonId`).
 
 ---
 
@@ -632,7 +684,7 @@ Surfaced under Settings → Automations / Templates. Build when needed.
 | Field        | Type           | Notes                          |
 | ------------ | -------------- | ------------------------------ |
 | `id`         | uuid           |                                |
-| `workspaceId`| fk → workspace |                                |
+| `workspaceId`| fk → Workspace |                                |
 | `name`       | text           |                                |
 | `trigger`    | text           | Event that fires it            |
 | `channel`    | enum           | Channel to send over           |
@@ -644,13 +696,16 @@ Surfaced under Settings → Automations / Templates. Build when needed.
 ## 🗺️ Entity Relationships at a Glance
 
 ```
-workspace ─┬─ member ── user (Better Auth)
-           ├─ invitation
-           ├─ location
+Plan  ─── Workspace_Subscription          Addon ─── Workspace_Subscription_Addon
+
+Workspace ─┬─ Workspace_Member ─┬─ user (Better Auth)
+           │                    └─ Workspace_Member_Location ── Workspace_Location
+           ├─ Workspace_Member_Invitation  (→ Workspace_Member, Workspace_Location)
+           ├─ Workspace_Location
            ├─ client ─┬─ client_contact
            │          └─ client_follow_up
            ├─ template ── template_phase
-           ├─ subscription ── invoice
+           ├─ Workspace_Subscription ── Workspace_Subscription_Addon
            ├─ channel
            └─ board ─┬─ board_fact
                      ├─ board_phase
