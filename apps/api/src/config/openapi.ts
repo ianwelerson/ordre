@@ -18,7 +18,6 @@ await Promise.all(
 
 const generator = new OpenApiGeneratorV31(registry.definitions);
 
-// Generate the OpenAPI docs
 const openApiDocument = generator.generateDocument({
   openapi: '3.1.0',
   info: {
@@ -36,6 +35,26 @@ const openApiDocument = generator.generateDocument({
     { url: 'https://api.ordre.app/api', description: 'Production' },
     { url: 'https://ordre-api.vercel.app/api', description: 'Development' },
     { url: 'https://api.ordre.localhost/api', description: 'Local' },
+  ],
+  // Declared at the document root so the docs generator (which groups pages by
+  // tag) can resolve each operation's tag; an operation tagged with a name not
+  // listed here is dropped from the generated reference.
+  tags: [
+    { name: 'Auth', description: 'Authentication and session endpoints (better-auth).' },
+    { name: 'Workspace', description: 'Create, read, update, and delete workspaces.' },
+    {
+      name: 'Workspace Location',
+      description: "Manage a workspace's locations, including the default location.",
+    },
+    {
+      name: 'Workspace Member',
+      description: "Manage a workspace's members - roles, profiles, removal, and self-service.",
+    },
+    {
+      name: 'Workspace Invite',
+      description: "Manage a workspace's member invites.",
+    },
+    { name: 'Health', description: 'Service health checks.' },
   ],
 });
 
@@ -57,11 +76,39 @@ const authSchema = await auth.api.generateOpenAPISchema();
 // Pull the cookie name from the live config so it stays correct if it changes.
 const sessionCookieName = (await auth.$context).authCookies.sessionToken.name;
 
+// HTTP methods that identify an operation object within a path item (the item
+// can also hold non-operation keys like `parameters` or `summary`).
+const HTTP_METHODS = new Set(['get', 'put', 'post', 'delete', 'patch', 'head', 'options', 'trace']);
+
 const authPaths = Object.fromEntries(
   Object.entries(authSchema.paths ?? {}).map(([route, item]) => {
-    for (const operation of Object.values(item as Record<string, unknown>)) {
-      if (operation && typeof operation === 'object' && 'security' in operation) {
-        (operation as { security: unknown }).security = [{ cookieAuth: [] }];
+    for (const [method, operation] of Object.entries(item as Record<string, unknown>)) {
+      if (!HTTP_METHODS.has(method) || !operation || typeof operation !== 'object') {
+        continue;
+      }
+
+      const op = operation as { security?: unknown; tags?: string[]; operationId?: string };
+
+      if ('security' in op) {
+        op.security = [{ cookieAuth: [] }];
+      }
+
+      // better-auth tags every operation `Default`; group them under `Auth` so
+      // the docs render a single, meaningfully named section.
+      op.tags = ['Auth'];
+
+      // The docs group by tag and name each page by operationId. better-auth
+      // omits it on some operations, so synthesise a stable, unique one from the
+      // method and route to keep every auth page flat (not falling back to a
+      // nested route path).
+      if (!op.operationId) {
+        op.operationId = [
+          method,
+          ...route
+            .split('/')
+            .filter(Boolean)
+            .map((s) => s.replace(/[{}]/g, '')),
+        ].join('-');
       }
     }
     return [`/auth${route}`, item];

@@ -66,16 +66,16 @@ apps/api/
 
 Each controller folder is a self-contained feature unit owning the controller(s), OpenAPI registration, local schemas, tests, and helpers. The OpenAPI file is co-located with the controller (not the route) so it travels with the logic if the HTTP adapter changes.
 
-| File              | Responsibility                                                                       |
-| ----------------- | ------------------------------------------------------------------------------------ |
-| `index.ts`        | Barrel. Public surface only (`*.controller.ts` and `*.openapi.ts`).                  |
-| `*.controller.ts` | Controller function(s). No Express dependency.                                       |
-| `*.openapi.ts`    | OpenAPI registration for the feature. One per folder.                                |
-| `*.schemas.ts`    | Local Zod schemas. Use only when controller-internal.                                |
-| `*.test.ts`       | Co-located integration tests (one per controller file).                              |
-| `helpers/`        | Folder for 2+ internal helpers. Single helper goes in a flat `*.helpers.ts` instead. |
+| File              | Responsibility                                                                                                      |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `index.ts`        | Barrel. Public surface only (`*.controller.ts` and `*.openapi.ts`).                                                 |
+| `*.controller.ts` | Controller function(s). No Express dependency.                                                                      |
+| `*.openapi.ts`    | OpenAPI registration for the feature. One per folder.                                                               |
+| `*.schemas.ts`    | Local Zod schemas. Use only when controller-internal.                                                               |
+| `*.test.ts`       | Co-located unit tests for fault injection (mocked DB). See [Testing](../docs/content/docs/engineering/testing.mdx). |
+| `helpers/`        | Folder for 2+ internal helpers. Single helper goes in a flat `*.helpers.ts` instead.                                |
 
-See [architecture.md](../../../ordre-internal-docs/architecture.md#controller-folder-convention) for the full rule set.
+See [Architecture](../docs/content/docs/engineering/architecture.mdx#controller-folder-convention) for the full rule set.
 
 ### Subpath imports
 
@@ -96,27 +96,13 @@ import { env, isProd } from '#env';
 
 ## 🚀 Getting Started
 
-From the repo root:
+Install and run the whole stack from the repo root - see **[Setup → Running the Project](../docs/content/docs/setup/running-the-project.mdx)**. To run only the API:
 
 ```bash
-pnpm install
 pnpm --filter api api:dev
 ```
 
-Or from this directory:
-
-```bash
-cp .env.example .env
-pnpm api:dev
-```
-
-`pnpm api:dev` proxies the server through **[portless](https://www.npmjs.com/package/portless)**, which serves it over HTTPS at a stable local hostname:
-
-**https://api.ordre.localhost**
-
-Run `pnpm api:dev:app` to start the raw server without portless - it listens on **http://localhost:3000** by default (override with `PORT` in `.env`).
-
-Health check: `GET /health`.
+`pnpm api:dev` serves it over HTTPS at **https://api.ordre.localhost** (via portless); `pnpm api:dev:app` runs the raw server on **http://localhost:3000**. Health check: `GET /health`.
 
 ---
 
@@ -136,19 +122,12 @@ Health check: `GET /health`.
 
 ## 🌍 Environment
 
-The API reads environment variables through a Zod-validated schema in `env.ts`. Invalid env vars fail at startup, not at request time.
-
-| Variable    | Required | Default       | Notes                                      |
-| ----------- | -------- | ------------- | ------------------------------------------ |
-| `PORT`      | no       | `3000`        | HTTP port                                  |
-| `APP_STAGE` | no       | `development` | One of `development`, `test`, `production` |
-| `NODE_ENV`  | no       | `development` | Must match `APP_STAGE`                     |
-
-In development, `.env` is auto-loaded. In test, `.env.test` is auto-loaded. In production, env vars come from the host.
+The API reads environment variables through a Zod-validated schema in `env.ts` - invalid values fail at startup, not at request time. See **[Setup → Environment Variables](../docs/content/docs/setup/environment-variables.mdx)** for every variable and how the `.env` files load.
 
 ---
 
 ## 📚 Further Reading
 
 - [Root README](../../README.md) - monorepo overview
-- [architecture.md](../../../ordre-internal-docs/architecture.md) - monorepo architecture (internal docs)
+- [Architecture](../docs/content/docs/engineering/architecture.mdx) - monorepo architecture (docs project)
+- [Testing](../docs/content/docs/engineering/testing.mdx) - the two-tier test strategy (integration vs. unit)
