@@ -11,8 +11,11 @@
     "tsx": "^4.22.4"
   },
   "exports": {
+    "./permissions": "./src/permissions/index.ts",
+    "./constants": "./src/constants/index.ts",
     "./schemas": "./src/schemas/index.ts",
     "./errors": "./src/errors/index.ts",
+    "./enums": "./src/enums/index.ts",
     "./types": "./src/types/index.ts"
   },
   "private": true,

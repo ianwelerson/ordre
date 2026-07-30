@@ -213,4 +213,14 @@ export const AUTH_ERRORS = {
     status: 405,
     message: 'POST method requires deferSessionRefresh to be enabled in session config',
   },
+
+  // --- Authentication and Authorization ---
+  UNAUTHORIZED: {
+    status: 401,
+    message: 'Authentication is required to access this resource',
+  },
+  FORBIDDEN: {
+    status: 403,
+    message: "You don't have permission to access this resource",
+  },
 } satisfies ErrorMap;

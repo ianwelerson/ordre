@@ -1,2 +1,12 @@
 export type { ErrorDefinition, ErrorMap } from './error.ts';
-export type { StatusCodes } from './http.ts';
+export type {
+  ErrorStatus,
+  NoContentResponse,
+  Response,
+  ResponseErrorBody,
+  StatusCodes,
+  SuccessStatus,
+} from './http.ts';
+export type * from './health.ts';
+export type * from './workspace.ts';
+export type * from './billing.ts';
