@@ -5,8 +5,22 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1780526220607,
-      "tag": "0000_optimal_living_mummy",
+      "when": 1785450695792,
+      "tag": "0000_initial_schema",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1785450703406,
+      "tag": "0001_row_level_security",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1785450703772,
+      "tag": "0002_invite_functions",
       "breakpoints": true
     }
   ]

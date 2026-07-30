@@ -3,3 +3,9 @@
 // relations, so the Drizzle client only sees the relations from `./auth.ts`.
 export { account, session, user, verification } from './better-auth.ts';
 export * from './auth.ts';
+
+// Workspace
+export * from './workspace.ts';
+
+// Billing
+export * from './billing.ts';

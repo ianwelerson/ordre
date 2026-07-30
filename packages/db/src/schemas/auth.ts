@@ -15,6 +15,12 @@
  *
  * Rule of thumb: tables come from `better-auth.ts`; everything auth/user-domain
  * we maintain ourselves lives here.
+ *
+ * The generator has no switches for a few of our conventions (timezone-aware
+ * timestamps, a default on `updated_at`, snake_case index names), so
+ * `auth:generate` pipes its output through `scripts/patch-better-auth-schema.ts`,
+ * which applies them and fails the command if it cannot. Nothing about the
+ * generated file is maintained by hand - adjust that script instead.
  */
 import { relations } from 'drizzle-orm';
 

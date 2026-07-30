@@ -84,7 +84,7 @@
         },
         {
           "name": "createdAt",
-          "type": "TIMESTAMP",
+          "type": "TIMESTAMPTZ",
           "default": "now()",
           "check": "",
           "primary": false,
@@ -99,7 +99,7 @@
         },
         {
           "name": "updatedAt",
-          "type": "TIMESTAMP",
+          "type": "TIMESTAMPTZ",
           "default": "now()",
           "check": "",
           "primary": false,
@@ -143,7 +143,7 @@
         },
         {
           "name": "expiresAt",
-          "type": "TIMESTAMP",
+          "type": "TIMESTAMPTZ",
           "default": "",
           "check": "",
           "primary": false,
@@ -218,7 +218,7 @@
         },
         {
           "name": "createdAt",
-          "type": "TIMESTAMP",
+          "type": "TIMESTAMPTZ",
           "default": "now()",
           "check": "",
           "primary": false,
@@ -233,7 +233,7 @@
         },
         {
           "name": "updatedAt",
-          "type": "TIMESTAMP",
+          "type": "TIMESTAMPTZ",
           "default": "",
           "check": "",
           "primary": false,
@@ -251,7 +251,7 @@
       "indices": [
         {
           "id": "idx_session_userId_01",
-          "name": "session_userId_idx",
+          "name": "session_user_id_idx",
           "unique": false,
           "fields": ["userId"]
         }
@@ -374,7 +374,7 @@
         },
         {
           "name": "accessTokenExpiresAt",
-          "type": "TIMESTAMP",
+          "type": "TIMESTAMPTZ",
           "default": "",
           "check": "",
           "primary": false,
@@ -389,7 +389,7 @@
         },
         {
           "name": "refreshTokenExpiresAt",
-          "type": "TIMESTAMP",
+          "type": "TIMESTAMPTZ",
           "default": "",
           "check": "",
           "primary": false,
@@ -434,7 +434,7 @@
         },
         {
           "name": "createdAt",
-          "type": "TIMESTAMP",
+          "type": "TIMESTAMPTZ",
           "default": "now()",
           "check": "",
           "primary": false,
@@ -449,7 +449,7 @@
         },
         {
           "name": "updatedAt",
-          "type": "TIMESTAMP",
+          "type": "TIMESTAMPTZ",
           "default": "",
           "check": "",
           "primary": false,
@@ -467,7 +467,7 @@
       "indices": [
         {
           "id": "idx_account_userId_01",
-          "name": "account_userId_idx",
+          "name": "account_user_id_idx",
           "unique": false,
           "fields": ["userId"]
         }
@@ -530,7 +530,7 @@
         },
         {
           "name": "expiresAt",
-          "type": "TIMESTAMP",
+          "type": "TIMESTAMPTZ",
           "default": "",
           "check": "",
           "primary": false,
@@ -545,7 +545,7 @@
         },
         {
           "name": "createdAt",
-          "type": "TIMESTAMP",
+          "type": "TIMESTAMPTZ",
           "default": "now()",
           "check": "",
           "primary": false,
@@ -560,7 +560,7 @@
         },
         {
           "name": "updatedAt",
-          "type": "TIMESTAMP",
+          "type": "TIMESTAMPTZ",
           "default": "now()",
           "check": "",
           "primary": false,
@@ -696,7 +696,7 @@
         {
           "id": "cvKjSklnxq9aMalTqbhHn",
           "name": "createdAt",
-          "type": "TIMESTAMP",
+          "type": "TIMESTAMPTZ",
           "default": "",
           "check": "",
           "primary": false,
@@ -710,7 +710,7 @@
         {
           "id": "1j0veAf8Kfn5y4kJwA3wP",
           "name": "updatedAt",
-          "type": "TIMESTAMP",
+          "type": "TIMESTAMPTZ",
           "default": "",
           "check": "",
           "primary": false,
@@ -795,7 +795,7 @@
         {
           "id": "NFefq37nPgLsK5BfknIgh",
           "name": "createdAt",
-          "type": "TIMESTAMP",
+          "type": "TIMESTAMPTZ",
           "default": "",
           "check": "",
           "primary": false,
@@ -809,7 +809,7 @@
         {
           "id": "_gJWHJGWyH0VRebtvx7-J",
           "name": "updatedAt",
-          "type": "TIMESTAMP",
+          "type": "TIMESTAMPTZ",
           "default": "",
           "check": "",
           "primary": false,
@@ -880,7 +880,7 @@
         {
           "id": "8mpeywiGv00jgAAAEI5Na",
           "name": "type",
-          "type": "TEXT",
+          "type": "workspace_type",
           "default": "",
           "check": "",
           "primary": false,
@@ -894,7 +894,7 @@
         {
           "id": "q8ibJ0hgZAKApzAJLiSso",
           "name": "industry",
-          "type": "TEXT",
+          "type": "workspace_industry",
           "default": "",
           "check": "",
           "primary": false,
@@ -950,7 +950,7 @@
         {
           "id": "FSwHghOcwW5D48_kPmkHC",
           "name": "createdAt",
-          "type": "TIMESTAMP",
+          "type": "TIMESTAMPTZ",
           "default": "",
           "check": "",
           "primary": false,
@@ -964,7 +964,7 @@
         {
           "id": "l7nr5QcQGwQwdE1Sqax68",
           "name": "updatedAt",
-          "type": "TIMESTAMP",
+          "type": "TIMESTAMPTZ",
           "default": "",
           "check": "",
           "primary": false,
@@ -1048,9 +1048,9 @@
           "values": []
         },
         {
-          "id": "rjy6CqyUIyHqoLRA3MVR6",
-          "name": "mapUrl",
-          "type": "TEXT",
+          "id": "rjy6CqyUIyHqoLRA3MVR7",
+          "name": "latitude",
+          "type": "NUMERIC",
           "default": "",
           "check": "",
           "primary": false,
@@ -1058,7 +1058,21 @@
           "notNull": false,
           "increment": false,
           "comment": "",
-          "size": "",
+          "size": "8,6",
+          "values": []
+        },
+        {
+          "id": "rjy6CqyUIyHqoLRA3MVR6",
+          "name": "longitude",
+          "type": "NUMERIC",
+          "default": "",
+          "check": "",
+          "primary": false,
+          "unique": false,
+          "notNull": false,
+          "increment": false,
+          "comment": "",
+          "size": "9,6",
           "values": []
         },
         {
@@ -1106,7 +1120,7 @@
         {
           "id": "XFBWmlHTFDWYAuQgKZ87j",
           "name": "createdAt",
-          "type": "TIMESTAMP",
+          "type": "TIMESTAMPTZ",
           "default": "",
           "check": "",
           "primary": false,
@@ -1120,7 +1134,7 @@
         {
           "id": "tAzl0RbCEnJ4fL4SUesSq",
           "name": "updatedAt",
-          "type": "TIMESTAMP",
+          "type": "TIMESTAMPTZ",
           "default": "",
           "check": "",
           "primary": false,
@@ -1132,8 +1146,15 @@
           "values": []
         }
       ],
-      "comment": "",
-      "indices": [],
+      "comment": "Partial unique: at most one is_default=true location per workspace \u2014 uniqueIndex workspace_location_one_default_per_workspace WHERE is_default. DrawDB cannot express the partial WHERE.",
+      "indices": [
+        {
+          "id": "idx_wsloc_workspace_01",
+          "name": "workspace_location_workspace_id_idx",
+          "unique": false,
+          "fields": ["workspaceId"]
+        }
+      ],
       "uniqueConstraints": [],
       "color": "#175e7a",
       "collapsed": false
@@ -1219,7 +1240,7 @@
         {
           "id": "4apBNnyXm-gBOe6TUK4ru",
           "name": "role",
-          "type": "TEXT",
+          "type": "workspace_member_role",
           "default": "",
           "check": "",
           "primary": false,
@@ -1233,7 +1254,7 @@
         {
           "id": "uGGUQORfKfa00N4l9srZt",
           "name": "status",
-          "type": "TEXT",
+          "type": "workspace_member_status",
           "default": "",
           "check": "",
           "primary": false,
@@ -1261,7 +1282,7 @@
         {
           "id": "tR60V_nQRdlUtchf-Estg",
           "name": "createdAt",
-          "type": "TIMESTAMP",
+          "type": "TIMESTAMPTZ",
           "default": "",
           "check": "",
           "primary": false,
@@ -1275,7 +1296,7 @@
         {
           "id": "5yOmcVCRC4q7SL9AN1KJn",
           "name": "updatedAt",
-          "type": "TIMESTAMP",
+          "type": "TIMESTAMPTZ",
           "default": "",
           "check": "",
           "primary": false,
@@ -1288,7 +1309,14 @@
         }
       ],
       "comment": "",
-      "indices": [],
+      "indices": [
+        {
+          "id": "idx_wsmem_workspace_01",
+          "name": "workspace_member_workspace_id_idx",
+          "unique": false,
+          "fields": ["workspaceId"]
+        }
+      ],
       "uniqueConstraints": [
         {
           "id": 0,
@@ -1324,7 +1352,7 @@
         },
         {
           "id": "FBc6a4bM72pub7YY_5yEp",
-          "name": "workspaceMemberId",
+          "name": "memberId",
           "type": "UUID",
           "default": "",
           "check": "",
@@ -1338,7 +1366,7 @@
         },
         {
           "id": "la-Wubp-Z_88XdYpn6tX1",
-          "name": "workspaceLocationId",
+          "name": "locationId",
           "type": "UUID",
           "default": "",
           "check": "",
@@ -1353,7 +1381,7 @@
         {
           "id": "XFvu8YTR4U6PseM0UFO_-",
           "name": "createdAt",
-          "type": "TIMESTAMP",
+          "type": "TIMESTAMPTZ",
           "default": "",
           "check": "",
           "primary": false,
@@ -1367,7 +1395,7 @@
         {
           "id": "87MIJHb2UgBrq5Mj3aUw7",
           "name": "updatedAt",
-          "type": "TIMESTAMP",
+          "type": "TIMESTAMPTZ",
           "default": "",
           "check": "",
           "primary": false,
@@ -1380,12 +1408,19 @@
         }
       ],
       "comment": "",
-      "indices": [],
+      "indices": [
+        {
+          "id": "idx_wsmemloc_location_01",
+          "name": "workspace_member_location_location_id_idx",
+          "unique": false,
+          "fields": ["locationId"]
+        }
+      ],
       "uniqueConstraints": [
         {
           "id": 0,
           "name": "Workspace_Member_Location_unique_0",
-          "fields": ["workspaceMemberId", "workspaceLocationId"]
+          "fields": ["memberId", "locationId"]
         }
       ],
       "color": "#175e7a",
@@ -1486,7 +1521,7 @@
         {
           "id": "H0UTHM5H6RO16Wn9jSu1P",
           "name": "currentPeriodStart",
-          "type": "TIMESTAMP",
+          "type": "TIMESTAMPTZ",
           "default": "",
           "check": "",
           "primary": false,
@@ -1500,7 +1535,7 @@
         {
           "id": "JS10hwSbGQ_tkHKrFbGDj",
           "name": "currentPeriodEnd",
-          "type": "TIMESTAMP",
+          "type": "TIMESTAMPTZ",
           "default": "",
           "check": "",
           "primary": false,
@@ -1528,7 +1563,7 @@
         {
           "id": "4e08RqnsUL4HQSUurggMx",
           "name": "createdAt",
-          "type": "TIMESTAMP",
+          "type": "TIMESTAMPTZ",
           "default": "",
           "check": "",
           "primary": false,
@@ -1542,7 +1577,7 @@
         {
           "id": "s8zXIir1Znr07lrnn-Lzi",
           "name": "updatedAt",
-          "type": "TIMESTAMP",
+          "type": "TIMESTAMPTZ",
           "default": "",
           "check": "",
           "primary": false,
@@ -1634,7 +1669,7 @@
         {
           "id": "RYGjNrzSPKbA0ybP_tl4H",
           "name": "createdAt",
-          "type": "TIMESTAMP",
+          "type": "TIMESTAMPTZ",
           "default": "",
           "check": "",
           "primary": false,
@@ -1648,7 +1683,7 @@
         {
           "id": "MIa-pRyqMpB6V0cf_mvg0",
           "name": "updatedAt",
-          "type": "TIMESTAMP",
+          "type": "TIMESTAMPTZ",
           "default": "",
           "check": "",
           "primary": false,
@@ -1674,7 +1709,7 @@
     },
     {
       "id": "IveZcMxY-MNfgdzgEFzJX",
-      "name": "Workspace_Member_Invitation",
+      "name": "Workspace_Invite",
       "x": 437.00241383344235,
       "y": -782.2819891006192,
       "locked": false,
@@ -1711,7 +1746,7 @@
         {
           "id": "B9ml-aJALyBHFuhfTuCH5",
           "name": "role",
-          "type": "TEXT",
+          "type": "workspace_member_role",
           "default": "",
           "check": "",
           "primary": false,
@@ -1738,7 +1773,7 @@
         },
         {
           "id": "OzwZ4o7Tf9oUr8KcrbdWq",
-          "name": "workspaceLocationId",
+          "name": "locationId",
           "type": "UUID",
           "default": "",
           "check": "",
@@ -1771,7 +1806,7 @@
           "default": "",
           "check": "",
           "primary": false,
-          "unique": false,
+          "unique": true,
           "notNull": true,
           "increment": false,
           "comment": "",
@@ -1781,7 +1816,7 @@
         {
           "id": "KForg33UKQLxkGn5vdeEQ",
           "name": "status",
-          "type": "TEXT",
+          "type": "workspace_invite_status",
           "default": "",
           "check": "",
           "primary": false,
@@ -1795,7 +1830,7 @@
         {
           "id": "Ho8R--78SOUrTfhQ0fwqW",
           "name": "expiresAt",
-          "type": "TIMESTAMP",
+          "type": "TIMESTAMPTZ",
           "default": "",
           "check": "",
           "primary": false,
@@ -1809,7 +1844,7 @@
         {
           "id": "Oc0d0o16oUhlon3kqA8li",
           "name": "createdAt",
-          "type": "TIMESTAMP",
+          "type": "TIMESTAMPTZ",
           "default": "",
           "check": "",
           "primary": false,
@@ -1823,7 +1858,7 @@
         {
           "id": "WA_RPhEqT60T5ceTns2NK",
           "name": "updatedAt",
-          "type": "TIMESTAMP",
+          "type": "TIMESTAMPTZ",
           "default": "",
           "check": "",
           "primary": false,
@@ -1835,15 +1870,34 @@
           "values": []
         }
       ],
-      "comment": "",
-      "indices": [],
-      "uniqueConstraints": [
+      "comment": "Partial unique: only one pending invite per (workspaceId, email) \u2014 uniqueIndex workspace_invite_workspace_email_pending_unique WHERE status = 'pending'. DrawDB cannot express the partial WHERE, so it is represented as a plain index here.",
+      "indices": [
         {
-          "id": 0,
-          "name": "Workspace_Member_Invitation_unique_0",
+          "id": "idx_wsinv_we_pending_01",
+          "name": "workspace_invite_workspace_email_pending_unique",
+          "unique": false,
           "fields": ["workspaceId", "email"]
+        },
+        {
+          "id": "idx_wsinv_workspace_01",
+          "name": "workspace_invite_workspace_id_idx",
+          "unique": false,
+          "fields": ["workspaceId"]
+        },
+        {
+          "id": "idx_wsinv_location_01",
+          "name": "workspace_invite_location_id_idx",
+          "unique": false,
+          "fields": ["locationId"]
+        },
+        {
+          "id": "idx_wsinv_invitedby_01",
+          "name": "workspace_invite_invited_by_member_id_idx",
+          "unique": false,
+          "fields": ["invitedByMemberId"]
         }
       ],
+      "uniqueConstraints": [],
       "color": "#175e7a",
       "collapsed": false
     }
@@ -1857,7 +1911,7 @@
       "cardinality": "many_to_one",
       "updateConstraint": "No action",
       "deleteConstraint": "Cascade",
-      "name": "fk_Workspace_Member_Location_workspaceLocationId_Workspace_Location",
+      "name": "fk_Workspace_Member_Location_locationId_Workspace_Location",
       "id": "5OzILW8_VwJDe6SnP28OW"
     },
     {
@@ -1977,8 +2031,8 @@
       "endFieldId": "rwl5XYswIYy2zQ4IVvooa",
       "cardinality": "many_to_one",
       "updateConstraint": "No action",
-      "deleteConstraint": "No action",
-      "name": "fk_Workspace_Member_Invitation_invitedByMemberId_Workspace_Member",
+      "deleteConstraint": "Set null",
+      "name": "fk_Workspace_Invite_invitedByMemberId_Workspace_Member",
       "id": "-bho8ip5_Nfn0c4mjyKiT"
     },
     {
@@ -1989,7 +2043,7 @@
       "cardinality": "many_to_one",
       "updateConstraint": "No action",
       "deleteConstraint": "Cascade",
-      "name": "fk_Workspace_Member_Invitation_workspaceId_Workspace",
+      "name": "fk_Workspace_Invite_workspaceId_Workspace",
       "id": "DFEKprv1fIIOc2Q-Ufyfc"
     },
     {
@@ -2000,7 +2054,7 @@
       "cardinality": "many_to_one",
       "updateConstraint": "No action",
       "deleteConstraint": "No action",
-      "name": "fk_Workspace_Member_Invitation_workspaceLocationId_Workspace_Location",
+      "name": "fk_Workspace_Invite_locationId_Workspace_Location",
       "id": "oj5JCyDWzLmheeA9aX6uQ"
     }
   ],
@@ -2008,6 +2062,27 @@
   "subjectAreas": [],
   "database": "postgresql",
   "types": [],
-  "enums": [],
+  "enums": [
+    {
+      "name": "workspace_type",
+      "values": ["individual", "business"]
+    },
+    {
+      "name": "workspace_industry",
+      "values": ["jewelry", "personal", "technology", "automotive", "construction", "other"]
+    },
+    {
+      "name": "workspace_member_role",
+      "values": ["owner", "admin", "member"]
+    },
+    {
+      "name": "workspace_member_status",
+      "values": ["active", "invited", "suspended"]
+    },
+    {
+      "name": "workspace_invite_status",
+      "values": ["pending", "accepted", "declined", "expired", "revoked"]
+    }
+  ],
   "title": "Ordre"
 }

@@ -2,6 +2,7 @@
   "name": "@ordre/db",
   "version": "0.1.0",
   "dependencies": {
+    "@ordre/core": "workspace:*",
     "drizzle-orm": "^0.45.2",
     "pg": "^8.21.0"
   },
@@ -16,14 +17,17 @@
   },
   "exports": {
     "./connection": "./src/connection.ts",
+    "./migrate": "./src/migrate.ts",
     "./schemas": "./src/schemas/index.ts"
   },
   "private": true,
   "scripts": {
+    "auth:patch": "tsx scripts/patch-better-auth-schema.ts && prettier src/schemas/better-auth.ts --write",
     "check-types": "tsc",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
+    "db:seed": "tsx src/seed.ts",
     "db:studio": "drizzle-kit studio",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
