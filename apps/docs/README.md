@@ -62,24 +62,13 @@ apps/docs/
 
 ## 🚀 Getting Started
 
-From the repo root:
+Install and run the whole stack from the repo root - see **[Setup → Running the Project](content/docs/setup/running-the-project.mdx)**. To run only the docs:
 
 ```bash
-pnpm install
 pnpm --filter docs docs:dev
 ```
 
-Or from this directory:
-
-```bash
-pnpm docs:dev
-```
-
-`pnpm docs:dev` proxies the app through **[portless](https://www.npmjs.com/package/portless)**, which serves it over HTTPS at a stable local hostname:
-
-**https://docs.ordre.localhost**
-
-Run `pnpm docs:dev:app` to start the raw dev server without portless - it runs the OpenAPI watcher and `next dev` together via `concurrently`.
+`pnpm docs:dev` serves it over HTTPS at **https://docs.ordre.localhost** (via portless); `pnpm docs:dev:app` runs the raw server (OpenAPI watcher + `next dev` together).
 
 ---
 
@@ -101,17 +90,21 @@ Run `pnpm docs:dev:app` to start the raw dev server without portless - it runs t
 
 ## 📝 Guides
 
-Guide pages live in `content/docs` as MDX. Navigation order is defined in `content/docs/meta.json`. Each page maps to a URL under `/internal-docs`:
+Guide pages live in `content/docs` as MDX, grouped into sections by folder. Navigation order is defined in `content/docs/meta.json` (and a `meta.json` inside each folder). Pages map to URLs under `/internal-docs`:
 
-| File                 | URL                             |
-| -------------------- | ------------------------------- |
-| `index.mdx`          | `/internal-docs`                |
-| `architecture.mdx`   | `/internal-docs/architecture`   |
-| `specs.mdx`          | `/internal-docs/specs`          |
-| `infrastructure.mdx` | `/internal-docs/infrastructure` |
-| `pricing.mdx`        | `/internal-docs/pricing`        |
-| `brand.mdx`          | `/internal-docs/brand`          |
-| `roadmap.mdx`        | `/internal-docs/roadmap`        |
+| Path                             | URL                                          |
+| -------------------------------- | -------------------------------------------- |
+| `index.mdx`                      | `/internal-docs`                             |
+| `setup/*`                        | `/internal-docs/setup/*`                     |
+| `design/brand.mdx`               | `/internal-docs/design/brand`                |
+| `product/specs.mdx`              | `/internal-docs/product/specs`               |
+| `product/pricing.mdx`            | `/internal-docs/product/pricing`             |
+| `product/roadmap/*`              | `/internal-docs/product/roadmap/*`           |
+| `engineering/architecture.mdx`   | `/internal-docs/engineering/architecture`    |
+| `engineering/data-model.mdx`     | `/internal-docs/engineering/data-model`      |
+| `engineering/authorization/*`    | `/internal-docs/engineering/authorization/*` |
+| `engineering/infrastructure.mdx` | `/internal-docs/engineering/infrastructure`  |
+| `reference/*`                    | `/internal-docs/reference/*`                 |
 
 ---
 
@@ -136,4 +129,4 @@ pnpm docs:openapi        # node scripts/generate-api-docs.ts
 ## 📚 Further Reading
 
 - [Root README](../../README.md) - monorepo overview
-- [architecture.md](../../../ordre-internal-docs/architecture.md) - monorepo architecture (internal docs)
+- [Architecture](content/docs/engineering/architecture.mdx) - monorepo architecture (docs project)

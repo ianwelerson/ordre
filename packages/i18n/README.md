@@ -64,4 +64,4 @@ The package is intentionally minimal - only strings that **more than one app use
 ## 📚 Further Reading
 
 - [Root README](../../README.md) - monorepo overview
-- [architecture.md](../../../ordre-internal-docs/architecture.md) - i18n architecture (internal docs)
+- [Architecture](../../apps/docs/content/docs/engineering/architecture.mdx) - i18n architecture (docs project)

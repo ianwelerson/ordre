@@ -10,14 +10,19 @@ import type { ErrorDefinition, ErrorMap } from '@ordre/core/types';
 // grouped by domain (AUTH_ERRORS, VALIDATION_ERRORS, ...). The source of truth
 // is @ordre/core/errors, so the page can never drift from the catalog the API
 // actually returns. Wired into the docs build alongside generate-api-docs.ts.
-const output = './content/docs/error-codes.mdx';
+const output = './content/docs/reference/error-codes.mdx';
 
 // `import *` over a workspace package gives the module namespace object - one
-// entry per exported catalog. Spec guarantees these keys come back sorted, so
-// the group order is deterministic across runs.
-const catalogs = errorCatalogs as Record<string, ErrorMap>;
+// entry per export. Spec guarantees these keys come back sorted, so the group
+// order is deterministic across runs. The errors barrel also exports helpers
+// (e.g. `errorResponse`), so keep only the `*_ERRORS` catalogs.
+const catalogs = Object.fromEntries(
+  Object.entries(errorCatalogs as Record<string, unknown>).filter(([name]) =>
+    name.endsWith('_ERRORS')
+  )
+) as Record<string, ErrorMap>;
 
-// `AUTH_ERRORS` -> `Auth`, `VALIDATION_ERRORS` -> `Validation`.
+/** Turns a catalog export name into a page heading (`AUTH_ERRORS` -> `Auth`). */
 function groupTitle(exportName: string): string {
   return exportName
     .replace(/_ERRORS$/, '')
@@ -27,11 +32,12 @@ function groupTitle(exportName: string): string {
     .join(' ');
 }
 
-// Markdown table cells are pipe-delimited; escape any literal pipe in a message.
+/** Escapes a literal pipe so a message can't break out of its Markdown table column. */
 function cell(value: string): string {
   return value.replace(/\|/g, '\\|');
 }
 
+/** Renders one error catalog as a Markdown section: a heading plus a code/status/message table. */
 function renderGroup(exportName: string, map: ErrorMap): string {
   const rows = Object.entries(map)
     .map(([code, def]: [string, ErrorDefinition]) => {
@@ -49,6 +55,7 @@ function renderGroup(exportName: string, map: ErrorMap): string {
   ].join('\n');
 }
 
+/** Builds the full MDX page: front matter, intro, and one section per error catalog. */
 function render(): string {
   const groups = Object.entries(catalogs)
     .map(([name, map]) => renderGroup(name, map))
@@ -70,6 +77,7 @@ ${groups}
 `;
 }
 
+/** Renders the page and writes it to `output`. */
 function generate(): void {
   writeFileSync(output, render());
   console.log(`Generated ${output}`);

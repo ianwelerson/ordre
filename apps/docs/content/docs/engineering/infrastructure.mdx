@@ -291,26 +291,9 @@ description: Hosting, infrastructure, and tooling decisions across the stack.
 
 **Status:** Active
 
-**Why:**
+Every app runs behind a stable HTTPS `*.localhost` hostname locally via [portless](https://www.npmjs.com/package/portless) instead of raw ports, so cookies, CORS, and OAuth-style flows behave the way they do in production and cross-app links resolve the same locally as once deployed. Each app keeps its own raw dev server (`*:dev:app`); portless is a thin proxy in front, wired through Turborepo.
 
-- Runs every app behind a stable HTTPS hostname locally instead of juggling `localhost` ports - cookies, CORS, and OAuth-style flows behave the way they do in production
-- Subdomains mirror the production layout, so cross-app links resolve the same locally as they do once deployed
-- Each app keeps its own raw dev server (`*:dev:app`); portless is a thin proxy layer in front, wired through Turborepo
-
-**How it works:** Each app declares a `portless` block in its `package.json` (a `name` and the underlying dev `script`). Running the app's portless dev command starts the raw dev server and proxies it over HTTPS at `https://<name>.localhost`. The root `portless.json` enables the Turborepo integration.
-
-**Dev URLs:**
-
-| App       | Command          | Dev URL                             |
-| --------- | ---------------- | ----------------------------------- |
-| Marketing | `pnpm dev`       | `https://ordre.localhost`           |
-| Dashboard | `pnpm dev`       | `https://dashboard.ordre.localhost` |
-| Board     | `pnpm dev`       | `https://board.ordre.localhost`     |
-| API       | `pnpm api:dev`   | `https://api.ordre.localhost`       |
-| Docs      | `pnpm docs:dev`  | `https://docs.ordre.localhost`      |
-| Storybook | `pnpm storybook` | `https://storybook.ordre.localhost` |
-
-Each command runs from the app directory (or via `pnpm --filter <app> <command>` from the root). To bypass the proxy and run a raw dev server on its default port, use the matching `*:dev:app` script (`dev:app`, `api:dev:app`, `docs:dev:app`, `storybook:app`).
+See [Setup - Running the Project](/internal-docs/setup/running-the-project) for the dev URLs and how to run each app locally.
 
 ---
 
@@ -338,7 +321,7 @@ Each Express route becomes a Vercel Function. The function signature changes fro
 - `@ordre/core` schemas and types
 - `@ordre/services` data access layer
 - Drizzle ORM schemas and migrations
-- All other services (Upstash Redis, Auth0, Twilio, Resend, Sentry, Umami)
+- All other services (Upstash Redis, Better Auth, Twilio, Resend, Sentry, Umami)
 
 ### Database portability note
 

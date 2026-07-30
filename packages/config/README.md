@@ -198,4 +198,4 @@ export { default } from "@ordre/config/prettier";
 ## 📚 Further Reading
 
 - [Root README](../../README.md) - monorepo overview
-- [architecture.md](../../../ordre-internal-docs/architecture.md) - package architecture (internal docs)
+- [Architecture](../../apps/docs/content/docs/engineering/architecture.mdx) - package architecture (docs project)

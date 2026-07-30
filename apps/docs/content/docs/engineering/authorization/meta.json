@@ -1,0 +1,5 @@
+{
+  "title": "Authorization",
+  "icon": "ShieldCheck",
+  "pages": ["rbac", "row-level-security"]
+}

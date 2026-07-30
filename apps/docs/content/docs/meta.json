@@ -2,14 +2,20 @@
   "title": "Guides",
   "root": true,
   "pages": [
+    "---Getting Started---",
     "index",
-    "architecture",
-    "specs",
-    "data-model",
-    "error-codes",
-    "infrastructure",
-    "pricing",
-    "brand",
-    "roadmap"
+    "setup",
+    "---Product---",
+    "design/brand",
+    "product/specs",
+    "product/pricing",
+    "product/roadmap",
+    "---Engineering---",
+    "engineering/architecture",
+    "engineering/data-model",
+    "engineering/authorization",
+    "engineering/testing",
+    "engineering/infrastructure",
+    "reference"
   ]
 }

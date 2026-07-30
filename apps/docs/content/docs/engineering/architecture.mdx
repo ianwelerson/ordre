@@ -366,7 +366,7 @@ Every controller folder is a self-contained feature unit that owns the business 
 | `*.controller.ts` | Controller function(s). No Express dependency. Imports from `@ordre/core/schemas` and `@ordre/db`.                   |
 | `*.openapi.ts`    | OpenAPI registration for the feature. One per folder, not one per controller.                                        |
 | `*.schemas.ts`    | Local Zod schemas. Use only when controller-internal; otherwise put the schema in `@ordre/core/schemas`.             |
-| `*.test.ts`       | Co-located integration tests (one per controller file).                                                              |
+| `*.test.ts`       | Co-located unit tests for fault injection (mocked DB). Full-path coverage lives in `*.routes.test.ts` - see [Testing](./testing). |
 | `helpers/`        | Folder for 2+ internal helpers. For a single helper, use a flat `*.helpers.ts` file instead.                         |
 
 **Naming:** `<feature>.<role>.ts` (e.g. `get-boards.controller.ts`, `boards.openapi.ts`). The `.controller.ts` suffix disambiguates controllers from helpers and schemas as the folder grows.

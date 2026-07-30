@@ -21,11 +21,12 @@ await generateFiles({
   input: openapi,
   output,
   per: 'operation',
-  // Lay every operation out as `{route}/{method}` so files group by their path
-  // (e.g. all /auth/* endpoints under auth/). Without this, fumadocs names files
-  // by operationId when present and falls back to the route otherwise, which is
-  // why some auth pages were nested and some were flat.
-  groupBy: 'route',
+  // Group operations by their `tags` (Auth, Workspace, Health) into one flat
+  // section each, instead of nesting by URL path. This relies on every operation
+  // having an `operationId` (fumadocs uses it for the flat page name and would
+  // otherwise fall back to a nested route path) - the spec generation in
+  // apps/api backfills one for any auth operation better-auth leaves without.
+  groupBy: 'tag',
   // Passed `--watch` by `docs:dev:app`: regenerate when the spec changes.
   watch: process.argv.includes('--watch'),
 });

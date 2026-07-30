@@ -1,0 +1,130 @@
+---
+title: Ideas
+icon: Lightbulb
+description: A repository of ideas Ordre might pursue - not committed, not designed, just captured and explored.
+---
+
+This is a backlog of ideas, not a plan. Nothing here is scheduled or fully
+designed - it's a place to capture possibilities and think them through before
+they're worth committing to.
+
+<Callout title="How to use this page">
+  Drop new ideas under the theme that fits best. Give each one a short **What**,
+  a **Why** it might be worth doing, and the **Open questions** or what it would
+  touch. When an idea graduates into committed work, promote it to the
+  [Launch](/internal-docs/product/roadmap/launch) checklist (or a future release scope) and
+  remove it from here.
+</Callout>
+
+## Product & Features
+
+### Recurring Service Type
+
+**What:** A board model for ongoing service relationships with repeating visits
+on a schedule - snow removal, lawn care, pool maintenance, cleaning.
+
+**Why:** Opens Ordre up to a whole category of service businesses the launch
+service types (Quick and Full) don't serve well.
+
+**Open questions:** This is a fundamentally different board model - open-ended
+rather than linear - and needs dedicated design for scheduling, per-visit
+timeline entries, and notification logic. Quick and Full share enough structure
+to ship together; Recurring needs focused work of its own.
+
+### Client Portal (`portal.ordre.app`)
+
+**What:** A dedicated app where clients see all their boards across different
+providers in one place.
+
+**Why:** Today clients access individual boards via direct links only; a portal
+would give repeat clients a single home and a reason to come back.
+
+**Open questions:** Requires client accounts (currently clients never create an
+account), cross-provider identity, and a new app surface. A big scope jump from
+the link-only model.
+
+### OG Tag Handling for Board URLs
+
+**What:** Rich social/link previews (Open Graph tags) when a board URL is shared
+in messaging apps and social media.
+
+**Why:** A shared board link currently previews as a bare URL; proper OG tags
+make it look polished and trustworthy.
+
+**Open questions:** The board app is already SSR (React Router v7 framework
+mode), so the groundwork is there - what's left is a loader that fetches board
+metadata on the server for `/:token` routes and injects OG tags into the
+document head. Low-risk polish; boards work fine without it.
+
+### Custom Branding
+
+**What:** Let workspace owners on paid tiers customise board appearance with
+their own logo, colours, and domain.
+
+**Why:** Adds perceived value and justifies higher-tier pricing.
+
+**Open questions:** How far does "custom domain" go, and how much theming can we
+expose without letting boards drift off-brand or break accessibility?
+
+### Workspace Analytics Dashboard
+
+**What:** Operational metrics for workspace members - average job duration,
+client response times, the phases where jobs most often stall, board engagement
+rates.
+
+**Why:** Turns the data Ordre already collects into insight members can act on.
+
+**Open questions:** Which metrics are genuinely actionable versus vanity, and how
+much of this overlaps with the product analytics already captured by Umami.
+
+## Messaging & Delivery
+
+### Stripe Direct Meta WhatsApp
+
+**What:** At scale, bypass Twilio for WhatsApp delivery and use the Meta Business
+API directly.
+
+**Why:** Removes the per-message Twilio markup on WhatsApp traffic.
+
+**Open questions:** Only worth the integration effort at high message volume, and
+Meta's Business API onboarding is heavier than Twilio's.
+
+### Plivo as a Twilio Alternative
+
+**What:** A drop-in SMS provider with lower per-message pricing than Twilio.
+
+**Why:** Meaningful cost savings if SMS volume grows, especially on expensive
+Brazil routes.
+
+**Open questions:** Best unlocked by abstracting the messaging layer behind a
+`NotificationService` interface in `@ordre/services` so the provider is a swap,
+not a rewrite. See [Infrastructure - SMS Alternative](/internal-docs/engineering/infrastructure).
+
+## API & Infrastructure
+
+### GraphQL API
+
+**What:** A GraphQL layer on top of the REST API.
+
+**Why:** Could reduce over-fetching once frontend data-fetching patterns reveal
+where it hurts.
+
+**Open questions:** REST on Express is the launch architecture. GraphQL can be
+layered on later without touching the `logic/` layer, since business logic is
+framework-agnostic - worth revisiting once the API surface stabilises.
+
+### Serverless Compute Migration
+
+**What:** Move the backend off a persistent Express service on Railway to a
+serverless model - Vercel Functions or AWS Lambda + API Gateway.
+
+**Why:** Vercel Functions consolidate onto a vendor already paid for frontend
+hosting; AWS Lambda is a portfolio-skills consideration and can be more
+cost-effective at certain traffic shapes.
+
+**Open questions:** The adapter pattern in `apps/api/` keeps the `logic/` layer
+untouched in either migration; the main change is swapping the `pg` pool driver
+for Neon's serverless/HTTP driver, since a serverless runtime can't hold a
+pooled TCP connection open. See
+[Infrastructure - Future Compute Options](/internal-docs/engineering/infrastructure) for the
+full mapping.

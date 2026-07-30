@@ -12,38 +12,71 @@ This is the internal documentation: how the product works, how the codebase is
 organized, the infrastructure behind it, and how it is priced. The
 [API Reference](/api-docs) is generated from the live OpenAPI spec.
 
+## About this project
+
+<Callout title="On the project">
+  Ordre is a **study project**. It exists to explore product concepts,
+  libraries, patterns, and monorepo architecture in depth. Some parts are
+  **intentionally overengineered** (layered packages, swappable service
+  interfaces, multi-app setup, and so on) because the goal is to learn by
+  building, not to ship the smallest possible MVP.
+</Callout>
+
+<Callout title="On AI usage">
+  AI is part of the development process, but deliberately kept away from the core
+  of it. It's used for supporting tasks - drafting and refining documentation,
+  writing code comments, and as a search resource alongside the official docs and
+  the wider internet. The goal is to lean on AI **as little as possible for the
+  actual coding**, because the whole point is to learn, practice, and explore by
+  writing the code myself. That said, this is transparency, not a claim that AI
+  plays no part in the work.
+</Callout>
+
+<Callout title="Built like a real product">
+  Even though it's a study project, Ordre is designed and documented **as if it
+  were a real product heading to market**. That's why the docs go all the way
+  down to pricing tiers, a founding-member strategy, payout constraints, and a
+  launch roadmap - working through those decisions is part of the exercise, not
+  set dressing.
+</Callout>
+
 ## Start here
 
 <Cards>
   <Card
+    title="Setup"
+    href="/internal-docs/setup/running-the-project"
+    description="Get the project running - prerequisites, environment variables, database roles, and how to run each app."
+  />
+  <Card
     title="Architecture"
-    href="/internal-docs/architecture"
+    href="/internal-docs/engineering/architecture"
     description="Monorepo structure, package responsibilities, app conventions, and the API folder model."
   />
   <Card
     title="Specifications"
-    href="/internal-docs/specs"
+    href="/internal-docs/product/specs"
     description="How individual features work - board access, identity verification, service types, and registration."
   />
   <Card
     title="Infrastructure"
-    href="/internal-docs/infrastructure"
+    href="/internal-docs/engineering/infrastructure"
     description="Hosting, database, storage, auth, messaging, and the rest of the service stack."
   />
   <Card
     title="Pricing & Billing"
-    href="/internal-docs/pricing"
+    href="/internal-docs/product/pricing"
     description="Tiers, founding member strategy, the Stripe billing model, and payout constraints."
   />
   <Card
     title="Brand"
-    href="/internal-docs/brand"
+    href="/internal-docs/design/brand"
     description="Positioning, color system, typography, and the component patterns that define the look."
   />
   <Card
     title="Roadmap"
-    href="/internal-docs/roadmap"
-    description="What is scoped for launch, what is planned post-launch, and longer-term ideas."
+    href="/internal-docs/product/roadmap"
+    description="The committed launch scope as a checklist, plus a repository of ideas being explored."
   />
 </Cards>
 
@@ -65,12 +98,12 @@ in one place.
 <Cards>
   <Card
     title="Who it's for"
-    href="/internal-docs/specs"
+    href="/internal-docs/product/specs"
     description="Service operations - repair shops, contractors, mechanics, freelancers - and their clients."
   />
   <Card
     title="Design principles"
-    href="/internal-docs/brand"
+    href="/internal-docs/design/brand"
     description="Zero friction for the client, professional by default, and useful across any service type."
   />
 </Cards>

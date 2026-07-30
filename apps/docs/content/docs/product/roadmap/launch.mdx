@@ -1,0 +1,99 @@
+---
+title: Launch
+icon: Rocket
+description: The committed scope for Ordre's initial release - a living map of what's built and what's still planned.
+---
+
+Everything here is committed for the initial release. This page is a living map
+of scope, grouped by layer - the product features clients and members see, the
+API that powers them, the apps that ship them, the platform they run on, and the
+commercial layer. The **Status** column shows where each piece stands today.
+There are no dates or deadlines; it's a picture of the product's current state
+and where it's headed.
+
+**Status key:** ✅ Done · 🚧 In progress · 📋 Planned
+
+## Product
+
+The features clients and workspace members experience.
+
+| Feature                    | Description                                                                            | Status |
+| -------------------------- | -------------------------------------------------------------------------------------- | ------ |
+| Registration & onboarding  | Industry selection, provider type (Individual / Business), contact info, password via email link; creates a user account and workspace | 🚧 |
+| Board creation and sharing | Unique link per job, shareable via SMS, email, or WhatsApp                              | 📋 |
+| Timeline updates           | Text and photo updates posted by members, visible to the client in real time           | 📋 |
+| Photo documentation        | Before/during/after shots attached to timeline updates                                 | 📋 |
+| Approval requests          | Formal approve/decline flow for scope or price changes                                 | 📋 |
+| Built-in chat              | Direct messaging between client and members inside the board                           | 📋 |
+| Phase tracker              | Template-defined progress stages (Full service type only)                              | 📋 |
+| Templates                  | Pre-built Quick and Full service-type templates; custom template creation              | 📋 |
+| Identity verification      | Sensitive fields blurred until the client verifies via email or phone                  | 📋 |
+| Multiple locations         | Workspaces can manage boards across more than one physical site                        | 📋 |
+
+## API
+
+Backend capabilities in [`apps/api`](/internal-docs/engineering/architecture) that power the product. See the [API Reference](/api-docs) for the live contract.
+
+| Capability                  | Description                                                                          | Status |
+| --------------------------- | ------------------------------------------------------------------------------------ | ------ |
+| Health check                | Liveness endpoint for uptime monitoring                                              | ✅ |
+| Authentication              | Better Auth - sign-up, sign-in, sessions, email verification                        | ✅ |
+| Authorization               | RBAC middleware in the app plus Postgres row-level security as the backstop          | ✅ |
+| Workspace management        | Create, read (by id/slug), update, delete, and slug-availability check               | ✅ |
+| Members & invitations       | Member endpoints (list, read, self-service profile/leave, update, remove, role change) plus admin invites (create, list, read, revoke) and the public invite flow (preview, accept, decline) | ✅ |
+| Locations                   | Location CRUD, default-location management, and assigning members to locations       | ✅ |
+| Billing & subscriptions     | Billing data model in place; Stripe integration pending                             | 🚧 |
+| Boards                      | Board lifecycle, access tokens, and client-facing read model                        | 📋 |
+| Timeline & updates          | Posting and retrieving timeline entries with real-time fan-out                       | 📋 |
+| Photo uploads               | Pre-signed upload URLs and thumbnail generation                                      | 📋 |
+| Approvals                   | Approve/decline requests tied to a board                                             | 📋 |
+| Chat / messaging            | Board-scoped messaging between client and members                                    | 📋 |
+| Templates                   | Template storage and per-workspace customisation                                     | 📋 |
+| Client verification         | One-time email/SMS token flow for unblurring sensitive fields                        | 📋 |
+
+## Apps
+
+The runnable surfaces of the product.
+
+| App                                     | Stack                                    | Status |
+| --------------------------------------- | ---------------------------------------- | ------ |
+| API (`api.ordre.app`)                   | Express on Railway                       | 🚧 |
+| Dashboard (`dashboard.ordre.app`)       | Next.js - used by workspace members      | 🚧 |
+| Client board (`go.ordre.app`)           | React Router v7, framework mode (SSR)    | 🚧 |
+| Marketing site (`ordre.app`)            | Next.js                                  | 🚧 |
+| Storybook (`storybook.ordre.app`)       | Component docs for `@ordre/ui`           | ✅ |
+| Docs & API reference (`docs.ordre.app`) | Fumadocs - guides plus the API reference | ✅ |
+
+## Platform & Services
+
+Hosting and third-party services. See [Infrastructure](/internal-docs/engineering/infrastructure) for the reasoning behind each choice.
+
+| Service           | Role                                                            | Status |
+| ----------------- | -------------------------------------------------------------- | ------ |
+| Vercel            | Frontend hosting for all apps                                  | ✅ |
+| Cloudflare DNS    | Domain and DNS for `ordre.app`                                 | ✅ |
+| Better Auth       | Workspace member authentication (clients excluded)            | ✅ |
+| pino logging      | Structured logs via `@ordre/monitoring`                       | ✅ |
+| Railway           | Backend compute; Express as a persistent containerised service | 🚧 |
+| Neon              | Serverless PostgreSQL database                                 | 🚧 |
+| Sentry            | Error tracking (release tracking in CI; SDK integration pending) | 🚧 |
+| Cloudflare R2     | Image storage (S3-compatible, zero egress)                    | 📋 |
+| Upstash Redis     | Real-time pub/sub (Socket.io) and board caching               | 📋 |
+| Twilio            | SMS and WhatsApp delivery                                      | 📋 |
+| Resend            | Transactional and notification email                          | 📋 |
+| Stripe            | Subscription billing with localised pricing                   | 📋 |
+| Umami             | Privacy-first, cookieless analytics                           | 📋 |
+| Better Stack      | Centralised log platform and uptime monitoring                | 📋 |
+
+## Pricing & Billing
+
+The commercial layer. See [Pricing & Billing](/internal-docs/product/pricing) for the full model.
+
+| Item                    | Description                                                              | Status |
+| ----------------------- | ----------------------------------------------------------------------- | ------ |
+| Free tier               | 3 active boards, 1 location, no team members                            | 📋 |
+| Premium tier            | Up to 20 active boards, up to 3 team members, 1 location                | 📋 |
+| Add-ons                 | Unlimited boards, unlimited team members, unlimited locations           | 📋 |
+| Founding member pricing | Reduced rate for early adopters, locked in for the subscription's life  | 📋 |
+| Annual billing          | ~17% discount over monthly, on both normal and founding pricing         | 📋 |
+| Stripe billing          | Localised pricing (USD, CAD, BRL) and full subscription lifecycle       | 📋 |

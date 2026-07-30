@@ -96,7 +96,7 @@ Ordre launches with a reduced **founding member** price to incentivise early ado
 - Industry-standard developer API with excellent documentation and TypeScript SDK
 - Native subscription billing with full lifecycle support (trials, proration, upgrades, downgrades, cancellations)
 - Accepts payments from 195+ countries across 135+ currencies with a single integration
-- Strong portfolio signal; integrates cleanly with the existing Next.js + Fastify stack
+- Strong portfolio signal; integrates cleanly with the existing Next.js + Express stack
 - No setup or monthly fees - pay-as-you-go per transaction
 
 **Alternatives considered:** Paddle (merchant of record - handles VAT automatically, but 5% + $0.50 per transaction is a higher cost at early stage and the MoR model is unnecessary given Ordre's primary markets), Lemon Squeezy (similar to Paddle, better suited for digital products than service-industry SaaS).
@@ -179,25 +179,3 @@ Stripe Billing handles the full subscription lifecycle:
 - **Cancellations** - access remains until the end of the current billing period
 - **Invoices** - generated automatically per billing cycle and accessible to the workspace owner
 - **Annual ↔ Monthly** - workspace owners can switch billing frequency; Stripe handles proration
-
----
-
-## 💵 USD Retention (Future Consideration)
-
-Because Brazilian Stripe accounts always pay out in BRL, any USD or CAD revenue is converted at the time of payout. If retaining foreign currency becomes desirable as revenue grows, the following options are available:
-
-- **Wise Business** - multi-currency account; can hold USD, receive transfers from Stripe, and convert at mid-market rates
-- **Nomad** - Brazilian-friendly USD account designed for freelancers and founders receiving foreign income
-
-This is deferred until there is meaningful USD/CAD volume and a clear reason to avoid conversion.
-
----
-
-## ⚠️ Tax & Compliance Notes
-
-- Ordre does not act as a merchant of record - tax compliance for digital services sold internationally is the responsibility of the operator
-- At the current scale and in the primary target markets (Brazil, US, Canada), cross-border VAT/GST obligations are unlikely to be triggered for an individual operator
-- All foreign income received must be declared to Receita Federal in Brazil according to applicable rules
-- A Brazilian accountant with SaaS and foreign income experience should be consulted before the paid tier goes live
-
-> These notes are for orientation only and do not constitute legal or tax advice.

@@ -1,0 +1,5 @@
+{
+  "title": "Setup",
+  "icon": "Settings",
+  "pages": ["running-the-project", "environment-variables", "database-roles"]
+}

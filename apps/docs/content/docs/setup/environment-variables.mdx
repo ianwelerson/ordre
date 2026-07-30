@@ -1,0 +1,62 @@
+---
+title: Environment Variables
+icon: KeySquare
+description: Which .env files exist, where they live, how they are loaded, and every variable the apps read.
+---
+
+Environment config is split between **shared infrastructure** (things every app needs, like the database) at the repo root, and **app-specific** values inside each app. The API validates its variables with a Zod schema at startup, so a missing or malformed value fails immediately rather than at request time.
+
+## The files
+
+| File                     | Scope                        | Committed?                     | Purpose                                                     |
+| ------------------------ | ---------------------------- | ------------------------------ | ---------------------------------------------------------- |
+| `.env`                   | Shared infra (dev)           | No                             | Database connection strings used across apps                |
+| `.env.example`           | Shared infra template        | Yes                            | Copy to `.env` and fill in                                  |
+| `.env.test`              | Shared infra (test)          | No                             | Points at a **dedicated, disposable** test database         |
+| `.env.test.example`      | Shared infra test template   | Yes                            | Copy to `.env.test`                                         |
+| `apps/api/.env`          | API-specific (dev)           | No                             | Auth secret, stage, port                                    |
+| `apps/api/.env.example`  | API-specific template        | Yes                            | Copy to `apps/api/.env`                                     |
+| `apps/api/.env.test`     | API-specific (test)          | No                             | API values used under `APP_STAGE=test`                      |
+
+<Callout type="warn">
+  The test harness `TRUNCATE`s every table before each test. Point `.env.test`
+  at a database you are happy to wipe - never a database with real data.
+</Callout>
+
+## How they are loaded
+
+The API's [`env.ts`](https://github.com/ianwelerson/ordre/blob/main/apps/api/src/config/env.ts) picks the stage from `APP_STAGE` (falling back to `NODE_ENV`, default `development`) and loads **root first, then app** so app values can override shared ones:
+
+| Stage           | Files loaded (in order)                    |
+| --------------- | ------------------------------------------ |
+| `development`   | `../../.env` → `apps/api/.env`             |
+| `test`          | `../../.env.test` → `apps/api/.env.test`  |
+| `production`    | none - variables come from the host        |
+
+In production nothing is read from disk; the host (Railway, Neon, etc.) provides the variables directly.
+
+## Shared infrastructure (`.env` / `.env.test`)
+
+These live at the repo root because more than one package needs them (the API runtime and the Drizzle migration tooling).
+
+| Variable             | Required | Example                                        | Notes                                                                    |
+| -------------------- | -------- | ---------------------------------------------- | ------------------------------------------------------------------------ |
+| `DATABASE_URL`       | yes      | `postgresql://ordre_app@localhost:5432/ordre`  | Runtime connection - the restricted `ordre_app` role                     |
+| `DATABASE_OWNER_URL` | yes      | `postgresql://owner@localhost:5432/ordre`      | Migration connection - the table **owner** (see [Database Roles & RLS](/internal-docs/setup/database-roles)) |
+
+Both are validated to start with `postgresql://`. The two-role split is what lets Row-Level Security actually enforce - see [Database Roles & RLS](/internal-docs/setup/database-roles).
+
+## API-specific (`apps/api/.env`)
+
+| Variable              | Required | Default         | Notes                                                                 |
+| --------------------- | -------- | --------------- | --------------------------------------------------------------------- |
+| `APP_STAGE`           | no       | `development`   | `development` \| `test` \| `production`; must match `NODE_ENV`         |
+| `NODE_ENV`            | no       | `development`   | Must match `APP_STAGE` (enforced by the schema)                       |
+| `PORT`                | no       | `3000`          | HTTP port for the raw server (`api:dev:app`)                          |
+| `BETTER_AUTH_SECRET`  | yes      | -               | Secret used by Better Auth for session signing                        |
+| `BETTER_AUTH_URL`     | yes      | -               | Base URL of the auth server, e.g. `http://ordre.localhost` in dev     |
+
+<Callout>
+  `NODE_ENV` and `APP_STAGE` must be equal - the schema rejects a mismatch. This
+  keeps "which env files load" and "how the framework behaves" from drifting apart.
+</Callout>

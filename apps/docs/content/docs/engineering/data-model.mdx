@@ -18,9 +18,12 @@ Two modelling decisions are baked in:
   polymorphic table. Each event kind (update, approval, milestone, internal note,
   visit report, stage transition, system event) is its own table.
 
+> `timestamp` below always means Postgres `timestamptz` (timestamp **with** time
+> zone) - every instant in Ordre is stored zone-aware.
+>
 > `[derived]` marks values computed at read time - do not store them.
 > `[sensitive]` marks fields blurred on the client board until identity is verified
-> (see [Board Access & Identity Verification](/internal-docs/specs)).
+> (see [Board Access & Identity Verification](/internal-docs/product/specs)).
 
 ---
 
@@ -102,7 +105,7 @@ Workspace Settings.
 | `name`         | text                          | Workspace / business display name                                 |
 | `slug`         | text, unique                  | Public handle - `ordre.app/<slug>`                                |
 | `type`         | enum `individual \| business` | Provider type - invoicing / branding                              |
-| `industry`     | text                          | `automotive \| home \| personal \| construction \| creative \| technology \| other` |
+| `industry`     | enum                          | `jewelry \| personal \| technology \| automotive \| construction \| other` |
 | `description`  | text, nullable                | Shown on the public page                                          |
 | `logo`         | text, nullable                | Logo URL                                                          |
 | `billingEmail` | text, nullable                |                                                                   |
@@ -124,7 +127,7 @@ Better Auth org plugin.
 | `displayName` | text, nullable                  | Name shown to clients on boards (first name works well) |
 | `title`       | text, nullable                  | Role label under the name on the client board           |
 | `role`        | enum `owner \| admin \| member` |                                                         |
-| `status`      | enum `active \| disabled`       |                                                         |
+| `status`      | enum `active \| invited \| suspended` |                                                   |
 | `phone`       | text, nullable                  | Personal account contact (Register step 4, Profile)     |
 | `createdAt`   | timestamp                       |                                                         |
 | `updatedAt`   | timestamp                       |                                                         |
@@ -138,21 +141,21 @@ Unique: (`userId`, `workspaceId`).
 Which locations a member works from - a member can cover many locations and a
 location many members.
 
-| Field                 | Type                    | Notes |
-| --------------------- | ----------------------- | ----- |
-| `id`                  | uuid                    |       |
-| `workspaceMemberId`   | fk → Workspace_Member   |       |
-| `workspaceLocationId` | fk → Workspace_Location |       |
-| `createdAt`           | timestamp               |       |
-| `updatedAt`           | timestamp               |       |
+| Field        | Type                    | Notes |
+| ------------ | ----------------------- | ----- |
+| `id`         | uuid                    |       |
+| `memberId`   | fk → Workspace_Member   |       |
+| `locationId` | fk → Workspace_Location |       |
+| `createdAt`  | timestamp               |       |
+| `updatedAt`  | timestamp               |       |
 
-Unique: (`workspaceMemberId`, `workspaceLocationId`).
+Unique: (`memberId`, `locationId`).
 
 ---
 
 ## ✉️ Invitation
 
-Pending teammate invites (`Workspace_Member_Invitation`; Team → Invite modal).
+Pending teammate invites (`Workspace_Invite`; Team → Invite modal).
 
 | Field                 | Type                                    | Notes                          |
 | --------------------- | --------------------------------------- | ------------------------------ |
@@ -160,10 +163,10 @@ Pending teammate invites (`Workspace_Member_Invitation`; Team → Invite modal).
 | `email`               | text                                    |                                |
 | `role`                | enum `admin \| member`                  |                                |
 | `workspaceId`         | fk → Workspace                          |                                |
-| `workspaceLocationId` | fk → Workspace_Location, nullable       | Location they're invited to    |
+| `locationId`          | fk → Workspace_Location, nullable       | Location they're invited to    |
 | `invitedByMemberId`   | fk → Workspace_Member, nullable         | Null for system/seed invites   |
 | `token`               | text                                    | Invite-link token              |
-| `status`              | enum `pending \| accepted \| cancelled` |                                |
+| `status`              | enum `pending \| accepted \| declined \| expired \| revoked` |            |
 | `expiresAt`           | timestamp                               |                                |
 | `createdAt`           | timestamp                               |                                |
 | `updatedAt`           | timestamp                               |                                |
@@ -183,7 +186,8 @@ board belongs to one.
 | `workspaceId` | fk → Workspace        |                             |
 | `name`        | text                  | "Geneva · Grand-Rue"        |
 | `address`     | text, nullable        |                             |
-| `mapUrl`      | text, nullable        |                             |
+| `latitude`    | numeric(8,6), nullable | For map pin                |
+| `longitude`   | numeric(9,6), nullable | For map pin                |
 | `phone`       | text, nullable        | Board "Workshop phone"      |
 | `email`       | text, nullable        |                             |
 | `isDefault`   | boolean               |                             |
@@ -546,7 +550,7 @@ The secure chat between client and workspace (Messages page, board chat).
 ## ✅ Client Verification
 
 Identity verification is **session-based** - the entered email/phone is matched
-and **not stored** (see [Specs](/internal-docs/specs)). The "verified" state lives
+and **not stored** (see [Specs](/internal-docs/product/specs)). The "verified" state lives
 in the client's session, not the database. Optionally keep an audit log:
 
 ### `verification_attempt` (optional, audit only)
@@ -700,7 +704,7 @@ Plan  ─── Workspace_Subscription          Addon ─── Workspace_Subscr
 
 Workspace ─┬─ Workspace_Member ─┬─ user (Better Auth)
            │                    └─ Workspace_Member_Location ── Workspace_Location
-           ├─ Workspace_Member_Invitation  (→ Workspace_Member, Workspace_Location)
+           ├─ Workspace_Member_Invite  (→ Workspace_Member, Workspace_Location)
            ├─ Workspace_Location
            ├─ client ─┬─ client_contact
            │          └─ client_follow_up

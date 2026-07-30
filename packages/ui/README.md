@@ -84,5 +84,5 @@ import { Card } from '@ordre/ui/card';
 ## 📚 Further Reading
 
 - [Root README](../../README.md) - monorepo overview
-- [brand.md](../../../ordre-internal-docs/brand.md) - brand identity and design principles (internal docs)
-- [architecture.md](../../../ordre-internal-docs/architecture.md) - package architecture (internal docs)
+- [Design → Brand](../../apps/docs/content/docs/design/brand.mdx) - brand identity, color system, and design principles (docs project)
+- [Architecture](../../apps/docs/content/docs/engineering/architecture.mdx) - package architecture (docs project)

@@ -1,0 +1,90 @@
+---
+title: Database Roles & RLS
+icon: KeyRound
+description: The one-time, per-database role and grant setup that Row-Level Security depends on - for local, Neon staging, and production.
+---
+
+**Status:** Manual - the only database setup step that is not automated.
+
+Every other database change ships in Drizzle migrations (`packages/db/src/migrations`) and runs automatically on deploy as the **owner** role. Creating the application role is the exception: it happens **once per database**, by hand, because it carries a login secret and needs owner-level privileges the app role deliberately lacks.
+
+<Callout>
+  This page is the runbook for **creating the role**. For how RLS actually works at
+  runtime - the per-request identity, the policies, and the gotchas - see
+  [Engineering - Row-Level Security](/internal-docs/engineering/authorization/row-level-security).
+</Callout>
+
+## Two roles, on purpose
+
+| Role                                                     | Used by                                                | Privileges                                                                                | Under RLS                                                            |
+| -------------------------------------------------------- | ------------------------------------------------------ | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| **Owner** (`neondb_owner` on Neon, your local superuser) | Migrations (`pnpm db:migrate`) via `DATABASE_OWNER_URL` | Owns the tables; can `CREATE POLICY`, `ALTER TABLE`                                        | Bypasses it (owner) - so policies use `FORCE ROW LEVEL SECURITY`    |
+| **App** (`ordre_app`)                                    | The API runtime via `DATABASE_URL`                     | `SELECT/INSERT/UPDATE/DELETE` on tables only - no ownership, not superuser, no `BYPASSRLS` | Yes - a weak, non-owner role is what makes Row-Level Security enforce |
+
+The app connecting as the weaker role is the whole point: the owner would silently bypass every policy.
+
+## Bootstrap SQL
+
+Run once per database, connected as the **owner**. Replace the password with a strong secret stored in that environment's secrets manager. Run order doesn't matter - `ALTER DEFAULT PRIVILEGES` covers tables created by later migrations, while `GRANT ... ON ALL TABLES` covers any that already exist.
+
+```sql
+-- 1. The application login role (weak on purpose).
+CREATE ROLE ordre_app LOGIN PASSWORD '<strong-secret>';
+
+-- 2. Let it reach the schema and tables (but never own them).
+GRANT CONNECT ON DATABASE <database_name> TO ordre_app;
+GRANT USAGE ON SCHEMA public TO ordre_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO ordre_app;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO ordre_app;
+
+-- 3. Apply the same grants to whatever future migrations create.
+--    Must be run BY the owner - default privileges only cover objects that role makes.
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+  GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO ordre_app;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+  GRANT USAGE, SELECT ON SEQUENCES TO ordre_app;
+```
+
+## Per environment
+
+Grants are **per database**, so this runs independently on each one:
+
+| Environment | Database     | Where to run it                               |
+| ----------- | ------------ | --------------------------------------------- |
+| Local dev   | `ordre`      | `psql` as your local superuser                |
+| Local tests | `ordre-test` | `psql` as your local superuser                |
+| Staging     | Neon staging | Neon Console → SQL Editor (as `neondb_owner`) |
+| Production  | Neon prod    | Neon Console → SQL Editor (as `neondb_owner`) |
+
+## Neon specifics
+
+<Callout type="warn">
+  **Do not create the role from the Neon dashboard (Console → Roles).** Neon gives
+  console-created roles the `BYPASSRLS` attribute, which silently disables Row-Level
+  Security for that role - every policy is ignored. Create it with the `CREATE ROLE`
+  SQL above, which defaults to `NOBYPASSRLS`.
+</Callout>
+
+- **Run it as the owner.** Neon has no superuser; the project's default `neondb_owner` role owns the tables and can create roles and grant. Open **Neon Console → your project → SQL Editor**, select the correct branch/database, and paste the block (or use `psql` with the `neondb_owner` string).
+- **The secret is a password, not a JWT/token.** Postgres authenticates the role with a password (SCRAM) carried in the connection string over SSL. Set it in `CREATE ROLE ... PASSWORD` and store it in the environment's secrets manager (reset later with `ALTER ROLE ordre_app PASSWORD '<new>'`).
+- **Already created it via the dashboard?** Fix the attribute with `ALTER ROLE ordre_app NOBYPASSRLS;`. If Neon blocks that (it can require superuser), drop and recreate via SQL - `DROP ROLE ordre_app;` then the `CREATE ROLE` block above.
+- **Every database needs its own run.** Prod and staging are separate - do both. If they are branches rather than separate projects, a role created _after_ a branch was made does not appear on that branch, so treat each environment independently.
+- **Connection strings for that environment:**
+  - `DATABASE_URL` → `ordre_app` on the **pooled** endpoint (the `-pooler` host), `sslmode=require&channel_binding=require`. If the `pg` driver ever fails with a channel-binding/SASL error, drop `channel_binding=require` (`sslmode=require` still encrypts).
+  - `DATABASE_OWNER_URL` → `neondb_owner`, ideally the **direct** (non-`-pooler`) host, used by migrations in that environment's deploy pipeline.
+
+## Verify
+
+First, confirm the role is genuinely weak - the three flags should read `f | f | t` (not superuser, **not bypassing RLS**, can log in):
+
+```sql
+SELECT rolsuper, rolbypassrls, rolcanlogin FROM pg_roles WHERE rolname = 'ordre_app';
+```
+
+`rolbypassrls = f` is the one that matters most - if it is `t`, RLS is disabled for the role and every policy is ignored.
+
+Then, once the schema exists (migrations have run), this should return a count rather than `permission denied`:
+
+```bash
+psql "<DATABASE_URL for ordre_app>" -c "SELECT count(*) FROM workspace;"
+```

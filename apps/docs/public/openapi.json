@@ -24,8 +24,1317 @@
       "description": "Local"
     }
   ],
+  "tags": [
+    {
+      "name": "Auth",
+      "description": "Authentication and session endpoints (better-auth)."
+    },
+    {
+      "name": "Workspace",
+      "description": "Create, read, update, and delete workspaces."
+    },
+    {
+      "name": "Workspace Location",
+      "description": "Manage a workspace's locations, including the default location."
+    },
+    {
+      "name": "Workspace Member",
+      "description": "Manage a workspace's members - roles, profiles, removal, and self-service."
+    },
+    {
+      "name": "Workspace Invite",
+      "description": "Manage a workspace's member invites."
+    },
+    {
+      "name": "Health",
+      "description": "Service health checks."
+    }
+  ],
   "components": {
     "schemas": {
+      "WorkspaceInvite": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "owner",
+              "admin",
+              "member"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "accepted",
+              "declined",
+              "expired",
+              "revoked"
+            ]
+          },
+          "token": {
+            "type": "string",
+            "minLength": 1
+          },
+          "workspaceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "locationId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "invitedByMemberId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "location": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "name": {
+                "type": "string"
+              },
+              "address": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "latitude": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": -90,
+                "maximum": 90
+              },
+              "longitude": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": -180,
+                "maximum": 180
+              },
+              "phone": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "email": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "email"
+              },
+              "isDefault": {
+                "type": "boolean"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "isDefault",
+              "createdAt",
+              "updatedAt"
+            ]
+          },
+          "invitedByMember": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "userId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "displayName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "title": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "owner",
+                  "admin",
+                  "member"
+                ]
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "suspended"
+                ]
+              },
+              "phone": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "id",
+              "userId",
+              "role",
+              "status",
+              "createdAt",
+              "updatedAt"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "name",
+          "role",
+          "status",
+          "token",
+          "workspaceId",
+          "expiresAt",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "WorkspaceInvitePreview": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "owner",
+              "admin",
+              "member"
+            ]
+          },
+          "workspaceName": {
+            "type": "string"
+          },
+          "workspaceLogo": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "invitedByName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "email",
+          "name",
+          "role",
+          "workspaceName",
+          "expiresAt"
+        ]
+      },
+      "ResponseError": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "details": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ]
+      },
+      "WorkspaceLocation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "address": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "latitude": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": -90,
+            "maximum": 90
+          },
+          "longitude": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": -180,
+            "maximum": 180
+          },
+          "phone": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "email"
+          },
+          "isDefault": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "userId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "displayName": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "title": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "role": {
+                  "type": "string",
+                  "enum": [
+                    "owner",
+                    "admin",
+                    "member"
+                  ]
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "active",
+                    "suspended"
+                  ]
+                },
+                "phone": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "id",
+                "userId",
+                "role",
+                "status",
+                "createdAt",
+                "updatedAt"
+              ]
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "isDefault",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "WorkspaceMember": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "title": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "owner",
+              "admin",
+              "member"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "suspended"
+            ]
+          },
+          "phone": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "locations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "address": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "latitude": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": -90,
+                  "maximum": 90
+                },
+                "longitude": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": -180,
+                  "maximum": 180
+                },
+                "phone": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "email": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "email"
+                },
+                "isDefault": {
+                  "type": "boolean"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "isDefault",
+                "createdAt",
+                "updatedAt"
+              ]
+            }
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "role",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "Workspace": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "slug": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "logo": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "individual",
+              "business"
+            ]
+          },
+          "industry": {
+            "type": "string",
+            "enum": [
+              "jewelry",
+              "personal",
+              "technology",
+              "automotive",
+              "construction",
+              "other"
+            ]
+          },
+          "billingEmail": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "email"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "userId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "displayName": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "title": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "role": {
+                  "type": "string",
+                  "enum": [
+                    "owner",
+                    "admin",
+                    "member"
+                  ]
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "active",
+                    "suspended"
+                  ]
+                },
+                "phone": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "locations": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "address": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "latitude": {
+                        "type": [
+                          "number",
+                          "null"
+                        ],
+                        "minimum": -90,
+                        "maximum": 90
+                      },
+                      "longitude": {
+                        "type": [
+                          "number",
+                          "null"
+                        ],
+                        "minimum": -180,
+                        "maximum": 180
+                      },
+                      "phone": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "email": {
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "format": "email"
+                      },
+                      "isDefault": {
+                        "type": "boolean"
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "updatedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "name",
+                      "isDefault",
+                      "createdAt",
+                      "updatedAt"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "id",
+                "userId",
+                "role",
+                "status",
+                "createdAt",
+                "updatedAt"
+              ]
+            }
+          },
+          "locations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "address": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "latitude": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": -90,
+                  "maximum": 90
+                },
+                "longitude": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": -180,
+                  "maximum": 180
+                },
+                "phone": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "email": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "email"
+                },
+                "isDefault": {
+                  "type": "boolean"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "members": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "userId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "displayName": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "title": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "role": {
+                        "type": "string",
+                        "enum": [
+                          "owner",
+                          "admin",
+                          "member"
+                        ]
+                      },
+                      "status": {
+                        "type": "string",
+                        "enum": [
+                          "active",
+                          "suspended"
+                        ]
+                      },
+                      "phone": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "updatedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "userId",
+                      "role",
+                      "status",
+                      "createdAt",
+                      "updatedAt"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "isDefault",
+                "createdAt",
+                "updatedAt"
+              ]
+            }
+          },
+          "invites": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "email": {
+                  "type": "string",
+                  "format": "email"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "role": {
+                  "type": "string",
+                  "enum": [
+                    "owner",
+                    "admin",
+                    "member"
+                  ]
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "pending",
+                    "accepted",
+                    "declined",
+                    "expired",
+                    "revoked"
+                  ]
+                },
+                "token": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "workspaceId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "locationId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "uuid"
+                },
+                "invitedByMemberId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "uuid"
+                },
+                "expiresAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "location": {
+                  "type": [
+                    "object",
+                    "null"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "address": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "latitude": {
+                      "type": [
+                        "number",
+                        "null"
+                      ],
+                      "minimum": -90,
+                      "maximum": 90
+                    },
+                    "longitude": {
+                      "type": [
+                        "number",
+                        "null"
+                      ],
+                      "minimum": -180,
+                      "maximum": 180
+                    },
+                    "phone": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "email": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "format": "email"
+                    },
+                    "isDefault": {
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "isDefault",
+                    "createdAt",
+                    "updatedAt"
+                  ]
+                },
+                "invitedByMember": {
+                  "type": [
+                    "object",
+                    "null"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "userId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "displayName": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "title": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "admin",
+                        "member"
+                      ]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "active",
+                        "suspended"
+                      ]
+                    },
+                    "phone": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "userId",
+                    "role",
+                    "status",
+                    "createdAt",
+                    "updatedAt"
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "email",
+                "name",
+                "role",
+                "status",
+                "token",
+                "workspaceId",
+                "expiresAt",
+                "createdAt",
+                "updatedAt"
+              ]
+            }
+          },
+          "subscription": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "workspaceId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "planId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "cancelled"
+                ]
+              },
+              "currentPeriodStart": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time"
+              },
+              "currentPeriodEnd": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time"
+              },
+              "cancelAtPeriodEnd": {
+                "type": "boolean"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "plan": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "code": {
+                    "type": "string",
+                    "enum": [
+                      "free:founding",
+                      "paid:founding"
+                    ]
+                  },
+                  "tier": {
+                    "type": "string",
+                    "enum": [
+                      "free",
+                      "paid"
+                    ]
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "active",
+                      "legacy",
+                      "closed"
+                    ]
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "entitlements": {
+                    "type": "object",
+                    "properties": {
+                      "limits": {
+                        "type": "object",
+                        "properties": {
+                          "member": {
+                            "type": [
+                              "integer",
+                              "null"
+                            ],
+                            "minimum": 0
+                          },
+                          "location": {
+                            "type": [
+                              "integer",
+                              "null"
+                            ],
+                            "minimum": 0
+                          }
+                        }
+                      }
+                    },
+                    "required": [
+                      "limits"
+                    ]
+                  },
+                  "createdAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "updatedAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                },
+                "required": [
+                  "id",
+                  "code",
+                  "tier",
+                  "status",
+                  "title",
+                  "description",
+                  "entitlements",
+                  "createdAt",
+                  "updatedAt"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "workspaceId",
+              "planId",
+              "status",
+              "cancelAtPeriodEnd",
+              "createdAt",
+              "updatedAt",
+              "plan"
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "slug",
+          "type",
+          "industry",
+          "id",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "WorkspaceSummary": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "logo": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "individual",
+              "business"
+            ]
+          },
+          "industry": {
+            "type": "string",
+            "enum": [
+              "jewelry",
+              "personal",
+              "technology",
+              "automotive",
+              "construction",
+              "other"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "type",
+          "industry"
+        ]
+      },
       "User": {
         "type": "object",
         "properties": {
@@ -218,10 +1527,14 @@
   "paths": {
     "/health": {
       "get": {
+        "operationId": "healthCheck",
+        "tags": [
+          "Health"
+        ],
         "summary": "Check health status",
         "responses": {
           "200": {
-            "description": "Board created",
+            "description": "The service is healthy",
             "content": {
               "application/json": {
                 "schema": {}
@@ -231,10 +1544,2162 @@
         }
       }
     },
+    "/workspace/{id}/invite": {
+      "get": {
+        "operationId": "listWorkspaceInvites",
+        "tags": [
+          "Workspace Invite"
+        ],
+        "summary": "List a workspace's invites",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The workspace's invites, newest first, regardless of status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkspaceInvite"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No workspace matches the id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createWorkspaceInvite",
+        "tags": [
+          "Workspace Invite"
+        ],
+        "summary": "Create a workspace invite",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "owner",
+                      "admin",
+                      "member"
+                    ]
+                  },
+                  "locationId": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "email",
+                  "name",
+                  "role"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The created invite",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceInvite"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The payload failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No workspace matches the id, or the target location is not in this workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The email already belongs to a member or a pending invite",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/{id}/invite/{inviteId}": {
+      "get": {
+        "operationId": "getWorkspaceInviteById",
+        "tags": [
+          "Workspace Invite"
+        ],
+        "summary": "Get a workspace invite by id",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "inviteId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The invite",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceInvite"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The invite id is not a valid UUID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No invite matches the id in this workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteWorkspaceInvite",
+        "tags": [
+          "Workspace Invite"
+        ],
+        "summary": "Delete a workspace invite",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "inviteId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The invite was deleted"
+          },
+          "400": {
+            "description": "The invite id is not a valid UUID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No pending invite matches the id in this workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/invite/{token}": {
+      "get": {
+        "operationId": "previewInvite",
+        "tags": [
+          "Workspace Invite"
+        ],
+        "summary": "Preview an invite by token",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "token",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The invite preview",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceInvitePreview"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No pending, non-expired invite matches the token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/invite/{token}/accept": {
+      "post": {
+        "operationId": "acceptInvite",
+        "tags": [
+          "Workspace Invite"
+        ],
+        "summary": "Accept an invite",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "token",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The invite was accepted (or had already been accepted by this user)"
+          },
+          "401": {
+            "description": "No active session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The invite was sent to a different email than the caller's",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No pending, non-expired invite matches the token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/invite/{token}/decline": {
+      "post": {
+        "operationId": "declineInvite",
+        "tags": [
+          "Workspace Invite"
+        ],
+        "summary": "Decline an invite",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "token",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The invite was declined"
+          },
+          "404": {
+            "description": "No pending invite matches the token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/{id}/location": {
+      "get": {
+        "operationId": "listWorkspaceLocations",
+        "tags": [
+          "Workspace Location"
+        ],
+        "summary": "List a workspace's locations",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The workspace's locations, default first",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkspaceLocation"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No workspace matches the id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createWorkspaceLocation",
+        "tags": [
+          "Workspace Location"
+        ],
+        "summary": "Create a workspace location",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "address": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "latitude": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "minimum": -90,
+                    "maximum": 90
+                  },
+                  "longitude": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "minimum": -180,
+                    "maximum": 180
+                  },
+                  "phone": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "email": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "email"
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The created location",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceLocation"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The payload failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No workspace matches the id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/{id}/location/{locationId}": {
+      "get": {
+        "operationId": "getWorkspaceLocationById",
+        "tags": [
+          "Workspace Location"
+        ],
+        "summary": "Get a workspace location by id",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "locationId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The location",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceLocation"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The location id is not a valid UUID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No location matches the id in this workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateWorkspaceLocation",
+        "tags": [
+          "Workspace Location"
+        ],
+        "summary": "Update a workspace location",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "locationId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "address": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "latitude": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "minimum": -90,
+                    "maximum": 90
+                  },
+                  "longitude": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "minimum": -180,
+                    "maximum": 180
+                  },
+                  "phone": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "email": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "email"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated location",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceLocation"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The payload or location id failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No location matches the id in this workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteWorkspaceLocation",
+        "tags": [
+          "Workspace Location"
+        ],
+        "summary": "Delete a workspace location",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "locationId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The location was deleted"
+          },
+          "400": {
+            "description": "The location id is not a valid UUID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No location matches the id in this workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The location is the workspace's default and can't be deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/{id}/location/{locationId}/default": {
+      "put": {
+        "operationId": "setWorkspaceLocationDefault",
+        "tags": [
+          "Workspace Location"
+        ],
+        "summary": "Set a location as the workspace's default",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "locationId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The promoted location",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceLocation"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The location id is not a valid UUID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No location matches the id in this workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/{id}/location/{locationId}/member/{memberId}": {
+      "put": {
+        "operationId": "assignWorkspaceLocationMember",
+        "tags": [
+          "Workspace Location"
+        ],
+        "summary": "Assign a member to a location",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "locationId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "memberId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The member is assigned to the location"
+          },
+          "400": {
+            "description": "The location id or member id is not a valid UUID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No location or member matches the id in this workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "unassignWorkspaceLocationMember",
+        "tags": [
+          "Workspace Location"
+        ],
+        "summary": "Unassign a member from a location",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "locationId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "memberId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reassignToMemberId": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "uuid"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "The member is no longer assigned to the location"
+          },
+          "400": {
+            "description": "The location id, member id, or payload failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/{id}/member": {
+      "get": {
+        "operationId": "listWorkspaceMembers",
+        "tags": [
+          "Workspace Member"
+        ],
+        "summary": "List a workspace's members",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The workspace's members, newest first",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkspaceMember"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The caller lacks workspace:member:manage",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No workspace matches the id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/{id}/member/me": {
+      "get": {
+        "operationId": "getOwnWorkspaceMember",
+        "tags": [
+          "Workspace Member"
+        ],
+        "summary": "Get the caller's own membership",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The caller's membership",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceMember"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No active session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The caller is not a member of this workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateOwnWorkspaceMember",
+        "tags": [
+          "Workspace Member"
+        ],
+        "summary": "Update the caller's own membership profile",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "displayName": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "title": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "phone": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated membership",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceMember"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The payload failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No active session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The caller is not a member of this workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/{id}/member/leave": {
+      "post": {
+        "operationId": "leaveWorkspace",
+        "tags": [
+          "Workspace Member"
+        ],
+        "summary": "Leave the workspace",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The caller left the workspace"
+          },
+          "401": {
+            "description": "No active session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The caller is not a member of this workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The caller is the last active owner and cannot leave",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/{id}/member/{memberId}": {
+      "get": {
+        "operationId": "getWorkspaceMemberById",
+        "tags": [
+          "Workspace Member"
+        ],
+        "summary": "Get a workspace member by id",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "memberId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The member",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceMember"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The member id is not a valid UUID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The caller lacks workspace:member:manage",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No member matches the id in this workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateWorkspaceMemberById",
+        "tags": [
+          "Workspace Member"
+        ],
+        "summary": "Update a member's profile",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "memberId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "displayName": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "title": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "phone": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated member",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceMember"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The payload or member id failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The caller lacks workspace:member:manage",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No member matches the id in this workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "removeWorkspaceMember",
+        "tags": [
+          "Workspace Member"
+        ],
+        "summary": "Remove a member from the workspace",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "memberId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reassignToMemberId": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "uuid"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "The member was removed"
+          },
+          "400": {
+            "description": "The member id or payload failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The caller lacks workspace:member:manage",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No member matches the id in this workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Cannot remove yourself, the last owner, or (as an admin) an owner/admin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/{id}/member/{memberId}/role": {
+      "post": {
+        "operationId": "changeWorkspaceMemberRole",
+        "tags": [
+          "Workspace Member"
+        ],
+        "summary": "Change a member's role",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "memberId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "owner",
+                      "admin",
+                      "member"
+                    ]
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The member with the updated role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceMember"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The payload or member id failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The caller lacks workspace:member:manage",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No member matches the id in this workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Cannot change your own role, grant/alter the owner role as a non-owner, act on a suspended member, or demote the last owner",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/slug/{slug}/exists": {
+      "get": {
+        "operationId": "workspaceSlugExists",
+        "tags": [
+          "Workspace"
+        ],
+        "summary": "Check whether a workspace slug is taken",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "slug",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Whether a workspace already uses this slug",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "exists": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "exists"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The slug failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace": {
+      "get": {
+        "operationId": "listUserWorkspaces",
+        "tags": [
+          "Workspace"
+        ],
+        "summary": "List the current user's workspaces (minimal)",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The user's workspaces as minimal summaries (empty if none)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkspaceSummary"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No active session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createWorkspace",
+        "tags": [
+          "Workspace"
+        ],
+        "summary": "Create a workspace",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "slug": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "description": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "logo": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "uri"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "individual",
+                      "business"
+                    ]
+                  },
+                  "industry": {
+                    "type": "string",
+                    "enum": [
+                      "jewelry",
+                      "personal",
+                      "technology",
+                      "automotive",
+                      "construction",
+                      "other"
+                    ]
+                  },
+                  "billingEmail": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "email"
+                  }
+                },
+                "required": [
+                  "name",
+                  "slug",
+                  "type",
+                  "industry"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The created workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Workspace"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The payload failed validation, or the slug is restricted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "A workspace already uses this slug",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/{id}": {
+      "get": {
+        "operationId": "getWorkspaceById",
+        "tags": [
+          "Workspace"
+        ],
+        "summary": "Get a workspace By ID",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Workspace"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The id is not a valid UUID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No workspace matches the id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteWorkspace",
+        "tags": [
+          "Workspace"
+        ],
+        "summary": "Delete a workspace By ID",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The workspace was deleted"
+          },
+          "400": {
+            "description": "The id is not a valid UUID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No workspace matches the id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateWorkspace",
+        "tags": [
+          "Workspace"
+        ],
+        "summary": "Update a workspace By ID",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "slug": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "description": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "logo": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "uri"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "individual",
+                      "business"
+                    ]
+                  },
+                  "industry": {
+                    "type": "string",
+                    "enum": [
+                      "jewelry",
+                      "personal",
+                      "technology",
+                      "automotive",
+                      "construction",
+                      "other"
+                    ]
+                  },
+                  "billingEmail": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "email"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Workspace"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The payload failed validation, or the slug is restricted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No workspace matches the id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "A workspace already uses this slug",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/slug/{slug}": {
+      "get": {
+        "operationId": "getWorkspaceBySlug",
+        "tags": [
+          "Workspace"
+        ],
+        "summary": "Get a workspace By Slug",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "slug",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Workspace"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The slug failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No workspace matches the slug",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/auth/sign-in/social": {
       "post": {
         "tags": [
-          "Default"
+          "Auth"
         ],
         "description": "Sign in with a social provider",
         "operationId": "socialSignIn",
@@ -523,8 +3988,9 @@
     "/auth/callback/{id}": {
       "get": {
         "tags": [
-          "Default"
+          "Auth"
         ],
+        "operationId": "get-callback-id",
         "security": [
           {
             "cookieAuth": []
@@ -632,8 +4098,9 @@
       },
       "post": {
         "tags": [
-          "Default"
+          "Auth"
         ],
+        "operationId": "post-callback-id",
         "security": [
           {
             "cookieAuth": []
@@ -773,7 +4240,7 @@
     "/auth/get-session": {
       "get": {
         "tags": [
-          "Default"
+          "Auth"
         ],
         "description": "Get the current session",
         "operationId": "getSession",
@@ -909,7 +4376,7 @@
       },
       "post": {
         "tags": [
-          "Default"
+          "Auth"
         ],
         "description": "Get the current session",
         "operationId": "getSessionPost",
@@ -1057,7 +4524,7 @@
     "/auth/sign-out": {
       "post": {
         "tags": [
-          "Default"
+          "Auth"
         ],
         "description": "Sign out the current user",
         "operationId": "signOut",
@@ -1195,7 +4662,7 @@
     "/auth/sign-up/email": {
       "post": {
         "tags": [
-          "Default"
+          "Auth"
         ],
         "description": "Sign up a user using email and password",
         "operationId": "signUpWithEmailAndPassword",
@@ -1429,7 +4896,7 @@
     "/auth/sign-in/email": {
       "post": {
         "tags": [
-          "Default"
+          "Auth"
         ],
         "description": "Sign in with email and password",
         "operationId": "signInEmail",
@@ -1610,7 +5077,7 @@
     "/auth/reset-password": {
       "post": {
         "tags": [
-          "Default"
+          "Auth"
         ],
         "description": "Reset the password for a user",
         "operationId": "resetPassword",
@@ -1761,7 +5228,7 @@
     "/auth/verify-password": {
       "post": {
         "tags": [
-          "Default"
+          "Auth"
         ],
         "description": "Verify the current user's password",
         "operationId": "verifyPassword",
@@ -1908,9 +5375,10 @@
     "/auth/verify-email": {
       "get": {
         "tags": [
-          "Default"
+          "Auth"
         ],
         "description": "Verify the email of the user",
+        "operationId": "get-verify-email",
         "security": [
           {
             "cookieAuth": []
@@ -2063,7 +5531,7 @@
     "/auth/send-verification-email": {
       "post": {
         "tags": [
-          "Default"
+          "Auth"
         ],
         "description": "Send a verification email to the user",
         "operationId": "sendVerificationEmail",
@@ -2217,7 +5685,7 @@
     "/auth/change-email": {
       "post": {
         "tags": [
-          "Default"
+          "Auth"
         ],
         "operationId": "changeEmail",
         "security": [
@@ -2384,7 +5852,7 @@
     "/auth/change-password": {
       "post": {
         "tags": [
-          "Default"
+          "Auth"
         ],
         "description": "Change the password of the user",
         "operationId": "changePassword",
@@ -2591,7 +6059,7 @@
     "/auth/update-session": {
       "post": {
         "tags": [
-          "Default"
+          "Auth"
         ],
         "description": "Update the current session",
         "operationId": "updateSession",
@@ -2735,7 +6203,7 @@
     "/auth/update-user": {
       "post": {
         "tags": [
-          "Default"
+          "Auth"
         ],
         "description": "Update the current user",
         "operationId": "updateUser",
@@ -2884,7 +6352,7 @@
     "/auth/delete-user": {
       "post": {
         "tags": [
-          "Default"
+          "Auth"
         ],
         "description": "Delete the user",
         "operationId": "deleteUser",
@@ -3048,7 +6516,7 @@
     "/auth/request-password-reset": {
       "post": {
         "tags": [
-          "Default"
+          "Auth"
         ],
         "description": "Send a password reset email to the user",
         "operationId": "requestPasswordReset",
@@ -3202,7 +6670,7 @@
     "/auth/reset-password/{token}": {
       "get": {
         "tags": [
-          "Default"
+          "Auth"
         ],
         "description": "Redirects the user to the callback URL with the token",
         "operationId": "resetPasswordCallback",
@@ -3349,7 +6817,7 @@
     "/auth/list-sessions": {
       "get": {
         "tags": [
-          "Default"
+          "Auth"
         ],
         "description": "List all active sessions for the user",
         "operationId": "listUserSessions",
@@ -3475,9 +6943,10 @@
     "/auth/revoke-session": {
       "post": {
         "tags": [
-          "Default"
+          "Auth"
         ],
         "description": "Revoke a single session",
+        "operationId": "post-revoke-session",
         "security": [
           {
             "cookieAuth": []
@@ -3624,9 +7093,10 @@
     "/auth/revoke-sessions": {
       "post": {
         "tags": [
-          "Default"
+          "Auth"
         ],
         "description": "Revoke all sessions for the user",
+        "operationId": "post-revoke-sessions",
         "security": [
           {
             "cookieAuth": []
@@ -3765,9 +7235,10 @@
     "/auth/revoke-other-sessions": {
       "post": {
         "tags": [
-          "Default"
+          "Auth"
         ],
         "description": "Revoke all other sessions for the user except the current one",
+        "operationId": "post-revoke-other-sessions",
         "security": [
           {
             "cookieAuth": []
@@ -3906,7 +7377,7 @@
     "/auth/link-social": {
       "post": {
         "tags": [
-          "Default"
+          "Auth"
         ],
         "description": "Link a social account to the user",
         "operationId": "linkSocialAccount",
@@ -4162,7 +7633,7 @@
     "/auth/list-accounts": {
       "get": {
         "tags": [
-          "Default"
+          "Auth"
         ],
         "description": "List all accounts linked to the user",
         "operationId": "listUserAccounts",
@@ -4325,9 +7796,10 @@
     "/auth/delete-user/callback": {
       "get": {
         "tags": [
-          "Default"
+          "Auth"
         ],
         "description": "Callback to complete user deletion with verification token",
+        "operationId": "get-delete-user-callback",
         "security": [
           {
             "cookieAuth": []
@@ -4481,9 +7953,10 @@
     "/auth/unlink-account": {
       "post": {
         "tags": [
-          "Default"
+          "Auth"
         ],
         "description": "Unlink an account",
+        "operationId": "post-unlink-account",
         "security": [
           {
             "cookieAuth": []
@@ -4629,9 +8102,10 @@
     "/auth/refresh-token": {
       "post": {
         "tags": [
-          "Default"
+          "Auth"
         ],
         "description": "Refresh the access token using a refresh token",
+        "operationId": "post-refresh-token",
         "security": [
           {
             "cookieAuth": []
@@ -4785,9 +8259,10 @@
     "/auth/get-access-token": {
       "post": {
         "tags": [
-          "Default"
+          "Auth"
         ],
         "description": "Get a valid access token, doing a refresh if needed",
+        "operationId": "post-get-access-token",
         "security": [
           {
             "cookieAuth": []
@@ -4934,9 +8409,10 @@
     "/auth/account-info": {
       "get": {
         "tags": [
-          "Default"
+          "Auth"
         ],
         "description": "Get the account info provided by the provider",
+        "operationId": "get-account-info",
         "security": [
           {
             "cookieAuth": []
@@ -5092,9 +8568,10 @@
     "/auth/ok": {
       "get": {
         "tags": [
-          "Default"
+          "Auth"
         ],
         "description": "Check if the API is working",
+        "operationId": "get-ok",
         "security": [
           {
             "cookieAuth": []
@@ -5223,9 +8700,10 @@
     "/auth/error": {
       "get": {
         "tags": [
-          "Default"
+          "Auth"
         ],
         "description": "Displays an error page",
+        "operationId": "get-error",
         "security": [
           {
             "cookieAuth": []
