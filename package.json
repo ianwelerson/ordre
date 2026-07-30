@@ -27,6 +27,7 @@
     "db:generate": "pnpm --filter @ordre/db db:generate",
     "db:migrate": "pnpm --filter @ordre/db db:migrate",
     "db:push": "pnpm --filter @ordre/db db:push",
+    "db:seed": "pnpm --filter @ordre/db db:seed",
     "db:studio": "pnpm --filter @ordre/db db:studio",
     "dev": "turbo run dev",
     "docs:dev": "turbo run docs:dev",

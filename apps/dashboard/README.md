@@ -67,24 +67,13 @@ apps/dashboard/
 
 ## 🚀 Getting Started
 
-From the repo root:
+Install and run the whole stack from the repo root - see **[Setup → Running the Project](../docs/content/docs/setup/running-the-project.mdx)**. To run only this app:
 
 ```bash
-pnpm install
 pnpm --filter dashboard dev
 ```
 
-Or from this directory:
-
-```bash
-pnpm dev
-```
-
-`pnpm dev` proxies the app through **[portless](https://www.npmjs.com/package/portless)**, which serves it over HTTPS at a stable local hostname:
-
-**https://dashboard.ordre.localhost**
-
-Run `pnpm dev:app` to start the raw Next.js dev server without portless (defaults to `http://localhost:3000`).
+`pnpm dev` serves it over HTTPS at **https://dashboard.ordre.localhost** (via portless); `pnpm dev:app` runs the raw Next.js dev server on **http://localhost:3000**.
 
 ---
 
@@ -119,4 +108,4 @@ Shared translations come from [`@ordre/i18n`](../../packages/i18n) and are merge
 ## 📚 Further Reading
 
 - [Root README](../../README.md) - monorepo overview
-- [architecture.md](../../../ordre-internal-docs/architecture.md) - monorepo architecture (internal docs)
+- [Architecture](../docs/content/docs/engineering/architecture.mdx) - monorepo architecture (docs project)

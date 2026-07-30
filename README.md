@@ -2,12 +2,19 @@
 
 Ordre is a client communication platform for service providers. It gives every job a private, shareable status page that clients can follow in real time - no app download, no account creation, just a link.
 
-> [!NOTE]  
-> Ordre is a **study project**. It exists to explore product concepts, libraries, patterns, and monorepo architecture in depth. Some parts are **intentionally overengineered** (layered packages, swappable service interfaces, multi-app setup, etc.) because the goal is to learn by building, not to ship the smallest possible MVP.
+> [!NOTE]
+> **On the project.** Ordre is a **study project**. It exists to explore product concepts, libraries, patterns, and monorepo architecture in depth. Some parts are **intentionally overengineered** (layered packages, swappable service interfaces, multi-app setup, etc.) because the goal is to learn by building, not to ship the smallest possible MVP.
+
+> [!NOTE]
+> **On AI usage.** AI is part of the development process, but deliberately kept away from the core of it. It's used as a research resource and for supporting tasks - documentation, comments, and smaller pieces of code like speeding up test writing. Most of the work is still done **by hand**, because the whole point is to learn and practice by writing the code myself. That said, this is transparency, not a claim that AI plays no part in the work.
+
+> [!NOTE]
+> **On progress.** The project is **currently in development**. Right now the focus is on the **API implementation** ([`apps/api`](./apps/api)); other apps and packages are still taking shape.
 
 ## Table of Contents
 
 - [The Idea](#-the-idea)
+- [Documentation](#-documentation)
 - [Project Structure](#-project-structure)
 - [Tech Stack](#-tech-stack)
 - [Quick Start](#-quick-start)
@@ -25,7 +32,33 @@ Service professionals spend a lot of time managing client anxiety - answering "a
 
 Workspace members create a **board** per job from an industry template, share the link with the client, and post updates. Clients open the link and see everything immediately - sensitive data stays blurred until they verify by email or phone.
 
-For the full product vision (features, personas, design principles), see the [internal docs repo](../ordre-internal-docs/README.md).
+For the full product vision - features, personas, design principles, pricing, infrastructure, and the roadmap - see the [Documentation](#-documentation) project in this repo.
+
+---
+
+## 📚 Documentation
+
+Everything about the product beyond the code - specs, personas, design
+principles, pricing, infrastructure choices, and the roadmap - is documented in
+the **docs project** at [`apps/docs`](./apps/docs), built with
+[Fumadocs](https://fumadocs.dev/). It also hosts the API reference generated from
+the live OpenAPI spec that `apps/api` produces.
+
+Run it locally with `pnpm dev` (or just the docs app via `pnpm --filter docs docs:dev`)
+and open the docs site, or read the MDX sources directly under
+[`apps/docs/content/docs`](./apps/docs/content/docs):
+
+| Section                                                                             | What's there                                                        |
+| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| [Overview](./apps/docs/content/docs/index.mdx)                                      | What Ordre is, and how the docs are organized.                      |
+| [Setup](./apps/docs/content/docs/setup)                                             | Running the project, environment variables, and database roles.     |
+| [Product](./apps/docs/content/docs/product)                                         | Feature specs, pricing & billing, and the roadmap.                  |
+| [Engineering](./apps/docs/content/docs/engineering)                                 | Architecture, data model, authorization, and infrastructure.        |
+| [Design](./apps/docs/content/docs/design/brand.mdx)                                 | Brand, color system, typography, and component patterns.            |
+
+To keep a single source of truth, this README stays focused on repo-level
+mechanics (structure, scripts, tooling); product and infrastructure detail lives
+in the docs.
 
 ---
 
@@ -36,13 +69,20 @@ This is a [Turborepo](https://turborepo.com/) + [pnpm workspaces](https://pnpm.i
 ```
 ordre/
 ├── apps/
+│   ├── api/            # Express (Railway) - backend API
 │   ├── board/          # React Router v7 (SSR) - client-facing board
 │   ├── dashboard/      # Next.js - workspace management app
-│   └── marketing/      # Next.js - public marketing site
+│   ├── marketing/      # Next.js - public marketing site
+│   ├── docs/           # Fumadocs - internal docs + API reference
+│   └── storybook/      # Component documentation for @ordre/ui
 │
 ├── packages/
 │   ├── config/         # Shared ESLint, TypeScript, and Prettier presets
+│   ├── core/           # Shared schemas and types (Zod)
+│   ├── db/             # Drizzle ORM schemas, migrations, and connection
 │   ├── i18n/           # Shared translations
+│   ├── monitoring/     # Structured logging (pino)
+│   ├── services/       # Service interfaces and data access layer
 │   └── ui/             # React component library
 │
 ├── turbo.json          # Turborepo pipeline
@@ -56,17 +96,24 @@ Apps are runnable; packages are shared. The package layer follows a strict depen
 
 | App                               | Description                                                                                               |
 | --------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| [**api**](./apps/api)             | Backend REST API. Express, deployed as a persistent service on Railway; framework-agnostic business logic behind a swappable HTTP adapter. |
 | [**board**](./apps/board)         | Client-facing board. React Router v7 in framework mode (SSR) - one board per job, opened via unique link. |
 | [**dashboard**](./apps/dashboard) | Authenticated workspace app for managing boards, members, and clients. Built with Next.js.                |
 | [**marketing**](./apps/marketing) | Public marketing site (home, pricing, about, legal). Built with Next.js.                                  |
+| [**docs**](./apps/docs)           | Internal documentation and the generated API reference. Built with Fumadocs.                              |
+| [**storybook**](./apps/storybook) | Component documentation for `@ordre/ui`.                                                                   |
 
 ### Packages
 
-| Package                                | Description                                                           |
-| -------------------------------------- | --------------------------------------------------------------------- |
-| [**@ordre/ui**](./packages/ui)         | React component library - atoms and design tokens shared across apps. |
-| [**@ordre/i18n**](./packages/i18n)     | Shared translations merged with app-specific strings at runtime.      |
-| [**@ordre/config**](./packages/config) | Shared ESLint, TypeScript, and Prettier presets.                      |
+| Package                                        | Description                                                           |
+| ---------------------------------------------- | --------------------------------------------------------------------- |
+| [**@ordre/ui**](./packages/ui)                 | React component library - atoms and design tokens shared across apps. |
+| [**@ordre/core**](./packages/core)             | Shared schemas and types (Zod) used across apps and packages.         |
+| [**@ordre/db**](./packages/db)                 | Drizzle ORM schemas, migrations, and the database connection.         |
+| [**@ordre/services**](./packages/services)     | Service interfaces and the data access layer.                         |
+| [**@ordre/monitoring**](./packages/monitoring) | Structured logging (pino) shared across services.                     |
+| [**@ordre/i18n**](./packages/i18n)             | Shared translations merged with app-specific strings at runtime.      |
+| [**@ordre/config**](./packages/config)         | Shared ESLint, TypeScript, and Prettier presets.                      |
 
 ---
 
@@ -74,10 +121,14 @@ Apps are runnable; packages are shared. The package layer follows a strict depen
 
 - **Monorepo**: Turborepo + pnpm workspaces
 - **Frameworks**: Next.js 16 (dashboard, marketing), React Router v7 framework mode (board)
+- **Backend**: Express (API), Drizzle ORM over PostgreSQL, Better Auth
 - **UI**: React 19, Tailwind CSS v4
 - **i18n**: `next-intl` (Next apps) and `i18next` + `remix-i18next` (board)
 - **Testing**: Vitest + Testing Library; Playwright as the browser provider for Vitest
+- **Docs**: Fumadocs (internal guides + generated API reference)
 - **Tooling**: TypeScript, ESLint 9 (flat config), Prettier, Syncpack, Husky + lint-staged, Commitlint
+
+For the full hosting and service stack (Railway, Neon, Cloudflare R2, and the rest), see the [Infrastructure docs](./apps/docs/content/docs/engineering/infrastructure.mdx).
 
 ---
 
@@ -102,18 +153,13 @@ pnpm install
 pnpm dev
 ```
 
-Dev URLs - each app is served over HTTPS via [portless](https://www.npmjs.com/package/portless):
+Full setup - environment variables, database roles, per-app dev URLs, and how to run one app at a time - lives in the internal docs:
 
-| App       | Command          | Dev URL                             |
-| --------- | ---------------- | ----------------------------------- |
-| Marketing | `pnpm dev`       | https://ordre.localhost             |
-| Dashboard | `pnpm dev`       | https://dashboard.ordre.localhost   |
-| Board     | `pnpm dev`       | https://board.ordre.localhost       |
-| API       | `pnpm api:dev`   | https://api.ordre.localhost         |
-| Docs      | `pnpm docs:dev`  | https://docs.ordre.localhost        |
-| Storybook | `pnpm storybook` | https://storybook.ordre.localhost   |
+- **[Setup → Running the Project](./apps/docs/content/docs/setup/running-the-project.mdx)**
+- **[Setup → Environment Variables](./apps/docs/content/docs/setup/environment-variables.mdx)**
+- **[Setup → Database Roles & RLS](./apps/docs/content/docs/setup/database-roles.mdx)**
 
-Each app also has its own README with app-specific instructions.
+Each app also has its own README with app-specific notes.
 
 ---
 

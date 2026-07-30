@@ -70,24 +70,13 @@ apps/board/
 
 ## 🚀 Getting Started
 
-From the repo root:
+Install and run the whole stack from the repo root - see **[Setup → Running the Project](../docs/content/docs/setup/running-the-project.mdx)**. To run only this app:
 
 ```bash
-pnpm install
 pnpm --filter board dev
 ```
 
-Or from this directory:
-
-```bash
-pnpm dev
-```
-
-`pnpm dev` proxies the app through **[portless](https://www.npmjs.com/package/portless)**, which serves it over HTTPS at a stable local hostname:
-
-**https://board.ordre.localhost**
-
-Run `pnpm dev:app` to start the raw dev server without portless (defaults to `http://localhost:5173`).
+`pnpm dev` serves it over HTTPS at **https://board.ordre.localhost** (via portless); `pnpm dev:app` runs the raw dev server on **http://localhost:5173**.
 
 ---
 
@@ -138,4 +127,4 @@ docker run -p 3000:3000 ordre-board
 ## 📚 Further Reading
 
 - [Root README](../../README.md) - monorepo overview
-- [architecture.md](../../../ordre-internal-docs/architecture.md) - monorepo architecture (internal docs)
+- [Architecture](../docs/content/docs/engineering/architecture.mdx) - monorepo architecture (docs project)

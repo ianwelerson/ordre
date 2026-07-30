@@ -8,6 +8,7 @@
     "PORT",
     "VERCEL_ENV",
     "DATABASE_URL",
+    "DATABASE_OWNER_URL",
     "LOG_LEVEL"
   ],
   "tasks": {
@@ -61,13 +62,16 @@
       "dependsOn": ["^lint"]
     },
     "test:unit": {
-      "dependsOn": ["^test:unit"]
+      "dependsOn": ["^test:unit"],
+      "env": ["BETTER_AUTH_SECRET"]
     },
     "test:unit:ui": {
-      "dependsOn": ["^test:unit:ui"]
+      "dependsOn": ["^test:unit:ui"],
+      "env": ["BETTER_AUTH_SECRET"]
     },
     "test:unit:ci": {
-      "dependsOn": ["^test:unit:ci"]
+      "dependsOn": ["^test:unit:ci"],
+      "env": ["BETTER_AUTH_SECRET"]
     }
   }
 }

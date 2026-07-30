@@ -55,24 +55,13 @@ Stories are resolved from across the monorepo - any `*.stories.tsx` or `*.mdx` f
 
 ## 🚀 Getting Started
 
-From the repo root:
-
-```bash
-pnpm install
-pnpm --filter storybook-app storybook
-```
-
-Or from this directory:
+Install and run the whole stack from the repo root - see **[Setup → Running the Project](../docs/content/docs/setup/running-the-project.mdx)**. To run only Storybook:
 
 ```bash
 pnpm storybook
 ```
 
-`pnpm storybook` proxies Storybook through **[portless](https://www.npmjs.com/package/portless)**, which serves it over HTTPS at a stable local hostname:
-
-**https://storybook.ordre.localhost**
-
-Run `pnpm storybook:app` to start the raw Storybook dev server without portless (defaults to `http://localhost:6006`).
+`pnpm storybook` serves it over HTTPS at **https://storybook.ordre.localhost** (via portless); `pnpm storybook:app` runs the raw Storybook dev server on **http://localhost:6006**.
 
 ---
 
@@ -95,4 +84,4 @@ The static build (`storybook-static/`) is deployed to Vercel as part of the mono
 ## 📚 Further Reading
 
 - [Root README](../../README.md) - monorepo overview
-- [architecture.md](../../../ordre-internal-docs/architecture.md) - monorepo architecture (internal docs)
+- [Architecture](../docs/content/docs/engineering/architecture.mdx) - monorepo architecture (docs project)
