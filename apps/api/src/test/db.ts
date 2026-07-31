@@ -1,8 +1,11 @@
 import { isTest } from '#env';
+import { eq } from 'drizzle-orm';
 
+import type { PlanEntitlements } from '@ordre/core/types';
 import * as schema from '@ordre/db/schemas';
 
 import {
+  PLAN_IDS,
   planFixtures,
   userFixtures,
   workspaceFixtures,
@@ -62,4 +65,23 @@ export const seedDb = async () => {
   await ownerDb.insert(schema.workspaceInvite).values(workspaceInviteFixtures);
   await ownerDb.insert(schema.plan).values(planFixtures);
   await ownerDb.insert(schema.workspaceSubscription).values(workspaceSubscriptionFixtures);
+};
+
+/**
+ * Tightens the free plan's limits for a single test.
+ *
+ * The seeded plans are uncapped so route tests aren't gated by
+ * `requireWorkspaceQuota` (see `planFixtures`); a test that wants to exercise a
+ * quota narrows the cap first. The primary workspace is subscribed to the free
+ * plan, and `resetDb()` + `seedDb()` restore the catalog before the next test.
+ *
+ * @param limits - The `entitlements.limits` to apply to the free plan.
+ */
+export const setFreePlanLimits = async (limits: PlanEntitlements['limits']) => {
+  assertTestDb();
+
+  await ownerDb
+    .update(schema.plan)
+    .set({ entitlements: { limits } })
+    .where(eq(schema.plan.id, PLAN_IDS.free));
 };

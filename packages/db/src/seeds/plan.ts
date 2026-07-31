@@ -27,19 +27,18 @@ const PLAN_CATALOG: ReadonlyArray<{
     // `active` in its tier (see the `plan_one_active_per_tier` index).
     status: 'active',
     title: 'Free',
-    description: 'Get started with a single location and member.',
+    description: 'Run a single location with room for you and one teammate.',
     entitlements: {
-      limits: { member: 1, location: 1 },
+      limits: { seat: 2, location: 1 },
     },
   },
   {
     code: 'paid:founding',
     status: 'active',
     title: 'Founding',
-    description: 'Unlimited members and locations.',
+    description: 'Grow to 20 members across 3 locations.',
     entitlements: {
-      // `null` documents "unlimited" explicitly; omitting the key does the same.
-      limits: { member: 3, location: 1 },
+      limits: { seat: 20, location: 3 },
     },
   },
 ];

@@ -15,7 +15,12 @@ export const getPlanTier = (code: PlanCode): PlanTier => code.split(':')[0] as P
 export const PLAN_STATUSES = ['active', 'legacy', 'closed'] as const;
 export type PlanStatus = (typeof PLAN_STATUSES)[number];
 
-export const PLAN_LIMITS = ['member', 'location'] as const;
+/**
+ * The resources a plan can cap. A `seat` is held by an active member *or* a
+ * pending invite, the workspace owner included, so it counts people a workspace
+ * has committed to rather than members it currently has.
+ */
+export const PLAN_LIMITS = ['seat', 'location'] as const;
 export type PlanLimit = (typeof PLAN_LIMITS)[number];
 
 export const SUBSCRIPTION_STATUSES = ['active', 'cancelled'] as const;

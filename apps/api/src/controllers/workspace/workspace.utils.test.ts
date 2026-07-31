@@ -66,7 +66,7 @@ const planRow = () => ({
   status: 'active' as const,
   title: 'Free',
   description: 'Free plan',
-  entitlements: { limits: { member: 1, location: 1 } },
+  entitlements: { limits: { seat: 2, location: 1 } },
   createdAt: new Date('2024-01-01T00:00:00.000Z'),
   updatedAt: new Date('2024-01-01T00:00:00.000Z'),
 });

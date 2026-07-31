@@ -1,5 +1,6 @@
 import { app, BASE_PATH } from '#/adapters/express/server.ts';
 import { auth } from '#/config/auth.ts';
+import { setFreePlanLimits } from '#/test/db.ts';
 import { INVITE_IDS, USER_IDS, userFixtures, WORKSPACE_IDS } from '#/test/fixtures.ts';
 import { parseBody } from '#/utils/testing.ts';
 import request from 'supertest';
@@ -135,6 +136,39 @@ describe('Workspace Invite (admin)', () => {
 
       expect(error.code).toBe('UNAUTHORIZED');
       expect(error.message).toBe(AUTH_ERRORS.UNAUTHORIZED.message);
+    });
+
+    // --- Plan quota ---
+    // The seeded plans are uncapped (see `planFixtures`), so each case narrows
+    // the cap it needs.
+    test('POST refuses an invite once the plan seats are full', async () => {
+      // The workspace is seeded with active members and pending invites, both of
+      // which hold a seat, so one seat is already spent.
+      await setFreePlanLimits({ seat: 1 });
+      mockUserSession({ id: USER_IDS.owner });
+
+      const response = await request(app).post(collectionUrl(WS)).send(invite()).expect(403);
+
+      expect(parseBody(ResponseErrorSchema, response.body).code).toBe('SEAT_LIMIT_REACHED');
+    });
+
+    test('POST reports FORBIDDEN, not the seat cap, for a member who lacks the permission', async () => {
+      // Billing state stays hidden from a caller who may not invite.
+      await setFreePlanLimits({ seat: 1 });
+      mockUserSession({ id: USER_IDS.member });
+
+      const response = await request(app).post(collectionUrl(WS)).send(invite()).expect(403);
+
+      expect(parseBody(ResponseErrorSchema, response.body).code).toBe('FORBIDDEN');
+    });
+
+    test('POST still creates an invite while seats remain', async () => {
+      await setFreePlanLimits({ seat: 20 });
+      mockUserSession({ id: USER_IDS.owner });
+
+      const response = await request(app).post(collectionUrl(WS)).send(invite()).expect(201);
+
+      expect(parseBody(WorkspaceInviteSchema, response.body).status).toBe('pending');
     });
   });
 

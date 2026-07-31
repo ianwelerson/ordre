@@ -67,6 +67,9 @@ registry.registerPath({
       content: { 'application/json': { schema: WorkspaceLocation } },
     },
     400: jsonError('The payload failed validation'),
+    403: jsonError(
+      "The caller lacks workspace:location:manage, or the plan's location limit is reached"
+    ),
     404: jsonError('No workspace matches the id'),
   },
 });

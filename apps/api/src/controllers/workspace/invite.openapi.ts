@@ -71,6 +71,9 @@ registry.registerPath({
       content: { 'application/json': { schema: WorkspaceInvite } },
     },
     400: jsonError('The payload failed validation'),
+    403: jsonError(
+      "The caller lacks workspace:member:manage, or the plan's seat limit is reached (a pending invite holds a seat)"
+    ),
     404: jsonError('No workspace matches the id, or the target location is not in this workspace'),
     409: jsonError('The email already belongs to a member or a pending invite'),
   },

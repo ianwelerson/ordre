@@ -90,8 +90,11 @@ It drops any relation the role can't see, so the unauthorized data is **never ev
 | Not a member (or workspace absent) | `404`  | `requireWorkspaceAccess`     |
 | Suspended member                   | `403`  | `requireWorkspaceAccess`     |
 | Member, but lacks the permission   | `403`  | `requireWorkspacePermission` |
+| Allowed, but the plan is at its cap | `403` | `requireWorkspaceQuota`      |
 
 The `404`-not-`403` for non-members is the one deliberate choice worth remembering: **hide existence from outsiders, report permission honestly to insiders.** A suspended member counts as an insider.
+
+The last row is not RBAC - it's the plan quota guard, which runs after the permission check so billing state is never revealed to a caller who wasn't allowed to act anyway. See [Authorization](/internal-docs/engineering/authorization).
 
 ## Extending it
 

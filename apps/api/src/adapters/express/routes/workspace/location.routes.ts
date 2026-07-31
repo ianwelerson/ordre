@@ -1,5 +1,6 @@
 import { requireWorkspaceAccess } from '#/adapters/express/middlewares/workspace-access.ts';
 import { requireWorkspacePermission } from '#/adapters/express/middlewares/workspace-permission.ts';
+import { requireWorkspaceQuota } from '#/adapters/express/middlewares/workspace-quota.ts';
 import { sendMemberResult } from '#/adapters/express/utils/send-result.ts';
 import {
   workspaceLocationCreate,
@@ -35,6 +36,7 @@ locationRouter.post(
   locationCollectionPath,
   requireWorkspaceAccess,
   requireWorkspacePermission('workspace:location:manage'),
+  requireWorkspaceQuota('location'),
   sendMemberResult((req) => workspaceLocationCreate(req.member, req.body))
 );
 

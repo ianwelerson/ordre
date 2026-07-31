@@ -623,19 +623,44 @@ Per-user weekly availability (User Settings → Working hours).
 ### `Plan`
 
 The plan catalog - the subscribable tiers and their limits. Global, not
-workspace-scoped.
+workspace-scoped. Seeded from [`packages/db/src/seeds/plan.ts`](https://github.com/ianwelerson/ordre/blob/main/packages/db/src/seeds/plan.ts);
+there is no admin API for plans.
 
-| Field           | Type           | Notes                                 |
-| --------------- | -------------- | ------------------------------------- |
-| `id`            | uuid           |                                       |
-| `code`          | text, unique   | Stable key, e.g. `free`, `workshop`   |
-| `name`          | text           | Display name                          |
-| `description`   | text           |                                       |
-| `boardLimit`    | int, nullable  | Null = unlimited                      |
-| `seatLimit`     | int, nullable  | Null = unlimited                      |
-| `locationLimit` | int, nullable  | Null = unlimited                      |
-| `createdAt`     | timestamp      |                                       |
-| `updatedAt`     | timestamp      |                                       |
+| Field          | Type                              | Notes                                                  |
+| -------------- | --------------------------------- | ------------------------------------------------------ |
+| `id`           | uuid                              |                                                        |
+| `code`         | enum, unique                      | `<tier>:<variant>`, e.g. `free:founding`               |
+| `tier`         | enum `free \| paid`               | Derived from `code`, stored so it can back the index   |
+| `status`       | enum `active \| legacy \| closed` |                                                        |
+| `title`        | text                              | Display name                                           |
+| `description`  | text                              |                                                        |
+| `entitlements` | jsonb                             | `{ limits: { seat?, location? } }` - see below         |
+| `createdAt`    | timestamp                         |                                                        |
+| `updatedAt`    | timestamp                         |                                                        |
+
+Unique: (`code`); partial unique on (`tier`) where `status = 'active'`, so "the
+current free/paid plan" is a single well-defined row while legacy plans of the
+same tier coexist.
+
+**Limits live in `entitlements`, not in columns.** A new limit is a new key in the
+`PLAN_LIMITS` enum with no migration. Within `limits`, a number caps the resource,
+and `null` - or the key being absent - means unlimited:
+
+```jsonc
+{ "limits": { "seat": 2, "location": 1 } } // free:founding
+{ "limits": { "seat": 20, "location": 3 } } // paid:founding
+```
+
+A **seat** is held by an active member *or* a pending invite, the workspace owner
+included - so it counts people the workspace has committed to, not members it
+currently has. `requireWorkspaceQuota` enforces both limits at the routes that
+consume one (see [Authorization](/internal-docs/engineering/authorization)).
+
+Because the blob is JSONB, Postgres will accept a typo'd key that the type system
+never sees, and an unrecognised key would read as "unlimited". The guard therefore
+re-validates `entitlements` against its Zod schema on every check and refuses the
+request (`500 INVALID_PLAN_ENTITLEMENTS`) rather than treating a malformed plan as
+uncapped.
 
 ### `Addon`
 
@@ -653,25 +678,32 @@ The add-on catalog - optional extras a subscription can attach. Global.
 ### `Workspace_Subscription`
 
 One per workspace (Settings → Plan & usage, Team seats). Limits come from the
-linked `Plan`.
+linked `Plan`. A workspace is subscribed to the active free plan at creation.
 
-| Field                  | Type                | Notes                          |
-| ---------------------- | ------------------- | ------------------------------ |
-| `id`                   | uuid                |                                |
-| `workspaceId`          | fk → Workspace      |                                |
-| `planId`               | fk → Plan           |                                |
-| `status`               | enum `trial \| active \| past_due \| cancelled` |  |
-| `stripeCustomerId`     | text, nullable      |                                |
-| `stripeSubscriptionId` | text, nullable      |                                |
-| `currentPeriodStart`   | timestamp, nullable |                                |
-| `currentPeriodEnd`     | timestamp, nullable |                                |
-| `cancelAtPeriodEnd`    | boolean             |                                |
-| `createdAt`            | timestamp           |                                |
-| `updatedAt`            | timestamp           |                                |
+| Field                  | Type                        | Notes |
+| ---------------------- | --------------------------- | ----- |
+| `id`                   | uuid                        |       |
+| `workspaceId`          | fk → Workspace              |       |
+| `planId`               | fk → Plan                   | `on delete restrict` - a plan in use can't be deleted |
+| `status`               | enum `active \| cancelled`  |       |
+| `currentPeriodStart`   | timestamp, nullable         |       |
+| `currentPeriodEnd`     | timestamp, nullable         |       |
+| `cancelAtPeriodEnd`    | boolean                     |       |
+| `createdAt`            | timestamp                   |       |
+| `updatedAt`            | timestamp                   |       |
 
-Unique: (`workspaceId`).
+Partial unique on (`workspaceId`) where `status = 'active'` - a workspace has at
+most one active subscription, while cancelled rows accumulate as history. Reads
+therefore filter to the active row rather than assuming a single row per workspace.
 
 `[derived]`: seats used, active boards, messages this month.
+
+<Callout type="info">
+  Stripe columns (`stripeCustomerId`, `stripeSubscriptionId`) and the `trial` /
+  `past_due` statuses are **not implemented yet** - they arrive with the payment
+  integration. Today a subscription is created directly, only ever `active` or
+  `cancelled`.
+</Callout>
 
 ### `Workspace_Subscription_Addon`
 

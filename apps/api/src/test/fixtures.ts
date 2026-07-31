@@ -279,6 +279,11 @@ export const workspaceInviteFixtures = [
  * The plan catalog seeded before each integration test. Mirrors the real seed
  * (`packages/db/src/seeds/plan.ts`): one `active` plan per tier, so
  * `findActivePlan('free')` resolves during workspace creation.
+ *
+ * Both plans are deliberately uncapped (`limits: {}` reads as unlimited - see
+ * `PlanLimitsSchema`), so a route test that creates a location or an invite is
+ * never gated by `requireWorkspaceQuota`. A test that wants a cap narrows it
+ * with `setFreePlanLimits`.
  */
 export const planFixtures = [
   {
@@ -287,8 +292,8 @@ export const planFixtures = [
     tier: 'free',
     status: 'active',
     title: 'Free',
-    description: 'Get started with a single location and member.',
-    entitlements: { limits: { member: 1, location: 1 } },
+    description: 'Run a single location with room for you and one teammate.',
+    entitlements: { limits: {} },
   },
   {
     id: PLAN_IDS.paid,
@@ -296,8 +301,8 @@ export const planFixtures = [
     tier: 'paid',
     status: 'active',
     title: 'Founding',
-    description: 'Unlimited members and locations.',
-    entitlements: { limits: { member: 3, location: 1 } },
+    description: 'Grow to 20 members across 3 locations.',
+    entitlements: { limits: {} },
   },
 ] satisfies PlanInsert[];
 

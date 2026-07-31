@@ -1223,7 +1223,7 @@
                       "limits": {
                         "type": "object",
                         "properties": {
-                          "member": {
+                          "seat": {
                             "type": [
                               "integer",
                               "null"
@@ -1668,6 +1668,16 @@
               }
             }
           },
+          "403": {
+            "description": "The caller lacks workspace:member:manage, or the plan's seat limit is reached (a pending invite holds a seat)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          },
           "404": {
             "description": "No workspace matches the id, or the target location is not in this workspace",
             "content": {
@@ -2084,6 +2094,16 @@
           },
           "400": {
             "description": "The payload failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The caller lacks workspace:location:manage, or the plan's location limit is reached",
             "content": {
               "application/json": {
                 "schema": {

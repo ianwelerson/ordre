@@ -1,5 +1,6 @@
 import { requireWorkspaceAccess } from '#/adapters/express/middlewares/workspace-access.ts';
 import { requireWorkspacePermission } from '#/adapters/express/middlewares/workspace-permission.ts';
+import { requireWorkspaceQuota } from '#/adapters/express/middlewares/workspace-quota.ts';
 import { sendMemberResult } from '#/adapters/express/utils/send-result.ts';
 import {
   workspaceInviteCreate,
@@ -19,6 +20,7 @@ inviteRouter.post(
   inviteCollectionPath,
   requireWorkspaceAccess,
   requireWorkspacePermission('workspace:member:manage'),
+  requireWorkspaceQuota('seat'),
   sendMemberResult((req) => workspaceInviteCreate(req.member, req.body))
 );
 

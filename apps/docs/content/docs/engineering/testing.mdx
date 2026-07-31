@@ -28,6 +28,7 @@ The harness gives every test identical, known data:
 - [`global-setup.ts`](../../../../apps/api/src/test/global-setup.ts) migrates and cleans the shared test DB once per run.
 - [`integration.setup.ts`](../../../../apps/api/src/test/integration.setup.ts) runs `resetDb()` + `seedDb()` in a `beforeEach`, so each test starts from the fixed-UUID fixtures in [`fixtures.ts`](../../../../apps/api/src/test/fixtures.ts).
 - `fileParallelism: false` serializes the files so one file's per-test `TRUNCATE` never wipes data another file is mid-way through using.
+- The seeded plans are deliberately **uncapped** (`entitlements.limits: {}`), so a route test that creates a location or an invite is never gated by `requireWorkspaceQuota` and keeps asserting its own behaviour. A test that means to exercise a quota sets the cap it needs.
 
 A guard in [`db.ts`](../../../../apps/api/src/test/db.ts) refuses to reset unless `APP_STAGE=test`, so the truncate can never point at a real database.
 

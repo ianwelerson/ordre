@@ -1,5 +1,6 @@
 import { app, BASE_PATH } from '#/adapters/express/server.ts';
 import { auth } from '#/config/auth.ts';
+import { setFreePlanLimits } from '#/test/db.ts';
 import { LOCATION_IDS, USER_IDS, userFixtures, WORKSPACE_IDS } from '#/test/fixtures.ts';
 import { parseBody } from '#/utils/testing.ts';
 import request from 'supertest';
@@ -225,6 +226,52 @@ describe('Workspace Location', () => {
       expect(error.code).toBe('INVALID_INPUT');
       expect(error.message).toBe(VALIDATION_ERRORS.INVALID_INPUT.message);
       expect(error.details).toMatchObject({ name: expect.any(String) });
+    });
+
+    // --- Plan quota ---
+    // The seeded plans are uncapped (see `planFixtures`), so each case narrows
+    // the cap it needs.
+    test('POST refuses a location once the plan cap is reached', async () => {
+      // The workspace is seeded with two locations, so a cap of one is reached.
+      await setFreePlanLimits({ location: 1 });
+      mockUserSession({ id: USER_IDS.owner });
+
+      const response = await request(app)
+        .post(collectionUrl(WS))
+        .send({ name: 'Warehouse' })
+        .expect(403);
+
+      const error = parseBody(ResponseErrorSchema, response.body);
+
+      expect(error.code).toBe('LOCATION_LIMIT_REACHED');
+    });
+
+    test('POST reports FORBIDDEN, not the plan cap, for a member who lacks the permission', async () => {
+      // A caller who may not create a location must never learn the workspace is
+      // at its plan cap - that is billing state.
+      await setFreePlanLimits({ location: 1 });
+      mockUserSession({ id: USER_IDS.member });
+
+      const response = await request(app)
+        .post(collectionUrl(WS))
+        .send({ name: 'Warehouse' })
+        .expect(403);
+
+      const error = parseBody(ResponseErrorSchema, response.body);
+
+      expect(error.code).toBe('FORBIDDEN');
+    });
+
+    test('POST still creates a location while the workspace is under the cap', async () => {
+      await setFreePlanLimits({ location: 3 });
+      mockUserSession({ id: USER_IDS.owner });
+
+      const response = await request(app)
+        .post(collectionUrl(WS))
+        .send({ name: 'Warehouse' })
+        .expect(201);
+
+      expect(parseBody(WorkspaceLocationSchema, response.body).name).toBe('Warehouse');
     });
   });
 
