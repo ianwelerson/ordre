@@ -15,9 +15,10 @@ const buildResponse = () => {
 describe('utils/sendResult', () => {
   describe('sendResult', () => {
     it('sends the controller result via res.status().json()', async () => {
-      const controller = vi.fn(
-        async (): Promise<Response<{ ok: boolean }>> => ({ status: 201, body: { ok: true } })
-      );
+      const controller = vi.fn(async (): Promise<Response<{ ok: boolean }>> => ({
+        status: 201,
+        body: { ok: true },
+      }));
       const { res, status, json } = buildResponse();
       const next = vi.fn() as unknown as NextFunction;
 
@@ -45,9 +46,10 @@ describe('utils/sendResult', () => {
 
   describe('sendAuthResult', () => {
     it('calls the controller when req.user is populated', async () => {
-      const controller = vi.fn(
-        async (): Promise<Response<{ ok: boolean }>> => ({ status: 200, body: { ok: true } })
-      );
+      const controller = vi.fn(async (): Promise<Response<{ ok: boolean }>> => ({
+        status: 200,
+        body: { ok: true },
+      }));
       const { res, json } = buildResponse();
       const next = vi.fn() as unknown as NextFunction;
 
@@ -72,9 +74,10 @@ describe('utils/sendResult', () => {
 
   describe('sendMemberResult', () => {
     it('calls the controller when req.user and req.member are populated', async () => {
-      const controller = vi.fn(
-        async (): Promise<Response<{ ok: boolean }>> => ({ status: 200, body: { ok: true } })
-      );
+      const controller = vi.fn(async (): Promise<Response<{ ok: boolean }>> => ({
+        status: 200,
+        body: { ok: true },
+      }));
       const { res, json } = buildResponse();
       const next = vi.fn() as unknown as NextFunction;
 

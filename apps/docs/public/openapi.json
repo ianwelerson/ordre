@@ -1358,13 +1358,11 @@
           },
           "createdAt": {
             "type": "string",
-            "format": "date-time",
-            "default": "Generated at runtime"
+            "format": "date-time"
           },
           "updatedAt": {
             "type": "string",
-            "format": "date-time",
-            "default": "Generated at runtime"
+            "format": "date-time"
           }
         },
         "required": [
@@ -1392,8 +1390,7 @@
           },
           "createdAt": {
             "type": "string",
-            "format": "date-time",
-            "default": "Generated at runtime"
+            "format": "date-time"
           },
           "updatedAt": {
             "type": "string",
@@ -1459,8 +1456,7 @@
           },
           "createdAt": {
             "type": "string",
-            "format": "date-time",
-            "default": "Generated at runtime"
+            "format": "date-time"
           },
           "updatedAt": {
             "type": "string",
@@ -1495,13 +1491,11 @@
           },
           "createdAt": {
             "type": "string",
-            "format": "date-time",
-            "default": "Generated at runtime"
+            "format": "date-time"
           },
           "updatedAt": {
             "type": "string",
-            "format": "date-time",
-            "default": "Generated at runtime"
+            "format": "date-time"
           }
         },
         "required": [
@@ -3996,7 +3990,16 @@
             "cookieAuth": []
           }
         ],
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "400": {
             "content": {
@@ -4106,7 +4109,16 @@
             "cookieAuth": []
           }
         ],
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "required": false,
           "content": {

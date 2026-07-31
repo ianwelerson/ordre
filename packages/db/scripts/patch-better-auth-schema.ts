@@ -1,12 +1,18 @@
 /**
  * Post-processes the Better Auth schema artifact (`src/schemas/better-auth.ts`).
  *
- * The Better Auth CLI emits that file and offers no switches for the conventions
+ * The Better Auth CLI emits that file and offers no switches for the two fixes
  * below, so this runs immediately after it (see the `auth:generate` script in
  * `apps/api/package.json`) and rewrites the output in place. Editing the artifact
  * by hand is not an option - the next regenerate would silently drop the fixes,
  * and a `timestamp` that lost its time zone is not the kind of bug that surfaces
  * quickly.
+ *
+ * Scope is deliberately limited to timestamp columns. Everything Better Auth
+ * addresses by name - table names, column names, the schema's property names -
+ * is left exactly as generated, so the adapter and any Better Auth tooling see
+ * their own standard schema. Cosmetic divergence (index naming, import order)
+ * is not worth owning.
  *
  * Every rule is idempotent (re-running changes nothing) and generic (keyed off
  * shapes, not off the four tables that exist today), so enabling a Better Auth
@@ -89,34 +95,6 @@ const RULES: Rule[] = [
     verify: (source) => {
       const missing = source.match(/\bupdatedAt: timestamp\([^)]*\)\s*\.\$onUpdate\(/g);
       return missing ? `updatedAt without a default: ${missing.length} site(s)` : null;
-    },
-  },
-  {
-    // The generator builds index names from the camelCase *property* name
-    // (`session_userId_idx`); every hand-written index in this schema is named
-    // after the snake_case column instead.
-    name: 'index names are snake_case',
-    apply: (source) => {
-      let changed = 0;
-      const next = source.replace(
-        /\bindex\((['"])([A-Za-z0-9_]+)\1\)/g,
-        (whole, quote: string, name: string) => {
-          const snake = name.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();
-
-          if (snake === name) {
-            return whole;
-          }
-
-          changed += 1;
-
-          return `index(${quote}${snake}${quote})`;
-        }
-      );
-      return { source: next, changed };
-    },
-    verify: (source) => {
-      const camel = source.match(/\bindex\((['"])[A-Za-z0-9_]*[A-Z][A-Za-z0-9_]*\1\)/g);
-      return camel ? `still camelCase: ${camel.join(', ')}` : null;
     },
   },
 ];

@@ -1,6 +1,6 @@
 {
-  "id": "1863bf9f-8309-417f-9d69-c9aca28b671b",
-  "prevId": "2fffd371-d386-452d-a94a-2f436bfce37a",
+  "id": "f7e6f897-7255-4c23-bda1-1ccb38bafbc8",
+  "prevId": "b83f6950-f244-4715-ab67-33bded23dcfd",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -91,8 +91,8 @@
         }
       },
       "indexes": {
-        "account_user_id_idx": {
-          "name": "account_user_id_idx",
+        "account_userId_idx": {
+          "name": "account_userId_idx",
           "columns": [
             {
               "expression": "user_id",
@@ -185,8 +185,8 @@
         }
       },
       "indexes": {
-        "session_user_id_idx": {
-          "name": "session_user_id_idx",
+        "session_userId_idx": {
+          "name": "session_userId_idx",
           "columns": [
             {
               "expression": "user_id",

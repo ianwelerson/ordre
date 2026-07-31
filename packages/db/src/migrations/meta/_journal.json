@@ -5,21 +5,21 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1785450695792,
+      "when": 1785467789880,
       "tag": "0000_initial_schema",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1785450703406,
+      "when": 1785467790255,
       "tag": "0001_row_level_security",
       "breakpoints": true
     },
     {
       "idx": 2,
       "version": "7",
-      "when": 1785450703772,
+      "when": 1785467790623,
       "tag": "0002_invite_functions",
       "breakpoints": true
     }

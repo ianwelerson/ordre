@@ -53,6 +53,28 @@ jobs:
       - name: Install Playwright Browsers
         run: pnpm exec playwright install
 
+      # The two-role split from Setup -> Database Roles & RLS. It is a manual,
+      # one-time step per database, so the ephemeral CI database needs it too:
+      # without a weak, non-owner role the API would connect as the owner and
+      # silently bypass every policy, making the RLS tests pass for free.
+      # The password is throwaway - this database dies with the job.
+      - name: Bootstrap database roles
+        run: |
+          psql "$DATABASE_OWNER_URL" -v ON_ERROR_STOP=1 <<'SQL'
+            CREATE ROLE ordre_app LOGIN PASSWORD 'ordre_app';
+            GRANT CONNECT ON DATABASE "ordre-test" TO ordre_app;
+            GRANT USAGE ON SCHEMA public TO ordre_app;
+            GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO ordre_app;
+            GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO ordre_app;
+            -- Covers the tables the migrations create later in the job.
+            ALTER DEFAULT PRIVILEGES IN SCHEMA public
+              GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO ordre_app;
+            ALTER DEFAULT PRIVILEGES IN SCHEMA public
+              GRANT USAGE, SELECT ON SEQUENCES TO ordre_app;
+          SQL
+        env:
+          DATABASE_OWNER_URL: postgresql://postgres:postgres@localhost:5432/ordre-test
+
       - name: Run Tests
         run: pnpm test:unit:ci
         env:
@@ -60,7 +82,10 @@ jobs:
           # env.ts falls back to these when no file is present.
           APP_STAGE: test
           NODE_ENV: test
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ordre-test
+          # Runtime connection - the restricted role, so RLS is actually enforced.
+          DATABASE_URL: postgresql://ordre_app:ordre_app@localhost:5432/ordre-test
+          # Owner connection - migrations, TRUNCATE and seeding (see src/test/owner-db.ts).
+          DATABASE_OWNER_URL: postgresql://postgres:postgres@localhost:5432/ordre-test
           BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
 
       # - name: Run E2E Tests

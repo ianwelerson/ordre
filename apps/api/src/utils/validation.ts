@@ -50,8 +50,7 @@ export const parseBetterAuthValidationDetails = (message: string): Record<string
  * Shared by {@link validateRequestBody} and {@link validateField}.
  */
 type ValidationResult<T> =
-  | { success: true; data: T }
-  | { success: false; response: Response<never> };
+  { success: true; data: T } | { success: false; response: Response<never> };
 
 /**
  * Validates a request payload against a Zod schema and normalizes the outcome.

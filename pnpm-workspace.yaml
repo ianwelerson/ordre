@@ -20,6 +20,17 @@ minimumReleaseAgeExclude:
   - '@typescript-eslint/visitor-keys@8.60.0'
   - typescript-eslint@8.60.0
   - postcss@8.5.10
+  - brace-expansion@2.1.4
+# GHSA-mh99-v99m-4gvg declares a single flat range (<=5.0.7) with no branch for
+# the 2.x line, so the backported fix in brace-expansion@2.1.4 still trips the
+# audit. We are on 2.1.4 (minimatch@9) and 5.0.8 (minimatch@10) - both patched.
+# minimatch@9 cannot take 5.x: it default-imports brace-expansion, and 5.x only
+# exports `expand` as a named export. Drop this once GitHub splits the range.
+auditConfig:
+  ignoreGhsas:
+    - GHSA-mh99-v99m-4gvg
 overrides:
   postcss@<8.5.10: ^8.5.10
   esbuild: ^0.28.1
+  sharp@<0.35.0: ^0.35.3
+  minimatch@9>brace-expansion: ^2.1.4

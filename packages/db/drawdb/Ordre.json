@@ -251,7 +251,7 @@
       "indices": [
         {
           "id": "idx_session_userId_01",
-          "name": "session_user_id_idx",
+          "name": "session_userId_idx",
           "unique": false,
           "fields": ["userId"]
         }
@@ -467,7 +467,7 @@
       "indices": [
         {
           "id": "idx_account_userId_01",
-          "name": "account_user_id_idx",
+          "name": "account_userId_idx",
           "unique": false,
           "fields": ["userId"]
         }

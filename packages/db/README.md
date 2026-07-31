@@ -24,14 +24,18 @@ Drizzle ORM schema, migrations, and the shared Postgres connection for Ordre.
 `src/schemas/better-auth.ts` is emitted by the Better Auth CLI and must never be
 edited by hand - the next `pnpm --filter api auth:generate` would overwrite it.
 
-That generator has no options for a few things we require, so `auth:generate`
-chains `auth:patch` (`scripts/patch-better-auth-schema.ts`), which rewrites its
-output: timestamps become timezone-aware, `updated_at` gets a default, and index
-names become snake_case. The rules are idempotent and keyed off shapes rather
-than specific table names, and the script **fails the command** if it cannot
-apply one - a silent no-op would mean losing time zones without noticing.
+That generator has no options for two fixes we need on its timestamp columns, so
+`auth:generate` chains `auth:patch` (`scripts/patch-better-auth-schema.ts`),
+which rewrites its output: timestamps become timezone-aware, and `updated_at`
+gets a default (the generator marks it `NOT NULL` without one, so inserts that
+don't set it explicitly fail). The rules are idempotent and keyed off shapes
+rather than specific table names, and the script **fails the command** if it
+cannot apply one - a silent no-op would mean losing time zones without noticing.
 
-Need another convention enforced? Add a rule there, not to the artifact.
+Everything Better Auth addresses by name - tables, columns, schema properties -
+is left exactly as generated, so its adapter and tooling see the standard schema.
+Purely cosmetic differences (index naming, import order) are deliberately not
+patched: they buy nothing and add divergence to maintain.
 
 ## Roles & Row-Level Security
 

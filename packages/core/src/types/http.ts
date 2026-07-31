@@ -87,8 +87,7 @@ export interface ResponseErrorBody {
  * codes carry a `ResponseErrorBody`.
  */
 export type Response<T> =
-  | { status: SuccessStatus; body: T }
-  | { status: ErrorStatus; body: ResponseErrorBody };
+  { status: SuccessStatus; body: T } | { status: ErrorStatus; body: ResponseErrorBody };
 
 /**
  * A success response that carries no payload - used for mutations (DELETE, and

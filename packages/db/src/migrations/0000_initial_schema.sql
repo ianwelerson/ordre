@@ -159,8 +159,8 @@ ALTER TABLE "workspace_member_location" ADD CONSTRAINT "workspace_member_locatio
 ALTER TABLE "workspace_member_location" ADD CONSTRAINT "workspace_member_location_location_id_workspace_location_id_fk" FOREIGN KEY ("location_id") REFERENCES "public"."workspace_location"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "workspace_subscription" ADD CONSTRAINT "workspace_subscription_workspace_id_workspace_id_fk" FOREIGN KEY ("workspace_id") REFERENCES "public"."workspace"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "workspace_subscription" ADD CONSTRAINT "workspace_subscription_plan_id_plan_id_fk" FOREIGN KEY ("plan_id") REFERENCES "public"."plan"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-CREATE INDEX "account_user_id_idx" ON "account" USING btree ("user_id");--> statement-breakpoint
-CREATE INDEX "session_user_id_idx" ON "session" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "account_userId_idx" ON "account" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "session_userId_idx" ON "session" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "verification_identifier_idx" ON "verification" USING btree ("identifier");--> statement-breakpoint
 CREATE UNIQUE INDEX "workspace_invite_workspace_email_pending_unique" ON "workspace_invite" USING btree ("workspace_id","email") WHERE "workspace_invite"."status" = 'pending';--> statement-breakpoint
 CREATE INDEX "workspace_invite_workspace_id_idx" ON "workspace_invite" USING btree ("workspace_id");--> statement-breakpoint
