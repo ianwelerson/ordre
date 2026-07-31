@@ -59,7 +59,9 @@ const mockUserSession = (user?: Record<string, string>) => {
  * | POST   /member/:mid/role(member:manage)|  200  |  409  |  403   |     -      |   -    |
  *
  * `member:manage` is held by owner and admin; self-service (`/me`, `/leave`) needs
- * only workspace access. A non-member (`outsider`) 404s at `requireWorkspaceAccess`.
+ * only workspace access. A non-member (`outsider`) 404s at `requireWorkspaceAccess`,
+ * and a suspended member 403s there - before any permission check, so it holds for
+ * every route in the table.
  */
 describe('Workspace Member', () => {
   const WS = WORKSPACE_IDS.primary;
@@ -76,14 +78,26 @@ describe('Workspace Member', () => {
 
       const members = parseBody(WorkspaceMemberSchema.array(), response.body);
 
-      // owner + admin + member seeded in the primary workspace.
-      expect(members).toHaveLength(3);
+      // owner + admin + member + the suspended member seeded in the primary
+      // workspace. Suspension gates access, not visibility - an admin still needs
+      // to see the row to lift it.
+      expect(members).toHaveLength(4);
     });
 
     test('GET allows an admin to list members', async () => {
       mockUserSession({ id: USER_IDS.admin });
 
       await request(app).get(listUrl(WS)).send().expect(200);
+    });
+
+    // The suspended member also lacks `member:manage`, so a status check placed
+    // after the permission guard would answer FORBIDDEN here instead.
+    test('GET rejects a suspended member with MEMBER_ACCESS_SUSPENDED, not FORBIDDEN', async () => {
+      mockUserSession({ id: USER_IDS.suspended });
+
+      const response = await request(app).get(listUrl(WS)).send().expect(403);
+
+      expect(parseBody(ResponseErrorSchema, response.body).code).toBe('MEMBER_ACCESS_SUSPENDED');
     });
 
     test('GET forbids a member (lacks member:manage) with FORBIDDEN', async () => {
@@ -100,6 +114,16 @@ describe('Workspace Member', () => {
       const response = await request(app).get(listUrl(WS)).send().expect(404);
 
       expect(parseBody(ResponseErrorSchema, response.body).code).toBe('NOT_FOUND');
+    });
+
+    // Self-service, so it needs only workspace access - proving the rejection comes
+    // from the membership guard and not from a missing `member:manage`.
+    test('GET /me rejects a suspended member with MEMBER_ACCESS_SUSPENDED', async () => {
+      mockUserSession({ id: USER_IDS.suspended });
+
+      const response = await request(app).get(selfUrl(WS)).send().expect(403);
+
+      expect(parseBody(ResponseErrorSchema, response.body).code).toBe('MEMBER_ACCESS_SUSPENDED');
     });
 
     test('GET rejects an unauthenticated request with UNAUTHORIZED', async () => {

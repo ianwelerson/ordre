@@ -127,12 +127,21 @@ Better Auth org plugin.
 | `displayName` | text, nullable                  | Name shown to clients on boards (first name works well) |
 | `title`       | text, nullable                  | Role label under the name on the client board           |
 | `role`        | enum `owner \| admin \| member` |                                                         |
-| `status`      | enum `active \| invited \| suspended` |                                                   |
+| `status`      | enum `active \| suspended`      | Suspended = soft-removed; the row is kept, access is not |
 | `phone`       | text, nullable                  | Personal account contact (Register step 4, Profile)     |
 | `createdAt`   | timestamp                       |                                                         |
 | `updatedAt`   | timestamp                       |                                                         |
 
 Unique: (`userId`, `workspaceId`).
+
+There is no `invited` status - an invitation lives in `Workspace_Member_Invite`
+until it is accepted, and only then does a member row exist. Removing a member
+(or a member leaving) **soft-removes**: `status` becomes `suspended`, `role` resets
+to `member` and `phone` is cleared, while `displayName` and `title` are kept for
+audit and for reactivation on re-invite. `requireWorkspaceAccess` rejects a
+suspended member with `403 MEMBER_ACCESS_SUSPENDED` before any permission check
+runs, but the row stays visible in the member list - an admin has to see it to
+lift the suspension.
 
 `[derived]`: open-board count, last active (from sessions).
 

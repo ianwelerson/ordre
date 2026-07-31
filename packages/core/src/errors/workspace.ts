@@ -73,6 +73,10 @@ export const WORKSPACE_ERRORS = {
     status: 409,
     message: "You can't change the role for a suspended member",
   },
+  MEMBER_ACCESS_SUSPENDED: {
+    status: 403,
+    message: 'Your access to this workspace has been suspended',
+  },
   INVITE_ALREADY_PENDING: {
     status: 409,
     message: 'There is already a pending invite for this email',

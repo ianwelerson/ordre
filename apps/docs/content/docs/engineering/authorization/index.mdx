@@ -25,7 +25,7 @@ authenticate → rlsContext → requireWorkspaceAccess → requireWorkspacePermi
 | ---------------------------- | ---------------------------------------------------------- | ------- |
 | `authenticate`               | Resolve the session, set `req.user`                        | `401 UNAUTHORIZED` |
 | `rlsContext`                 | Open the RLS transaction, pin `app.user_id` (RLS layer)    | -       |
-| `requireWorkspaceAccess`     | Resolve the workspace, load the caller's membership, set `req.member` | `404 NOT_FOUND` |
+| `requireWorkspaceAccess`     | Resolve the workspace, load the caller's **active** membership, set `req.member` | `404 NOT_FOUND` / `403 MEMBER_ACCESS_SUSPENDED` |
 | `requireWorkspacePermission` | Check the role holds the required permission               | `403 FORBIDDEN` |
 | controller                   | Do the work; shape the payload by role (`scopeRelations`)  | -       |
 

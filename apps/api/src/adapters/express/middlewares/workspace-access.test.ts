@@ -132,8 +132,31 @@ describe('middleware/requireWorkspaceAccess', () => {
     expect(next).not.toHaveBeenCalled();
   });
 
-  it('populates req.member and continues when the caller is a member', async () => {
-    findMember.mockResolvedValue({ id: 'member-1', role: 'owner' } as Awaited<
+  it('returns forbidden when the caller is a member but suspended', async () => {
+    findMember.mockResolvedValue({ id: 'member-1', role: 'member', status: 'suspended' } as Awaited<
+      ReturnType<typeof db.query.workspaceMember.findFirst>
+    >);
+    const req = buildRequest({
+      user: { id: 'user-1', email: 'user@example.com' },
+      params: { id: WORKSPACE_ID },
+    });
+    const { res, status, json } = buildResponse();
+    const next = vi.fn() as unknown as NextFunction;
+
+    await requireWorkspaceAccess(req, res, next);
+
+    const { status: expectedStatus, body } = errorResponse(
+      WORKSPACE_ERRORS,
+      'MEMBER_ACCESS_SUSPENDED'
+    );
+    expect(status).toHaveBeenCalledWith(expectedStatus);
+    expect(json).toHaveBeenCalledWith(body);
+    expect(req.member).toBeUndefined();
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it('populates req.member and continues when the caller is an active member', async () => {
+    findMember.mockResolvedValue({ id: 'member-1', role: 'owner', status: 'active' } as Awaited<
       ReturnType<typeof db.query.workspaceMember.findFirst>
     >);
     const req = buildRequest({

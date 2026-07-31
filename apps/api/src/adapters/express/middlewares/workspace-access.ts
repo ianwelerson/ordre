@@ -18,15 +18,17 @@ import * as schema from '@ordre/db/schemas';
  *
  * Must run after `authenticate`. It resolves the target workspace from
  * the route params (`:id` directly, or `:slug` via a lookup), then loads the
- * caller's `workspace_member` row for that workspace. On success it populates
- * `req.member` (see the Express `Request` augmentation in
- * `src/types/express.d.ts`) with the member id, workspace id, and role, so the
- * downstream permission check can read the role.
+ * caller's `workspace_member` row for that workspace and requires it to be
+ * `active`. On success it populates `req.member` (see the Express `Request`
+ * augmentation in `src/types/express.d.ts`) with the member id, workspace id,
+ * and role, so the downstream permission check can read the role.
  *
  * Returns `NOT_FOUND` both when the workspace can't be resolved and when the
  * caller isn't a member - the two are intentionally indistinguishable, so
- * membership can't be used to probe which workspaces exist. Any thrown error is
- * forwarded to the central error handler.
+ * membership can't be used to probe which workspaces exist. A suspended member
+ * instead gets `MEMBER_ACCESS_SUSPENDED` (403): they already know the workspace
+ * exists, so masking it as a 404 would only hide why they're locked out. Any
+ * thrown error is forwarded to the central error handler.
  */
 export const requireWorkspaceAccess = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -75,6 +77,12 @@ export const requireWorkspaceAccess = async (req: Request, res: Response, next: 
 
     if (!member) {
       const { status, body } = errorResponse(WORKSPACE_ERRORS, 'NOT_FOUND');
+
+      return res.status(status).json(body);
+    }
+
+    if (member.status !== 'active') {
+      const { status, body } = errorResponse(WORKSPACE_ERRORS, 'MEMBER_ACCESS_SUSPENDED');
 
       return res.status(status).json(body);
     }

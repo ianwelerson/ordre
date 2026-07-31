@@ -783,6 +783,21 @@ describe('Workspace', () => {
       parseBody(WorkspaceSchema, response.body);
     });
 
+    // The suspended member holds the `member` role, so `workspace:read` would let
+    // them through - only the membership status stops them.
+    test('GET rejects a suspended member with MEMBER_ACCESS_SUSPENDED', async () => {
+      mockUserSession({
+        id: USER_IDS.suspended,
+      });
+
+      const response = await request(app)
+        .get(`${BASE}${workspaceItemByIdPath.replace(':id', WORKSPACE_IDS.primary)}`)
+        .send()
+        .expect(403);
+
+      expect(parseBody(ResponseErrorSchema, response.body).code).toBe('MEMBER_ACCESS_SUSPENDED');
+    });
+
     test('GET hides the workspace from a non-member with NOT_FOUND', async () => {
       mockUserSession({
         id: USER_IDS.outsider,

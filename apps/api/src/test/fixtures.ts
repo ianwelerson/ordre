@@ -21,6 +21,9 @@ export const USER_IDS = {
   owner: 'dd2d6688-63d2-4775-a44a-b844fa42a29d',
   admin: '3f1c0a52-6b7d-4e8f-9a10-2c3d4e5f6a7b',
   member: '9b8a7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d',
+  // A member of the primary workspace whose membership is `suspended` - exercises
+  // the 403 in `requireWorkspaceAccess` (a member row exists, but it's not active).
+  suspended: '6d5c4b3a-2f1e-4d0c-9b8a-7f6e5d4c3b2a',
   // A real user that belongs to NO workspace - exercises the membership 404s
   // in `requireWorkspaceAccess` (authenticated but not a member).
   outsider: 'a1b2c3d4-e5f6-4708-9a1b-2c3d4e5f6071',
@@ -54,6 +57,7 @@ export const MEMBER_IDS = {
   admin: 'a2000000-0000-4000-8000-000000000002',
   member: 'a3000000-0000-4000-8000-000000000003',
   ownerMinimal: 'a4000000-0000-4000-8000-000000000004',
+  suspended: 'a5000000-0000-4000-8000-000000000005',
   // Never seeded - for "unknown member" cases.
   missing: 'a9000000-0000-4000-8000-000000000009',
 } as const;
@@ -104,6 +108,12 @@ export const userFixtures = [
     emailVerified: true,
   },
   {
+    id: USER_IDS.suspended,
+    name: 'Suspended User',
+    email: 'suspended@ordre.app',
+    emailVerified: true,
+  },
+  {
     id: USER_IDS.outsider,
     name: 'Outsider User',
     email: 'outsider@ordre.app',
@@ -141,6 +151,8 @@ export const workspaceFixtures = [
  *
  * The `owner` also owns `minimal` so both seeded workspaces are reachable; the
  * `outsider` is intentionally absent so authenticated-but-not-a-member 404s hold.
+ * The `suspended` row is a `member` whose status isn't `active`, so the 403 in
+ * `requireWorkspaceAccess` has a caller to reject.
  */
 export const workspaceMemberFixtures = [
   {
@@ -170,6 +182,13 @@ export const workspaceMemberFixtures = [
     workspaceId: WORKSPACE_IDS.minimal,
     role: 'owner',
     status: 'active',
+  },
+  {
+    id: MEMBER_IDS.suspended,
+    userId: USER_IDS.suspended,
+    workspaceId: WORKSPACE_IDS.primary,
+    role: 'member',
+    status: 'suspended',
   },
 ] satisfies WorkspaceMemberInsert[];
 

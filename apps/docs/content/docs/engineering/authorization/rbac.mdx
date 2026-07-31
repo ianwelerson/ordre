@@ -47,7 +47,7 @@ can(role, permission); // e.g. can('admin', 'workspace:delete') -> false
 
 Two middlewares split the work; both run after `authenticate` and `rlsContext` (see the [pipeline](/internal-docs/engineering/authorization)).
 
-**`requireWorkspaceAccess`** - resource-level. Resolves the workspace from `:id` or `:slug`, loads the caller's `workspace_member` row, and sets `req.member` (`{ id, workspaceId, role }`).
+**`requireWorkspaceAccess`** - resource-level. Resolves the workspace from `:id` or `:slug`, loads the caller's `workspace_member` row, requires it to be `active`, and sets `req.member` (`{ id, workspaceId, role }`).
 
 <Callout type="warn">
   It returns **`404 NOT_FOUND` both when the workspace doesn't exist and when the
@@ -55,6 +55,8 @@ Two middlewares split the work; both run after `authenticate` and `rlsContext` (
   used to probe which workspaces exist. A non-member never learns the difference
   between "no such workspace" and "not yours".
 </Callout>
+
+A **suspended** member is the exception to that masking: they get `403 MEMBER_ACCESS_SUSPENDED` instead of a `404`. They already know the workspace exists - they used to be in it - so hiding it would leak nothing and would only obscure why they're locked out. Because the check sits in the access guard, it holds for every workspace route including the self-service ones (`/me`, `/leave`) that need no permission at all.
 
 **`requireWorkspacePermission(permission)`** - action-level. Reads `req.member.role` and tests it with `can()`; a role lacking the permission gets `403 FORBIDDEN`. If `req.member` is missing it **throws (500)** rather than returning 403 - a missing member means the route forgot to mount `requireWorkspaceAccess` first, and masking a wiring bug as a permission error would hide it.
 
@@ -86,9 +88,10 @@ It drops any relation the role can't see, so the unauthorized data is **never ev
 | ---------------------------------- | ------ | ---------------------------- |
 | No session                         | `401`  | `authenticate`               |
 | Not a member (or workspace absent) | `404`  | `requireWorkspaceAccess`     |
+| Suspended member                   | `403`  | `requireWorkspaceAccess`     |
 | Member, but lacks the permission   | `403`  | `requireWorkspacePermission` |
 
-The `404`-not-`403` for non-members is the one deliberate choice worth remembering: **hide existence from outsiders, report permission honestly to insiders.**
+The `404`-not-`403` for non-members is the one deliberate choice worth remembering: **hide existence from outsiders, report permission honestly to insiders.** A suspended member counts as an insider.
 
 ## Extending it
 
