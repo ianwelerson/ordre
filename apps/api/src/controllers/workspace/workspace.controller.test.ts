@@ -1,4 +1,4 @@
-import type { WorkspaceMemberContext } from '#/types/context.ts';
+import type { MemberContext, WorkspaceContext } from '#/types/context.ts';
 import { PG_ERROR_CODES } from '#/utils/db-error.ts';
 
 import {
@@ -47,7 +47,8 @@ const mockUpdate = (result: unknown[] | Error) => {
 };
 
 const WORKSPACE_ID = '11111111-1111-4111-8111-111111111111';
-const member: WorkspaceMemberContext = { id: 'member-1', workspaceId: WORKSPACE_ID, role: 'owner' };
+const workspace: WorkspaceContext = { id: WORKSPACE_ID };
+const member: MemberContext = { id: 'member-1', role: 'owner' };
 
 const validCreatePayload = {
   name: 'Test',
@@ -163,20 +164,14 @@ describe('controllers/workspace', () => {
   });
 
   describe('workspaceUpdate', () => {
-    it('returns INVALID_INPUT when the workspace id is not a uuid', async () => {
-      const result = await workspaceUpdate({ ...member, workspaceId: 'not-a-uuid' }, {
-        name: 'New',
-      } as Parameters<typeof workspaceUpdate>[1]);
-
-      expect(result.body).toMatchObject({ code: 'INVALID_INPUT' });
-    });
-
+    // No "invalid workspace id" case: the id comes from the workspace context that
+    // `requireWorkspaceAccess` resolved from the database, not from client input.
     it('returns WORKSPACE_NOT_FOUND when a valid id matches no row', async () => {
       mockUpdate([]);
 
-      const result = await workspaceUpdate(member, { name: 'New' } as Parameters<
+      const result = await workspaceUpdate(workspace, member, { name: 'New' } as Parameters<
         typeof workspaceUpdate
-      >[1]);
+      >[2]);
 
       expect(result.status).toBe(404);
     });
@@ -184,9 +179,9 @@ describe('controllers/workspace', () => {
     it('maps a concurrent unique violation to WORKSPACE_SLUG_ALREADY_EXISTS', async () => {
       mockUpdate(uniqueViolation());
 
-      const result = await workspaceUpdate(member, { name: 'New' } as Parameters<
+      const result = await workspaceUpdate(workspace, member, { name: 'New' } as Parameters<
         typeof workspaceUpdate
-      >[1]);
+      >[2]);
 
       expect(result.status).toBe(409);
     });
@@ -194,9 +189,9 @@ describe('controllers/workspace', () => {
     it('returns INTERNAL_ERROR on an unexpected error', async () => {
       mockUpdate(new Error('db down'));
 
-      const result = await workspaceUpdate(member, { name: 'New' } as Parameters<
+      const result = await workspaceUpdate(workspace, member, { name: 'New' } as Parameters<
         typeof workspaceUpdate
-      >[1]);
+      >[2]);
 
       expect(result.status).toBe(500);
     });

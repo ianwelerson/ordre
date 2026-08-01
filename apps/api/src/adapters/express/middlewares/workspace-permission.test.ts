@@ -4,8 +4,6 @@ import { BASE_ERRORS, errorResponse } from '@ordre/core/errors';
 
 import { requireWorkspacePermission } from './workspace-permission.ts';
 
-const WORKSPACE_ID = '11111111-1111-4111-8111-111111111111';
-
 /** Minimal Express `Request` with the bits `requireWorkspacePermission` reads. */
 const buildRequest = (overrides: Partial<Request> = {}): Request => ({ ...overrides }) as Request;
 
@@ -20,7 +18,7 @@ const buildResponse = () => {
 describe('middleware/requireWorkspacePermission', () => {
   it('continues when the role holds the required permission', () => {
     const req = buildRequest({
-      member: { id: 'member-1', workspaceId: WORKSPACE_ID, role: 'owner' },
+      member: { id: 'member-1', role: 'owner' },
     });
     const { res, status } = buildResponse();
     const next = vi.fn() as unknown as NextFunction;
@@ -33,7 +31,7 @@ describe('middleware/requireWorkspacePermission', () => {
 
   it('responds with forbidden when the role lacks the required permission', () => {
     const req = buildRequest({
-      member: { id: 'member-1', workspaceId: WORKSPACE_ID, role: 'member' },
+      member: { id: 'member-1', role: 'member' },
     });
     const { res, status, json } = buildResponse();
     const next = vi.fn() as unknown as NextFunction;

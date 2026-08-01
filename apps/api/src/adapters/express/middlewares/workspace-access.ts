@@ -20,9 +20,10 @@ import * as schema from '@ordre/db/schemas';
  * Must run after `authenticate`. It resolves the target workspace from
  * the route params (`:id` directly, or `:slug` via a lookup), then loads the
  * caller's `workspace_member` row for that workspace and requires it to be
- * `active`. On success it populates `req.member` (see the Express `Request`
- * augmentation in `src/types/express.d.ts`) with the member id, workspace id,
- * and role, so the downstream permission check can read the role.
+ * `active`. On success it populates two separate contexts (see the Express
+ * `Request` augmentation in `src/types/express.d.ts`): `req.workspace` with the
+ * resolved tenant scope, and `req.member` with the caller's member id and role,
+ * so the downstream permission check can read the role.
  *
  * Returns `WORKSPACE_NOT_FOUND` both when the workspace can't be resolved and
  * when the caller isn't a member - the two are intentionally indistinguishable,
@@ -88,9 +89,10 @@ export const requireWorkspaceAccess = async (req: Request, res: Response, next: 
       return res.status(status).json(body);
     }
 
+    req.workspace = { id: workspaceId };
+
     req.member = {
       id: member.id,
-      workspaceId,
       role: member.role,
     };
 

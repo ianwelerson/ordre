@@ -153,7 +153,7 @@ describe('middleware/requireWorkspaceAccess', () => {
     expect(next).not.toHaveBeenCalled();
   });
 
-  it('populates req.member and continues when the caller is an active member', async () => {
+  it('populates req.workspace and req.member, and continues, when the caller is an active member', async () => {
     findMember.mockResolvedValue({ id: 'member-1', role: 'owner', status: 'active' } as Awaited<
       ReturnType<typeof db.query.workspaceMember.findFirst>
     >);
@@ -166,7 +166,8 @@ describe('middleware/requireWorkspaceAccess', () => {
 
     await requireWorkspaceAccess(req, res, next);
 
-    expect(req.member).toEqual({ id: 'member-1', workspaceId: WORKSPACE_ID, role: 'owner' });
+    expect(req.workspace).toEqual({ id: WORKSPACE_ID });
+    expect(req.member).toEqual({ id: 'member-1', role: 'owner' });
     expect(next).toHaveBeenCalledWith();
     expect(status).not.toHaveBeenCalled();
   });

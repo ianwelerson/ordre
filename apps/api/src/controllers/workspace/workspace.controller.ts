@@ -1,6 +1,6 @@
 import { getDb } from '#/config/db-context.ts';
 import { logger } from '#/config/logger.ts';
-import type { WorkspaceMemberContext } from '#/types/context.ts';
+import type { MemberContext, WorkspaceContext } from '#/types/context.ts';
 import { isUniqueViolation } from '#/utils/db-error.ts';
 import { validateField, validateRequestBody } from '#/utils/validation.ts';
 import { eq, sql } from 'drizzle-orm';
@@ -233,7 +233,7 @@ export const workspaceGetAll = async (userId: string): Promise<Response<Workspac
  * @returns The `Workspace` (200), `WORKSPACE_NOT_FOUND` (404), or an error response.
  */
 export const workspaceGetById = async (
-  member: WorkspaceMemberContext,
+  member: MemberContext,
   id: unknown
 ): Promise<Response<Workspace>> => {
   try {
@@ -262,7 +262,7 @@ export const workspaceGetById = async (
  * @returns The `Workspace` (200), `WORKSPACE_NOT_FOUND` (404), or an error response.
  */
 export const workspaceGetBySlug = async (
-  member: WorkspaceMemberContext,
+  member: MemberContext,
   slug: unknown
 ): Promise<Response<Workspace>> => {
   try {
@@ -321,21 +321,17 @@ export const workspaceDelete = async (id: unknown): Promise<NoContentResponse> =
  * `WORKSPACE_SLUG_ALREADY_EXISTS`. An empty payload is a no-op that returns the current
  * workspace unchanged.
  *
- * @param member - The caller's workspace membership; identifies the workspace and scopes relations.
+ * @param workspace - The workspace the request is scoped to; identifies the row to update.
+ * @param member - The caller's workspace membership; its role scopes which relations load.
  * @param payload - The workspace fields to update; validated against `WorkspaceUpdateSchema`.
  * @returns The updated `Workspace` (200) on success, `WORKSPACE_NOT_FOUND` (404) if no row matches, or an error response.
  */
 export const workspaceUpdate = async (
-  member: WorkspaceMemberContext,
+  workspace: WorkspaceContext,
+  member: MemberContext,
   payload: WorkspaceUpdate
 ): Promise<Response<Workspace>> => {
   try {
-    const parsedId = validateField(z.uuid(), member.workspaceId, 'id');
-
-    if (!parsedId.success) {
-      return parsedId.response;
-    }
-
     const parsedPayload = validateRequestBody<WorkspaceUpdate>(WorkspaceUpdateSchema, payload);
 
     if (!parsedPayload.success) {
@@ -346,34 +342,34 @@ export const workspaceUpdate = async (
 
     // Empty payload: return the workspace unchanged rather than let Drizzle throw on `.set({})`.
     if (Object.keys(data).length === 0) {
-      return respondWithWorkspace(member.role, eq(schema.workspace.id, parsedId.data));
+      return respondWithWorkspace(member.role, eq(schema.workspace.id, workspace.id));
     }
 
     if (data.slug) {
-      const slugError = await checkSlugAvailability(data.slug, parsedId.data);
+      const slugError = await checkSlugAvailability(data.slug, workspace.id);
 
       if (slugError) {
         return slugError;
       }
     }
 
-    const [workspace] = await getDb()
+    const [updated] = await getDb()
       .update(schema.workspace)
       .set({
         ...data,
       })
-      .where(eq(schema.workspace.id, parsedId.data))
+      .where(eq(schema.workspace.id, workspace.id))
       .returning();
 
     // A valid id that matches no row means the workspace doesn't exist - the
     // `.set()` above always returns the row when the id matches.
-    if (!workspace) {
+    if (!updated) {
       return errorResponse(WORKSPACE_ERRORS, 'WORKSPACE_NOT_FOUND');
     }
 
     // Re-read through the shared path so the response matches every other
     // workspace read (same role-scoped relations), not the bare updated row.
-    return respondWithWorkspace(member.role, eq(schema.workspace.id, parsedId.data));
+    return respondWithWorkspace(member.role, eq(schema.workspace.id, workspace.id));
   } catch (error) {
     // A concurrent update can slip past the pre-check; the unique index is the real guard.
     if (isUniqueViolation(error)) {

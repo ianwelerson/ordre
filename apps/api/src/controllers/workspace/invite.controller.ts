@@ -1,6 +1,6 @@
 import { getDb } from '#/config/db-context.ts';
 import { logger } from '#/config/logger.ts';
-import type { WorkspaceMemberContext } from '#/types/context.ts';
+import type { MemberContext, WorkspaceContext } from '#/types/context.ts';
 import { isUniqueViolation } from '#/utils/db-error.ts';
 import { validateField, validateRequestBody } from '#/utils/validation.ts';
 import { and, eq, sql } from 'drizzle-orm';
@@ -41,20 +41,22 @@ import { locationInWorkspace } from './location.utils.ts';
  * Creates a pending invite for someone to join the caller's workspace.
  *
  * The invite is always scoped to the caller's own workspace, so the
- * `workspaceId` is taken from the member context rather than the payload. An
+ * `workspaceId` is taken from the workspace context rather than the payload. An
  * invite is rejected when the email already belongs to an active member or an
  * unexpired pending invite; a stale (past-`expiresAt`) pending invite is expired
  * first so the email can be re-invited. When supplied, the target location must
  * live in the same workspace. The generated `token` and `expiresAt`
  * (now + `INVITE_TTL_MS`) back the eventual accept flow.
  *
- * @param member - The caller's workspace membership; scopes the invite to their workspace.
+ * @param workspace - The workspace the request is scoped to; owns the new invite.
+ * @param member - The caller's workspace membership; recorded as the inviter.
  * @param payload - The invite fields to create; validated against `WorkspaceInviteCreateSchema`.
  * @returns The created `WorkspaceInvite` (201), `MEMBER_ALREADY_EXISTS` /
  *   `INVITE_ALREADY_PENDING` (409), `LOCATION_NOT_FOUND` (404), or an error response.
  */
 export const workspaceInviteCreate = async (
-  member: WorkspaceMemberContext,
+  workspace: WorkspaceContext,
+  member: MemberContext,
   payload: WorkspaceInviteCreate
 ): Promise<Response<WorkspaceInvite>> => {
   try {
@@ -68,17 +70,14 @@ export const workspaceInviteCreate = async (
     }
 
     // Expire a stale pending invite for this email before the checks below.
-    await expireStalePendingInvite(member.workspaceId, parsedPayload.data.email);
+    await expireStalePendingInvite(workspace.id, parsedPayload.data.email);
 
-    const hasActiveMember = await hasActiveMemberWithEmail(
-      member.workspaceId,
-      parsedPayload.data.email
-    );
+    const hasActiveMember = await hasActiveMemberWithEmail(workspace.id, parsedPayload.data.email);
     if (hasActiveMember) {
       return errorResponse(MEMBER_ERRORS, 'MEMBER_ALREADY_EXISTS');
     }
 
-    const hasPending = await hasPendingInvite(member.workspaceId, parsedPayload.data.email);
+    const hasPending = await hasPendingInvite(workspace.id, parsedPayload.data.email);
     if (hasPending) {
       return errorResponse(INVITE_ERRORS, 'INVITE_ALREADY_PENDING');
     }
@@ -86,7 +85,7 @@ export const workspaceInviteCreate = async (
     // Check if the Location received exists in the workspace
     if (
       parsedPayload.data.locationId &&
-      !(await locationInWorkspace(member.workspaceId, parsedPayload.data.locationId))
+      !(await locationInWorkspace(workspace.id, parsedPayload.data.locationId))
     ) {
       return errorResponse(LOCATION_ERRORS, 'LOCATION_NOT_FOUND');
     }
@@ -97,7 +96,7 @@ export const workspaceInviteCreate = async (
       .insert(schema.workspaceInvite)
       .values({
         invitedByMemberId: member.id,
-        workspaceId: member.workspaceId,
+        workspaceId: workspace.id,
         email: parsedPayload.data.email,
         name: parsedPayload.data.name,
         role: parsedPayload.data.role,
@@ -136,18 +135,18 @@ export const workspaceInviteCreate = async (
  * is modelled as a DELETE returning `204 No Content`.
  *
  * Only a `pending` invite can be deleted, and only within the caller's own
- * workspace: the update is scoped to `member.workspaceId` (on top of RLS) and to
+ * workspace: the update is scoped to the workspace context (on top of RLS) and to
  * `status = 'pending'`, so an accepted/declined/expired/already-revoked invite is
  * left untouched. A missing invite, one in another workspace, and one in a
  * non-pending state all collapse to the same `INVITE_NOT_FOUND` - the endpoint
  * never reveals whether an invite exists outside the caller's workspace.
  *
- * @param member - The caller's workspace membership; scopes the delete to their workspace.
+ * @param workspace - The workspace the request is scoped to; scopes the delete.
  * @param inviteId - The invite id to delete; validated as a UUID.
  * @returns `204 No Content` on success, `INVITE_NOT_FOUND` (404), or an error response.
  */
 export const workspaceInviteDelete = async (
-  member: WorkspaceMemberContext,
+  workspace: WorkspaceContext,
   inviteId: unknown
 ): Promise<NoContentResponse> => {
   try {
@@ -165,7 +164,7 @@ export const workspaceInviteDelete = async (
       .where(
         and(
           eq(schema.workspaceInvite.id, parsedInviteId.data),
-          eq(schema.workspaceInvite.workspaceId, member.workspaceId),
+          eq(schema.workspaceInvite.workspaceId, workspace.id),
           eq(schema.workspaceInvite.status, 'pending')
         )
       )
@@ -191,12 +190,12 @@ export const workspaceInviteDelete = async (
  * one both collapse to the same `INVITE_NOT_FOUND` - the endpoint never reveals
  * whether an invite exists outside the caller's workspace.
  *
- * @param member - The caller's workspace membership; scopes the lookup to their workspace.
+ * @param workspace - The workspace the request is scoped to; scopes the lookup.
  * @param inviteId - The invite id; must be a valid UUID or `INVALID_INPUT` is returned.
  * @returns The `WorkspaceInvite` (200), `INVITE_NOT_FOUND` (404), or an error response.
  */
 export const workspaceInviteGetById = async (
-  member: WorkspaceMemberContext,
+  workspace: WorkspaceContext,
   inviteId: unknown
 ): Promise<Response<WorkspaceInvite>> => {
   try {
@@ -206,7 +205,7 @@ export const workspaceInviteGetById = async (
       return parsedInviteId.response;
     }
 
-    const invite = await findInvite(member.workspaceId, parsedInviteId.data);
+    const invite = await findInvite(workspace.id, parsedInviteId.data);
 
     if (!invite) {
       return errorResponse(INVITE_ERRORS, 'INVITE_NOT_FOUND');
@@ -229,14 +228,14 @@ export const workspaceInviteGetById = async (
  * Unlike {@link workspaceInviteGetById}, the listing is not filtered to pending
  * invites, so accepted/declined/expired/revoked invites are included as history.
  *
- * @param member - The caller's workspace membership; scopes the listing to their workspace.
+ * @param workspace - The workspace the request is scoped to; scopes the listing.
  * @returns The workspace's invites (200), or an error response.
  */
 export const workspaceInviteGetAll = async (
-  member: WorkspaceMemberContext
+  workspace: WorkspaceContext
 ): Promise<Response<WorkspaceInvite[]>> => {
   try {
-    const invites = await findInvites(member.workspaceId);
+    const invites = await findInvites(workspace.id);
 
     return {
       status: 200,

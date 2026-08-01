@@ -1,4 +1,4 @@
-import type { WorkspaceMemberContext } from '#/types/context.ts';
+import type { WorkspaceContext } from '#/types/context.ts';
 
 import {
   workspaceLocationCreate,
@@ -63,7 +63,7 @@ const LOCATION_ID = '22222222-2222-4222-8222-222222222222';
 const DEFAULT_LOCATION_ID = '33333333-3333-4333-8333-333333333333';
 const MEMBER_ID = '44444444-4444-4444-8444-444444444444';
 const USER_ID = '55555555-5555-4555-8555-555555555555';
-const member: WorkspaceMemberContext = { id: 'member-1', workspaceId: WORKSPACE_ID, role: 'owner' };
+const workspace: WorkspaceContext = { id: WORKSPACE_ID };
 
 /** A workspace_member row, as Drizzle returns it (Date timestamps). */
 const memberRow = (overrides: Record<string, unknown> = {}) => ({
@@ -109,7 +109,7 @@ describe('controllers/workspace/location', () => {
         locationRow(),
       ]);
 
-      const result = await workspaceLocationGetAll(member);
+      const result = await workspaceLocationGetAll(workspace);
 
       expect(result.status).toBe(200);
       expect(result.body).toHaveLength(2);
@@ -120,7 +120,7 @@ describe('controllers/workspace/location', () => {
     it('returns INTERNAL_ERROR on an unexpected error', async () => {
       mockDb.query.workspaceLocation.findMany.mockRejectedValueOnce(new Error('db down'));
 
-      const result = await workspaceLocationGetAll(member);
+      const result = await workspaceLocationGetAll(workspace);
 
       expect(result.status).toBe(500);
     });
@@ -128,7 +128,7 @@ describe('controllers/workspace/location', () => {
 
   describe('workspaceLocationGetById', () => {
     it('returns INVALID_INPUT when the location id is not a uuid', async () => {
-      const result = await workspaceLocationGetById(member, 'not-a-uuid');
+      const result = await workspaceLocationGetById(workspace, 'not-a-uuid');
 
       expect(result.body).toMatchObject({ code: 'INVALID_INPUT' });
     });
@@ -136,7 +136,7 @@ describe('controllers/workspace/location', () => {
     it('returns 200 with the location', async () => {
       mockDb.query.workspaceLocation.findFirst.mockResolvedValueOnce(locationRow());
 
-      const result = await workspaceLocationGetById(member, LOCATION_ID);
+      const result = await workspaceLocationGetById(workspace, LOCATION_ID);
 
       expect(result.status).toBe(200);
       expect(result.body).toMatchObject({ id: LOCATION_ID });
@@ -145,7 +145,7 @@ describe('controllers/workspace/location', () => {
     it('returns LOCATION_NOT_FOUND when no location matches in the workspace', async () => {
       mockDb.query.workspaceLocation.findFirst.mockResolvedValueOnce(undefined);
 
-      const result = await workspaceLocationGetById(member, LOCATION_ID);
+      const result = await workspaceLocationGetById(workspace, LOCATION_ID);
 
       expect(result.status).toBe(404);
     });
@@ -157,7 +157,7 @@ describe('controllers/workspace/location', () => {
     it('returns 201 with the created location', async () => {
       mockInsert([locationRow({ name: 'Second' })]);
 
-      const result = await workspaceLocationCreate(member, payload);
+      const result = await workspaceLocationCreate(workspace, payload);
 
       expect(result.status).toBe(201);
       expect(result.body).toMatchObject({ name: 'Second' });
@@ -166,7 +166,7 @@ describe('controllers/workspace/location', () => {
     it('returns LOCATION_CREATE_FAILED when the insert returns no row', async () => {
       mockInsert([]);
 
-      const result = await workspaceLocationCreate(member, payload);
+      const result = await workspaceLocationCreate(workspace, payload);
 
       expect(result.body).toMatchObject({ code: 'LOCATION_CREATE_FAILED' });
     });
@@ -174,7 +174,7 @@ describe('controllers/workspace/location', () => {
 
   describe('workspaceLocationUpdate', () => {
     it('returns INVALID_INPUT when the location id is not a uuid', async () => {
-      const result = await workspaceLocationUpdate(member, 'not-a-uuid', {
+      const result = await workspaceLocationUpdate(workspace, 'not-a-uuid', {
         name: 'New',
       } as Parameters<typeof workspaceLocationUpdate>[2]);
 
@@ -185,7 +185,7 @@ describe('controllers/workspace/location', () => {
       mockDb.query.workspaceLocation.findFirst.mockResolvedValueOnce(locationRow());
 
       const result = await workspaceLocationUpdate(
-        member,
+        workspace,
         LOCATION_ID,
         {} as Parameters<typeof workspaceLocationUpdate>[2]
       );
@@ -198,7 +198,7 @@ describe('controllers/workspace/location', () => {
       mockDb.query.workspaceLocation.findFirst.mockResolvedValueOnce(undefined);
 
       const result = await workspaceLocationUpdate(
-        member,
+        workspace,
         LOCATION_ID,
         {} as Parameters<typeof workspaceLocationUpdate>[2]
       );
@@ -209,7 +209,7 @@ describe('controllers/workspace/location', () => {
     it('returns 200 with the updated location', async () => {
       mockUpdate([locationRow({ name: 'Renamed' })]);
 
-      const result = await workspaceLocationUpdate(member, LOCATION_ID, {
+      const result = await workspaceLocationUpdate(workspace, LOCATION_ID, {
         name: 'Renamed',
       } as Parameters<typeof workspaceLocationUpdate>[2]);
 
@@ -220,7 +220,7 @@ describe('controllers/workspace/location', () => {
     it('returns LOCATION_NOT_FOUND when a valid id matches no row', async () => {
       mockUpdate([]);
 
-      const result = await workspaceLocationUpdate(member, LOCATION_ID, {
+      const result = await workspaceLocationUpdate(workspace, LOCATION_ID, {
         name: 'Renamed',
       } as Parameters<typeof workspaceLocationUpdate>[2]);
 
@@ -230,7 +230,7 @@ describe('controllers/workspace/location', () => {
 
   describe('workspaceLocationSetDefault', () => {
     it('returns INVALID_INPUT when the location id is not a uuid', async () => {
-      const result = await workspaceLocationSetDefault(member, 'not-a-uuid');
+      const result = await workspaceLocationSetDefault(workspace, 'not-a-uuid');
 
       expect(result.body).toMatchObject({ code: 'INVALID_INPUT' });
     });
@@ -238,7 +238,7 @@ describe('controllers/workspace/location', () => {
     it('returns 200 with the promoted location', async () => {
       mockDb.transaction.mockResolvedValueOnce(locationRow({ isDefault: true }));
 
-      const result = await workspaceLocationSetDefault(member, LOCATION_ID);
+      const result = await workspaceLocationSetDefault(workspace, LOCATION_ID);
 
       expect(result.status).toBe(200);
       expect(result.body).toMatchObject({ id: LOCATION_ID, isDefault: true });
@@ -247,7 +247,7 @@ describe('controllers/workspace/location', () => {
     it('returns LOCATION_NOT_FOUND when the target is not in the workspace', async () => {
       mockDb.transaction.mockResolvedValueOnce(undefined);
 
-      const result = await workspaceLocationSetDefault(member, LOCATION_ID);
+      const result = await workspaceLocationSetDefault(workspace, LOCATION_ID);
 
       expect(result.status).toBe(404);
     });
@@ -255,7 +255,7 @@ describe('controllers/workspace/location', () => {
     it('returns INTERNAL_ERROR on an unexpected error', async () => {
       mockDb.transaction.mockRejectedValueOnce(new Error('db down'));
 
-      const result = await workspaceLocationSetDefault(member, LOCATION_ID);
+      const result = await workspaceLocationSetDefault(workspace, LOCATION_ID);
 
       expect(result.status).toBe(500);
     });
@@ -265,7 +265,7 @@ describe('controllers/workspace/location', () => {
     it('returns LOCATION_NOT_FOUND when the workspace has no default location', async () => {
       mockDb.query.workspaceLocation.findFirst.mockResolvedValueOnce(undefined);
 
-      const result = await workspaceLocationDelete(member, LOCATION_ID);
+      const result = await workspaceLocationDelete(workspace, LOCATION_ID);
 
       expect(result.body).toMatchObject({ code: 'LOCATION_NOT_FOUND' });
     });
@@ -275,7 +275,7 @@ describe('controllers/workspace/location', () => {
         locationRow({ id: LOCATION_ID, isDefault: true })
       );
 
-      const result = await workspaceLocationDelete(member, LOCATION_ID);
+      const result = await workspaceLocationDelete(workspace, LOCATION_ID);
 
       expect(result.status).toBe(409);
       expect(result.body).toMatchObject({ code: 'LOCATION_IS_DEFAULT' });
@@ -287,7 +287,7 @@ describe('controllers/workspace/location', () => {
       );
       mockDb.transaction.mockResolvedValueOnce([locationRow()]);
 
-      const result = await workspaceLocationDelete(member, LOCATION_ID);
+      const result = await workspaceLocationDelete(workspace, LOCATION_ID);
 
       expect(result.status).toBe(204);
       expect(result.body).toBeNull();
@@ -296,13 +296,13 @@ describe('controllers/workspace/location', () => {
 
   describe('workspaceLocationMemberAssign', () => {
     it('returns INVALID_INPUT when the location id is not a uuid', async () => {
-      const result = await workspaceLocationMemberAssign(member, 'not-a-uuid', MEMBER_ID);
+      const result = await workspaceLocationMemberAssign(workspace, 'not-a-uuid', MEMBER_ID);
 
       expect(result.body).toMatchObject({ code: 'INVALID_INPUT' });
     });
 
     it('returns INVALID_INPUT when the member id is not a uuid', async () => {
-      const result = await workspaceLocationMemberAssign(member, LOCATION_ID, 'not-a-uuid');
+      const result = await workspaceLocationMemberAssign(workspace, LOCATION_ID, 'not-a-uuid');
 
       expect(result.body).toMatchObject({ code: 'INVALID_INPUT' });
     });
@@ -310,7 +310,7 @@ describe('controllers/workspace/location', () => {
     it('returns LOCATION_NOT_FOUND when the location is not in the workspace', async () => {
       mockDb.query.workspaceLocation.findFirst.mockResolvedValueOnce(undefined);
 
-      const result = await workspaceLocationMemberAssign(member, LOCATION_ID, MEMBER_ID);
+      const result = await workspaceLocationMemberAssign(workspace, LOCATION_ID, MEMBER_ID);
 
       expect(result.status).toBe(404);
       expect(result.body).toMatchObject({ code: 'LOCATION_NOT_FOUND' });
@@ -320,7 +320,7 @@ describe('controllers/workspace/location', () => {
       mockDb.query.workspaceLocation.findFirst.mockResolvedValueOnce(locationRow());
       mockDb.query.workspaceMember.findFirst.mockResolvedValueOnce(undefined);
 
-      const result = await workspaceLocationMemberAssign(member, LOCATION_ID, MEMBER_ID);
+      const result = await workspaceLocationMemberAssign(workspace, LOCATION_ID, MEMBER_ID);
 
       expect(result.status).toBe(404);
       expect(result.body).toMatchObject({ code: 'MEMBER_NOT_FOUND' });
@@ -332,7 +332,7 @@ describe('controllers/workspace/location', () => {
         memberRow({ status: 'suspended' })
       );
 
-      const result = await workspaceLocationMemberAssign(member, LOCATION_ID, MEMBER_ID);
+      const result = await workspaceLocationMemberAssign(workspace, LOCATION_ID, MEMBER_ID);
 
       expect(result.status).toBe(404);
       expect(result.body).toMatchObject({ code: 'MEMBER_NOT_FOUND' });
@@ -343,7 +343,7 @@ describe('controllers/workspace/location', () => {
       mockDb.query.workspaceMember.findFirst.mockResolvedValueOnce(memberRow());
       mockInsert([{ id: 'assignment-1', memberId: MEMBER_ID, locationId: LOCATION_ID }]);
 
-      const result = await workspaceLocationMemberAssign(member, LOCATION_ID, MEMBER_ID);
+      const result = await workspaceLocationMemberAssign(workspace, LOCATION_ID, MEMBER_ID);
 
       expect(result.status).toBe(204);
       expect(result.body).toBeNull();
@@ -354,7 +354,7 @@ describe('controllers/workspace/location', () => {
       mockDb.query.workspaceMember.findFirst.mockResolvedValueOnce(memberRow());
       mockInsertReject(uniqueViolation);
 
-      const result = await workspaceLocationMemberAssign(member, LOCATION_ID, MEMBER_ID);
+      const result = await workspaceLocationMemberAssign(workspace, LOCATION_ID, MEMBER_ID);
 
       expect(result.status).toBe(204);
       expect(result.body).toBeNull();
@@ -365,7 +365,7 @@ describe('controllers/workspace/location', () => {
       mockDb.query.workspaceMember.findFirst.mockResolvedValueOnce(memberRow());
       mockInsert([]);
 
-      const result = await workspaceLocationMemberAssign(member, LOCATION_ID, MEMBER_ID);
+      const result = await workspaceLocationMemberAssign(workspace, LOCATION_ID, MEMBER_ID);
 
       expect(result.body).toMatchObject({ code: 'LOCATION_MEMBER_ASSIGN_FAILED' });
     });
@@ -373,41 +373,31 @@ describe('controllers/workspace/location', () => {
     it('returns INTERNAL_ERROR on an unexpected error', async () => {
       mockDb.query.workspaceLocation.findFirst.mockRejectedValueOnce(new Error('db down'));
 
-      const result = await workspaceLocationMemberAssign(member, LOCATION_ID, MEMBER_ID);
+      const result = await workspaceLocationMemberAssign(workspace, LOCATION_ID, MEMBER_ID);
 
       expect(result.status).toBe(500);
     });
   });
 
   describe('workspaceLocationMemberUnassign', () => {
-    const payload = {} as Parameters<typeof workspaceLocationMemberUnassign>[3];
+    const payload = {} as Parameters<typeof workspaceLocationMemberUnassign>[2];
 
     it('returns INVALID_INPUT when the location id is not a uuid', async () => {
-      const result = await workspaceLocationMemberUnassign(
-        member,
-        'not-a-uuid',
-        MEMBER_ID,
-        payload
-      );
+      const result = await workspaceLocationMemberUnassign('not-a-uuid', MEMBER_ID, payload);
 
       expect(result.body).toMatchObject({ code: 'INVALID_INPUT' });
     });
 
     it('returns INVALID_INPUT when the member id is not a uuid', async () => {
-      const result = await workspaceLocationMemberUnassign(
-        member,
-        LOCATION_ID,
-        'not-a-uuid',
-        payload
-      );
+      const result = await workspaceLocationMemberUnassign(LOCATION_ID, 'not-a-uuid', payload);
 
       expect(result.body).toMatchObject({ code: 'INVALID_INPUT' });
     });
 
     it('returns INVALID_INPUT when reassignToMemberId is not a uuid', async () => {
-      const result = await workspaceLocationMemberUnassign(member, LOCATION_ID, MEMBER_ID, {
+      const result = await workspaceLocationMemberUnassign(LOCATION_ID, MEMBER_ID, {
         reassignToMemberId: 'not-a-uuid',
-      } as Parameters<typeof workspaceLocationMemberUnassign>[3]);
+      } as Parameters<typeof workspaceLocationMemberUnassign>[2]);
 
       expect(result.body).toMatchObject({ code: 'INVALID_INPUT' });
     });
@@ -415,7 +405,7 @@ describe('controllers/workspace/location', () => {
     it('unassigns the member and returns 204', async () => {
       mockDelete();
 
-      const result = await workspaceLocationMemberUnassign(member, LOCATION_ID, MEMBER_ID, payload);
+      const result = await workspaceLocationMemberUnassign(LOCATION_ID, MEMBER_ID, payload);
 
       expect(result.status).toBe(204);
       expect(result.body).toBeNull();
@@ -424,7 +414,7 @@ describe('controllers/workspace/location', () => {
     it('is idempotent: unassigning a member who is not assigned still returns 204', async () => {
       mockDelete();
 
-      const result = await workspaceLocationMemberUnassign(member, LOCATION_ID, MEMBER_ID, payload);
+      const result = await workspaceLocationMemberUnassign(LOCATION_ID, MEMBER_ID, payload);
 
       expect(result.status).toBe(204);
       expect(result.body).toBeNull();
@@ -435,7 +425,7 @@ describe('controllers/workspace/location', () => {
         throw new Error('db down');
       });
 
-      const result = await workspaceLocationMemberUnassign(member, LOCATION_ID, MEMBER_ID, payload);
+      const result = await workspaceLocationMemberUnassign(LOCATION_ID, MEMBER_ID, payload);
 
       expect(result.status).toBe(500);
     });

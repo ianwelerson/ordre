@@ -1,6 +1,6 @@
 import { getDb } from '#/config/db-context.ts';
 import { logger } from '#/config/logger.ts';
-import type { WorkspaceMemberContext } from '#/types/context.ts';
+import type { MemberContext, WorkspaceContext } from '#/types/context.ts';
 import { validateField, validateRequestBody } from '#/utils/validation.ts';
 import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
@@ -33,14 +33,14 @@ import {
 /**
  * Lists every member of the caller's workspace (all statuses), newest first.
  *
- * @param member - The caller's workspace membership; scopes the listing to their workspace.
+ * @param workspace - The workspace the request is scoped to; scopes the listing.
  * @returns The workspace's members (200), or an error response.
  */
 export const workspaceMemberGetAll = async (
-  member: WorkspaceMemberContext
+  workspace: WorkspaceContext
 ): Promise<Response<WorkspaceMember[]>> => {
   try {
-    const members = await findMembers(member.workspaceId);
+    const members = await findMembers(workspace.id);
 
     return { status: 200, body: members.map(toMemberResponse) };
   } catch (error) {
@@ -57,14 +57,16 @@ export const workspaceMemberGetAll = async (
  * `member:manage`. The member id comes from the caller's context, so there is no
  * id to validate.
  *
+ * @param workspace - The workspace the request is scoped to; scopes the lookup.
  * @param member - The caller's workspace membership; identifies the row to load.
  * @returns The caller's `WorkspaceMember` (200), `MEMBER_NOT_FOUND` (404), or an error response.
  */
 export const workspaceMemberGetSelf = async (
-  member: WorkspaceMemberContext
+  workspace: WorkspaceContext,
+  member: MemberContext
 ): Promise<Response<WorkspaceMember>> => {
   try {
-    const self = await findMember(member.workspaceId, member.id);
+    const self = await findMember(workspace.id, member.id);
 
     if (!self) {
       return errorResponse(MEMBER_ERRORS, 'MEMBER_NOT_FOUND');
@@ -84,12 +86,12 @@ export const workspaceMemberGetSelf = async (
  * Scoped to the caller's workspace, so a member that belongs to another workspace
  * reads as `MEMBER_NOT_FOUND` rather than being exposed.
  *
- * @param member - The caller's workspace membership; scopes the lookup to their workspace.
+ * @param workspace - The workspace the request is scoped to; scopes the lookup.
  * @param memberId - The member id; must be a valid UUID or `INVALID_INPUT` is returned.
  * @returns The `WorkspaceMember` (200), `MEMBER_NOT_FOUND` (404), or an error response.
  */
 export const workspaceMemberGetById = async (
-  member: WorkspaceMemberContext,
+  workspace: WorkspaceContext,
   memberId: unknown
 ): Promise<Response<WorkspaceMember>> => {
   try {
@@ -99,7 +101,7 @@ export const workspaceMemberGetById = async (
       return parsedMemberId.response;
     }
 
-    const result = await findMember(member.workspaceId, parsedMemberId.data);
+    const result = await findMember(workspace.id, parsedMemberId.data);
 
     if (!result) {
       return errorResponse(MEMBER_ERRORS, 'MEMBER_NOT_FOUND');
@@ -122,14 +124,16 @@ export const workspaceMemberGetById = async (
  * last check runs under a row lock (see `countActiveOwnersForUpdate`) so
  * concurrent demotions can't race the workspace down to zero owners.
  *
- * @param member - The caller's workspace membership; supplies their role and scopes the change.
+ * @param workspace - The workspace the request is scoped to; scopes the change.
+ * @param member - The caller's workspace membership; supplies their id and role.
  * @param memberId - The target member id; must be a valid UUID or `INVALID_INPUT` is returned.
  * @param payload - The new role; validated against `WorkspaceMemberRoleUpdateSchema`.
  * @returns The updated `WorkspaceMember` (200), a caller-policy error (403), a
  *   member-state error (409), `MEMBER_NOT_FOUND` (404), or an error response.
  */
 export const workspaceMemberChangeRole = async (
-  member: WorkspaceMemberContext,
+  workspace: WorkspaceContext,
+  member: MemberContext,
   memberId: unknown,
   payload: WorkspaceMemberRoleUpdate
 ): Promise<Response<WorkspaceMember>> => {
@@ -150,7 +154,7 @@ export const workspaceMemberChangeRole = async (
       return errorResponse(MEMBER_ERRORS, 'MEMBER_SELF_ROLE_UPDATE');
     }
 
-    const target = await findMember(member.workspaceId, parsedMemberId.data);
+    const target = await findMember(workspace.id, parsedMemberId.data);
 
     if (!target) {
       return errorResponse(MEMBER_ERRORS, 'MEMBER_NOT_FOUND');
@@ -180,7 +184,7 @@ export const workspaceMemberChangeRole = async (
       // The count is locked (FOR UPDATE) so concurrent demotions can't both
       // pass and race the owner count to zero.
       if (target.role === 'owner' && target.status === 'active') {
-        const activeOwners = await countActiveOwnersForUpdate(tx, member.workspaceId);
+        const activeOwners = await countActiveOwnersForUpdate(tx, workspace.id);
 
         if (activeOwners <= 1) {
           return 'LAST_OWNER' as const;
@@ -192,7 +196,7 @@ export const workspaceMemberChangeRole = async (
         .set({ role: newRole })
         .where(
           and(
-            eq(schema.workspaceMember.workspaceId, member.workspaceId),
+            eq(schema.workspaceMember.workspaceId, workspace.id),
             eq(schema.workspaceMember.id, parsedMemberId.data)
           )
         )
@@ -226,14 +230,16 @@ export const workspaceMemberChangeRole = async (
  * `workspaceMemberLeave` - and an admin can only remove plain members, not owners
  * or other admins.
  *
- * @param member - The caller's workspace membership; supplies their role and scopes the removal.
+ * @param workspace - The workspace the request is scoped to; scopes the removal.
+ * @param member - The caller's workspace membership; supplies their id and role.
  * @param memberId - The target member id; must be a valid UUID or `INVALID_INPUT` is returned.
  * @param payload - Removal options; validated against `WorkspaceMemberRemoveSchema`.
  * @returns `204 No Content` on success, a caller-policy error (403),
  *   `MEMBER_LAST_OWNER` (409), `MEMBER_NOT_FOUND` (404), or an error response.
  */
 export const workspaceMemberRemove = async (
-  member: WorkspaceMemberContext,
+  workspace: WorkspaceContext,
+  member: MemberContext,
   memberId: unknown,
   payload: WorkspaceMemberRemove
 ): Promise<NoContentResponse> => {
@@ -256,7 +262,7 @@ export const workspaceMemberRemove = async (
       return errorResponse(MEMBER_ERRORS, 'MEMBER_SELF_REMOVE');
     }
 
-    const target = await findMember(member.workspaceId, parsedMemberId.data);
+    const target = await findMember(workspace.id, parsedMemberId.data);
 
     if (!target || target.status === 'suspended') {
       return errorResponse(MEMBER_ERRORS, 'MEMBER_NOT_FOUND');
@@ -292,14 +298,16 @@ export const workspaceMemberRemove = async (
  * `suspendMember` guard still refuses if the caller is the last active owner,
  * keeping the "always at least one owner" invariant.
  *
+ * @param workspace - The workspace the request is scoped to; scopes the lookup.
  * @param member - The caller's workspace membership; identifies the row to remove.
  * @returns `204 No Content` on success, `MEMBER_LAST_OWNER` (409), `MEMBER_NOT_FOUND` (404), or an error response.
  */
 export const workspaceMemberLeave = async (
-  member: WorkspaceMemberContext
+  workspace: WorkspaceContext,
+  member: MemberContext
 ): Promise<NoContentResponse> => {
   try {
-    const self = await findMember(member.workspaceId, member.id);
+    const self = await findMember(workspace.id, member.id);
 
     if (!self || self.status === 'suspended') {
       return errorResponse(MEMBER_ERRORS, 'MEMBER_NOT_FOUND');
@@ -330,12 +338,14 @@ export const workspaceMemberLeave = async (
  * `member:manage`. Role and status are out of scope here (see
  * `workspaceMemberChangeRole` and `workspaceMemberRemove`).
  *
+ * @param workspace - The workspace the request is scoped to; scopes the update.
  * @param member - The caller's workspace membership; identifies the row to update.
  * @param payload - The profile fields to change; validated against `WorkspaceMemberUpdateSchema`.
  * @returns The updated `WorkspaceMember` (200), `MEMBER_NOT_FOUND` (404), or an error response.
  */
 export const workspaceMemberUpdate = async (
-  member: WorkspaceMemberContext,
+  workspace: WorkspaceContext,
+  member: MemberContext,
   payload: WorkspaceMemberUpdate
 ): Promise<Response<WorkspaceMember>> => {
   try {
@@ -345,7 +355,7 @@ export const workspaceMemberUpdate = async (
       return parsedPayload.response;
     }
 
-    const self = await findMember(member.workspaceId, member.id);
+    const self = await findMember(workspace.id, member.id);
 
     if (!self || self.status === 'suspended') {
       return errorResponse(MEMBER_ERRORS, 'MEMBER_NOT_FOUND');
@@ -356,7 +366,7 @@ export const workspaceMemberUpdate = async (
       return { status: 200, body: toMemberResponse(self) };
     }
 
-    const updated = await updateMember(member.workspaceId, member.id, parsedPayload.data);
+    const updated = await updateMember(workspace.id, member.id, parsedPayload.data);
 
     if (!updated) {
       return errorResponse(MEMBER_ERRORS, 'MEMBER_NOT_FOUND');
@@ -380,13 +390,13 @@ export const workspaceMemberUpdate = async (
  * caller's workspace, and a suspended member can't be edited. Role and status are
  * out of scope (see `workspaceMemberChangeRole` and `workspaceMemberRemove`).
  *
- * @param member - The caller's workspace membership; scopes the update to their workspace.
+ * @param workspace - The workspace the request is scoped to; scopes the update.
  * @param memberId - The target member id; must be a valid UUID or `INVALID_INPUT` is returned.
  * @param payload - The profile fields to change; validated against `WorkspaceMemberUpdateSchema`.
  * @returns The updated `WorkspaceMember` (200), `MEMBER_TARGET_SUSPENDED` (409), `MEMBER_NOT_FOUND` (404), or an error response.
  */
 export const workspaceMemberUpdateById = async (
-  member: WorkspaceMemberContext,
+  workspace: WorkspaceContext,
   memberId: unknown,
   payload: WorkspaceMemberUpdate
 ): Promise<Response<WorkspaceMember>> => {
@@ -403,7 +413,7 @@ export const workspaceMemberUpdateById = async (
       return parsedPayload.response;
     }
 
-    const target = await findMember(member.workspaceId, parsedMemberId.data);
+    const target = await findMember(workspace.id, parsedMemberId.data);
 
     if (!target) {
       return errorResponse(MEMBER_ERRORS, 'MEMBER_NOT_FOUND');
@@ -418,7 +428,7 @@ export const workspaceMemberUpdateById = async (
       return { status: 200, body: toMemberResponse(target) };
     }
 
-    const updated = await updateMember(member.workspaceId, parsedMemberId.data, parsedPayload.data);
+    const updated = await updateMember(workspace.id, parsedMemberId.data, parsedPayload.data);
 
     if (!updated) {
       return errorResponse(MEMBER_ERRORS, 'MEMBER_NOT_FOUND');

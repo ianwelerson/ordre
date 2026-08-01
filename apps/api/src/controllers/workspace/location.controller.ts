@@ -1,6 +1,6 @@
 import { getDb } from '#/config/db-context.ts';
 import { logger } from '#/config/logger.ts';
-import type { WorkspaceMemberContext } from '#/types/context.ts';
+import type { WorkspaceContext } from '#/types/context.ts';
 import { isUniqueViolation } from '#/utils/db-error.ts';
 import { validateField, validateRequestBody } from '#/utils/validation.ts';
 import { and, eq, inArray } from 'drizzle-orm';
@@ -38,14 +38,14 @@ import { findMember } from './member.utils.ts';
  * Creates a location in the caller's workspace.
  *
  * The location is always attached to the caller's own workspace, so the
- * `workspaceId` is taken from the member context rather than the payload.
+ * `workspaceId` is taken from the workspace context rather than the payload.
  *
- * @param member - The caller's workspace membership; scopes the location to their workspace.
+ * @param workspace - The workspace the request is scoped to; owns the new location.
  * @param payload - The location fields to create; validated against `WorkspaceLocationCreateSchema`.
  * @returns The created `WorkspaceLocation` (201) on success, or an error response.
  */
 export const workspaceLocationCreate = async (
-  member: WorkspaceMemberContext,
+  workspace: WorkspaceContext,
   payload: WorkspaceLocationCreate
 ): Promise<Response<WorkspaceLocation>> => {
   try {
@@ -60,7 +60,7 @@ export const workspaceLocationCreate = async (
 
     const { data } = parsedPayload;
 
-    const newLocation = await createLocation(member.workspaceId, data);
+    const newLocation = await createLocation(workspace.id, data);
 
     if (!newLocation) {
       return errorResponse(LOCATION_ERRORS, 'LOCATION_CREATE_FAILED');
@@ -77,14 +77,14 @@ export const workspaceLocationCreate = async (
 /**
  * Lists every location in the caller's workspace (default first, then newest).
  *
- * @param member - The caller's workspace membership; scopes the listing to their workspace.
+ * @param workspace - The workspace the request is scoped to; scopes the listing.
  * @returns The workspace's locations (200), or an error response.
  */
 export const workspaceLocationGetAll = async (
-  member: WorkspaceMemberContext
+  workspace: WorkspaceContext
 ): Promise<Response<WorkspaceLocation[]>> => {
   try {
-    const locations = await findLocations(member.workspaceId);
+    const locations = await findLocations(workspace.id);
 
     return { status: 200, body: locations.map(toLocationResponse) };
   } catch (error) {
@@ -100,12 +100,12 @@ export const workspaceLocationGetAll = async (
  * Scoped to the caller's workspace, so a location that belongs to another
  * workspace reads as `LOCATION_NOT_FOUND` rather than being exposed.
  *
- * @param member - The caller's workspace membership; scopes the lookup to their workspace.
+ * @param workspace - The workspace the request is scoped to; scopes the lookup.
  * @param locationId - The location id; must be a valid UUID or `INVALID_INPUT` is returned.
  * @returns The `WorkspaceLocation` (200), `LOCATION_NOT_FOUND` (404), or an error response.
  */
 export const workspaceLocationGetById = async (
-  member: WorkspaceMemberContext,
+  workspace: WorkspaceContext,
   locationId: unknown
 ): Promise<Response<WorkspaceLocation>> => {
   try {
@@ -115,7 +115,7 @@ export const workspaceLocationGetById = async (
       return parsedLocationId.response;
     }
 
-    const location = await findLocation(member.workspaceId, parsedLocationId.data);
+    const location = await findLocation(workspace.id, parsedLocationId.data);
 
     if (!location) {
       return errorResponse(LOCATION_ERRORS, 'LOCATION_NOT_FOUND');
@@ -137,13 +137,13 @@ export const workspaceLocationGetById = async (
  * workspaces. An empty payload is a no-op that returns the current location
  * unchanged (rather than letting Drizzle throw on an empty `.set({})`).
  *
- * @param member - The caller's workspace membership; scopes the update to their workspace.
+ * @param workspace - The workspace the request is scoped to; scopes the update.
  * @param locationId - The location id; must be a valid UUID or `INVALID_INPUT` is returned.
  * @param payload - The fields to update; validated against `WorkspaceLocationUpdateSchema`.
  * @returns The updated `WorkspaceLocation` (200), `LOCATION_NOT_FOUND` (404), or an error response.
  */
 export const workspaceLocationUpdate = async (
-  member: WorkspaceMemberContext,
+  workspace: WorkspaceContext,
   locationId: unknown,
   payload: WorkspaceLocationUpdate
 ): Promise<Response<WorkspaceLocation>> => {
@@ -167,7 +167,7 @@ export const workspaceLocationUpdate = async (
 
     // Empty payload: return the location unchanged rather than let Drizzle throw on `.set({})`.
     if (Object.keys(data).length === 0) {
-      const current = await findLocation(member.workspaceId, parsedLocationId.data);
+      const current = await findLocation(workspace.id, parsedLocationId.data);
 
       if (!current) {
         return errorResponse(LOCATION_ERRORS, 'LOCATION_NOT_FOUND');
@@ -176,7 +176,7 @@ export const workspaceLocationUpdate = async (
       return { status: 200, body: toLocationResponse(current) };
     }
 
-    const updated = await updateLocation(member.workspaceId, parsedLocationId.data, data);
+    const updated = await updateLocation(workspace.id, parsedLocationId.data, data);
 
     if (!updated) {
       return errorResponse(LOCATION_ERRORS, 'LOCATION_NOT_FOUND');
@@ -200,12 +200,12 @@ export const workspaceLocationUpdate = async (
  * matches no row and the whole swap rolls back - the workspace keeps its
  * existing default.
  *
- * @param member - The caller's workspace membership; scopes the swap to their workspace.
+ * @param workspace - The workspace the request is scoped to; scopes the swap.
  * @param locationId - The id of the location to promote; must be a valid UUID.
  * @returns The promoted `WorkspaceLocation` (200), `LOCATION_NOT_FOUND` (404), or an error response.
  */
 export const workspaceLocationSetDefault = async (
-  member: WorkspaceMemberContext,
+  workspace: WorkspaceContext,
   locationId: unknown
 ): Promise<Response<WorkspaceLocation>> => {
   try {
@@ -223,7 +223,7 @@ export const workspaceLocationSetDefault = async (
         .set({ isDefault: false })
         .where(
           and(
-            eq(schema.workspaceLocation.workspaceId, member.workspaceId),
+            eq(schema.workspaceLocation.workspaceId, workspace.id),
             eq(schema.workspaceLocation.isDefault, true)
           )
         );
@@ -235,7 +235,7 @@ export const workspaceLocationSetDefault = async (
         .set({ isDefault: true })
         .where(
           and(
-            eq(schema.workspaceLocation.workspaceId, member.workspaceId),
+            eq(schema.workspaceLocation.workspaceId, workspace.id),
             eq(schema.workspaceLocation.id, parsedLocationId.data)
           )
         )
@@ -264,13 +264,13 @@ export const workspaceLocationSetDefault = async (
  * along with it. The default location itself can't be deleted - a workspace must
  * always keep one.
  *
- * @param member - The caller's workspace membership; scopes the delete to their workspace.
+ * @param workspace - The workspace the request is scoped to; scopes the delete.
  * @param locationId - The location id; must be a valid UUID or `INVALID_INPUT` is returned.
  * @returns `204 No Content` on success, `LOCATION_IS_DEFAULT` (409),
  *   `LOCATION_NOT_FOUND` (404), or an error response.
  */
 export const workspaceLocationDelete = async (
-  member: WorkspaceMemberContext,
+  workspace: WorkspaceContext,
   locationId: unknown
 ): Promise<NoContentResponse> => {
   try {
@@ -287,7 +287,7 @@ export const workspaceLocationDelete = async (
      * the mutations below, and the request already runs inside a transaction
      * (RLS context), so this read is consistent with the writes that follow.
      */
-    const defaultLocation = await findDefaultLocation(member.workspaceId);
+    const defaultLocation = await findDefaultLocation(workspace.id);
 
     if (!defaultLocation) {
       return errorResponse(LOCATION_ERRORS, 'LOCATION_NOT_FOUND');
@@ -335,7 +335,7 @@ export const workspaceLocationDelete = async (
         .delete(schema.workspaceLocation)
         .where(
           and(
-            eq(schema.workspaceLocation.workspaceId, member.workspaceId),
+            eq(schema.workspaceLocation.workspaceId, workspace.id),
             eq(schema.workspaceLocation.id, parsedLocationId.data)
           )
         )
@@ -363,14 +363,14 @@ export const workspaceLocationDelete = async (
  * is already on the location is a success, not a conflict - the unique
  * `(member, location)` constraint collision is caught and mapped to `204`.
  *
- * @param member - The caller's workspace membership; scopes both lookups to their workspace.
+ * @param workspace - The workspace the request is scoped to; scopes both lookups.
  * @param locationId - The target location id; must be a valid UUID.
  * @param memberId - The member to assign; must be a valid UUID.
  * @returns `204 No Content` on success (or already-assigned), `LOCATION_NOT_FOUND` /
  *   `MEMBER_NOT_FOUND` (404), or an error response.
  */
 export const workspaceLocationMemberAssign = async (
-  member: WorkspaceMemberContext,
+  workspace: WorkspaceContext,
   locationId: unknown,
   memberId: unknown
 ): Promise<NoContentResponse> => {
@@ -387,7 +387,7 @@ export const workspaceLocationMemberAssign = async (
       return parsedMemberId.response;
     }
 
-    const location = await findLocation(member.workspaceId, parsedLocationId.data);
+    const location = await findLocation(workspace.id, parsedLocationId.data);
 
     if (!location) {
       return errorResponse(LOCATION_ERRORS, 'LOCATION_NOT_FOUND');
@@ -395,7 +395,7 @@ export const workspaceLocationMemberAssign = async (
 
     // A suspended member is soft-removed, so treat them as not-found here rather
     // than granting a location - mirrors the `workspaceMemberLeave`/`update` guards.
-    const target = await findMember(member.workspaceId, parsedMemberId.data);
+    const target = await findMember(workspace.id, parsedMemberId.data);
 
     if (!target || target.status === 'suspended') {
       return errorResponse(MEMBER_ERRORS, 'MEMBER_NOT_FOUND');
@@ -426,16 +426,15 @@ export const workspaceLocationMemberAssign = async (
  *
  * Idempotent: unassigning a member who isn't on the location still returns `204`,
  * so a double submit or retried request is harmless. The delete is scoped to the
- * `(member, location)` pair; RLS keeps it within the caller's workspace.
+ * `(member, location)` pair; RLS keeps it within the caller's workspace, which is
+ * why this takes neither a workspace nor a member context.
  *
- * @param member - The caller's workspace membership; RLS scopes the delete to their workspace.
  * @param locationId - The location id; must be a valid UUID.
  * @param memberId - The member to unassign; must be a valid UUID.
  * @param payload - Removal options; validated against `WorkspaceLocationMemberRemoveSchema`.
  * @returns `204 No Content` on success, `INVALID_INPUT` (400), or an error response.
  */
 export const workspaceLocationMemberUnassign = async (
-  member: WorkspaceMemberContext,
   locationId: unknown,
   memberId: unknown,
   payload: WorkspaceLocationMemberRemove

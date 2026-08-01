@@ -21,28 +21,28 @@ inviteRouter.post(
   requireWorkspaceAccess,
   requireWorkspacePermission('workspace:member:manage'),
   requireWorkspaceQuota('seat'),
-  sendMemberResult((req) => workspaceInviteCreate(req.member, req.body))
+  sendMemberResult((req) => workspaceInviteCreate(req.workspace, req.member, req.body))
 );
 
 inviteRouter.get(
   inviteItemPath,
   requireWorkspaceAccess,
   requireWorkspacePermission('workspace:member:manage'),
-  sendMemberResult((req) => workspaceInviteGetById(req.member, req.params.inviteId))
+  sendMemberResult((req) => workspaceInviteGetById(req.workspace, req.params.inviteId))
 );
 
 inviteRouter.get(
   inviteCollectionPath,
   requireWorkspaceAccess,
   requireWorkspacePermission('workspace:member:manage'),
-  sendMemberResult((req) => workspaceInviteGetAll(req.member))
+  sendMemberResult((req) => workspaceInviteGetAll(req.workspace))
 );
 
 inviteRouter.delete(
   inviteItemPath,
   requireWorkspaceAccess,
   requireWorkspacePermission('workspace:member:manage'),
-  sendMemberResult((req) => workspaceInviteDelete(req.member, req.params.inviteId))
+  sendMemberResult((req) => workspaceInviteDelete(req.workspace, req.params.inviteId))
 );
 
 export default inviteRouter;

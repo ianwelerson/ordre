@@ -82,7 +82,11 @@ describe('utils/sendResult', () => {
       const next = vi.fn() as unknown as NextFunction;
 
       await sendMemberResult(controller)(
-        { user: { id: 'user-1' }, member: { role: 'owner' } } as Request,
+        {
+          user: { id: 'user-1' },
+          workspace: { id: 'workspace-1' },
+          member: { role: 'owner' },
+        } as Request,
         res,
         next
       );

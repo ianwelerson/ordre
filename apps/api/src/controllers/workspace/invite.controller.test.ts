@@ -1,4 +1,4 @@
-import type { WorkspaceMemberContext } from '#/types/context.ts';
+import type { MemberContext, WorkspaceContext } from '#/types/context.ts';
 
 import {
   workspaceInviteAccept,
@@ -69,7 +69,8 @@ const MEMBER_ID = '22222222-2222-4222-8222-222222222222';
 const INVITE_ID = '33333333-3333-4333-8333-333333333333';
 const LOCATION_ID = '44444444-4444-4444-8444-444444444444';
 
-const member: WorkspaceMemberContext = { id: MEMBER_ID, workspaceId: WORKSPACE_ID, role: 'owner' };
+const workspace: WorkspaceContext = { id: WORKSPACE_ID };
+const member: MemberContext = { id: MEMBER_ID, role: 'owner' };
 
 /** A workspace_invite row, as Drizzle returns it (Date timestamps). */
 const inviteRow = (overrides: Record<string, unknown> = {}) => ({
@@ -95,7 +96,7 @@ const createPayload = (overrides: Record<string, unknown> = {}) =>
     name: 'Invitee',
     role: 'member',
     ...overrides,
-  }) as Parameters<typeof workspaceInviteCreate>[1];
+  }) as Parameters<typeof workspaceInviteCreate>[2];
 
 describe('controllers/workspace/invite', () => {
   beforeEach(() => {
@@ -104,7 +105,7 @@ describe('controllers/workspace/invite', () => {
 
   describe('workspaceInviteCreate', () => {
     it('returns INVALID_INPUT when the payload fails validation', async () => {
-      const result = await workspaceInviteCreate(member, { name: 'x' } as never);
+      const result = await workspaceInviteCreate(workspace, member, { name: 'x' } as never);
 
       expect(result.body).toMatchObject({ code: 'INVALID_INPUT' });
     });
@@ -115,7 +116,7 @@ describe('controllers/workspace/invite', () => {
       mockDb.query.workspaceInvite.findFirst.mockResolvedValueOnce(undefined);
       mockInsert([inviteRow()]);
 
-      const result = await workspaceInviteCreate(member, createPayload());
+      const result = await workspaceInviteCreate(workspace, member, createPayload());
 
       expect(result.status).toBe(201);
       expect(result.body).toMatchObject({ id: INVITE_ID, email: 'invitee@ordre.app' });
@@ -129,6 +130,7 @@ describe('controllers/workspace/invite', () => {
       mockInsert([inviteRow({ locationId: LOCATION_ID })]);
 
       const result = await workspaceInviteCreate(
+        workspace,
         member,
         createPayload({ locationId: LOCATION_ID })
       );
@@ -140,7 +142,7 @@ describe('controllers/workspace/invite', () => {
       mockExpireStale();
       mockActiveMember([{ id: 'existing-member' }]);
 
-      const result = await workspaceInviteCreate(member, createPayload());
+      const result = await workspaceInviteCreate(workspace, member, createPayload());
 
       expect(result.status).toBe(409);
       expect(result.body).toMatchObject({ code: 'MEMBER_ALREADY_EXISTS' });
@@ -151,7 +153,7 @@ describe('controllers/workspace/invite', () => {
       mockActiveMember([]);
       mockDb.query.workspaceInvite.findFirst.mockResolvedValueOnce({ id: INVITE_ID });
 
-      const result = await workspaceInviteCreate(member, createPayload());
+      const result = await workspaceInviteCreate(workspace, member, createPayload());
 
       expect(result.status).toBe(409);
       expect(result.body).toMatchObject({ code: 'INVITE_ALREADY_PENDING' });
@@ -164,6 +166,7 @@ describe('controllers/workspace/invite', () => {
       mockDb.query.workspaceLocation.findFirst.mockResolvedValueOnce(undefined);
 
       const result = await workspaceInviteCreate(
+        workspace,
         member,
         createPayload({ locationId: LOCATION_ID })
       );
@@ -178,7 +181,7 @@ describe('controllers/workspace/invite', () => {
       mockDb.query.workspaceInvite.findFirst.mockResolvedValueOnce(undefined);
       mockInsertReject(uniqueViolation);
 
-      const result = await workspaceInviteCreate(member, createPayload());
+      const result = await workspaceInviteCreate(workspace, member, createPayload());
 
       expect(result.status).toBe(409);
       expect(result.body).toMatchObject({ code: 'INVITE_ALREADY_PENDING' });
@@ -190,7 +193,7 @@ describe('controllers/workspace/invite', () => {
       mockDb.query.workspaceInvite.findFirst.mockResolvedValueOnce(undefined);
       mockInsert([]);
 
-      const result = await workspaceInviteCreate(member, createPayload());
+      const result = await workspaceInviteCreate(workspace, member, createPayload());
 
       expect(result.body).toMatchObject({ code: 'INVITE_CREATE_FAILED' });
     });
@@ -201,7 +204,7 @@ describe('controllers/workspace/invite', () => {
       mockDb.query.workspaceInvite.findFirst.mockResolvedValueOnce(undefined);
       mockInsertReject(new Error('db down'));
 
-      const result = await workspaceInviteCreate(member, createPayload());
+      const result = await workspaceInviteCreate(workspace, member, createPayload());
 
       expect(result.status).toBe(500);
     });
@@ -209,7 +212,7 @@ describe('controllers/workspace/invite', () => {
 
   describe('workspaceInviteDelete', () => {
     it('returns INVALID_INPUT when the invite id is not a uuid', async () => {
-      const result = await workspaceInviteDelete(member, 'not-a-uuid');
+      const result = await workspaceInviteDelete(workspace, 'not-a-uuid');
 
       expect(result.body).toMatchObject({ code: 'INVALID_INPUT' });
     });
@@ -217,7 +220,7 @@ describe('controllers/workspace/invite', () => {
     it('revokes a pending invite and returns 204', async () => {
       mockRevoke([inviteRow({ status: 'revoked' })]);
 
-      const result = await workspaceInviteDelete(member, INVITE_ID);
+      const result = await workspaceInviteDelete(workspace, INVITE_ID);
 
       expect(result.status).toBe(204);
       expect(result.body).toBeNull();
@@ -226,7 +229,7 @@ describe('controllers/workspace/invite', () => {
     it('returns INVITE_NOT_FOUND when no pending invite matches', async () => {
       mockRevoke([]);
 
-      const result = await workspaceInviteDelete(member, INVITE_ID);
+      const result = await workspaceInviteDelete(workspace, INVITE_ID);
 
       expect(result.status).toBe(404);
       expect(result.body).toMatchObject({ code: 'INVITE_NOT_FOUND' });
@@ -235,7 +238,7 @@ describe('controllers/workspace/invite', () => {
 
   describe('workspaceInviteGetById', () => {
     it('returns INVALID_INPUT when the invite id is not a uuid', async () => {
-      const result = await workspaceInviteGetById(member, 'not-a-uuid');
+      const result = await workspaceInviteGetById(workspace, 'not-a-uuid');
 
       expect(result.body).toMatchObject({ code: 'INVALID_INPUT' });
     });
@@ -243,7 +246,7 @@ describe('controllers/workspace/invite', () => {
     it('returns 200 with the invite', async () => {
       mockDb.query.workspaceInvite.findFirst.mockResolvedValueOnce(inviteRow());
 
-      const result = await workspaceInviteGetById(member, INVITE_ID);
+      const result = await workspaceInviteGetById(workspace, INVITE_ID);
 
       expect(result.status).toBe(200);
       expect(result.body).toMatchObject({ id: INVITE_ID });
@@ -252,7 +255,7 @@ describe('controllers/workspace/invite', () => {
     it('returns INVITE_NOT_FOUND when no invite matches in the workspace', async () => {
       mockDb.query.workspaceInvite.findFirst.mockResolvedValueOnce(undefined);
 
-      const result = await workspaceInviteGetById(member, INVITE_ID);
+      const result = await workspaceInviteGetById(workspace, INVITE_ID);
 
       expect(result.status).toBe(404);
     });
@@ -262,7 +265,7 @@ describe('controllers/workspace/invite', () => {
     it('returns 200 with the mapped invites', async () => {
       mockDb.query.workspaceInvite.findMany.mockResolvedValueOnce([inviteRow(), inviteRow()]);
 
-      const result = await workspaceInviteGetAll(member);
+      const result = await workspaceInviteGetAll(workspace);
 
       expect(result.status).toBe(200);
       expect(result.body).toHaveLength(2);
@@ -271,7 +274,7 @@ describe('controllers/workspace/invite', () => {
     it('returns INTERNAL_ERROR on an unexpected error', async () => {
       mockDb.query.workspaceInvite.findMany.mockRejectedValueOnce(new Error('db down'));
 
-      const result = await workspaceInviteGetAll(member);
+      const result = await workspaceInviteGetAll(workspace);
 
       expect(result.status).toBe(500);
     });

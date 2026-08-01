@@ -1,14 +1,16 @@
 import type { Request } from 'express';
 
-import type { SessionUser, WorkspaceMemberContext } from './context.ts';
+import type { MemberContext, SessionUser, WorkspaceContext } from './context.ts';
 
 // Augments Express's `Request` so `req.user` is available (and typed) on every
-// handler once `authenticate` has populated it.
+// handler once `authenticate` has populated it, and `req.workspace` / `req.member`
+// once `requireWorkspaceAccess` has.
 declare global {
   namespace Express {
     interface Request {
       user?: SessionUser;
-      member?: WorkspaceMemberContext;
+      workspace?: WorkspaceContext;
+      member?: MemberContext;
     }
   }
 
@@ -19,7 +21,8 @@ declare global {
 
   type WorkspaceMemberRequest = Request & {
     user: NonNullable<SessionUser>;
-    member: NonNullable<WorkspaceMemberContext>;
+    workspace: NonNullable<WorkspaceContext>;
+    member: NonNullable<MemberContext>;
   };
 }
 

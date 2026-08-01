@@ -77,9 +77,9 @@ const LIMIT_REACHED = {
  * Middleware factory that gates a route on the workspace's plan quota - the
  * billing-level check, for routes that consume a unit of a metered resource.
  *
- * Must run after `requireWorkspaceAccess`, which populates `req.member`, and
+ * Must run after `requireWorkspaceAccess`, which populates `req.workspace`, and
  * after `requireWorkspacePermission`, so a caller who isn't allowed to perform
- * the action never learns the plan is at its cap. A missing `req.member` means
+ * the action never learns the plan is at its cap. A missing `req.workspace` means
  * the guard wasn't mounted in that order - that's a misconfiguration, so it
  * throws (surfacing as a 500) rather than masking the wiring bug as a 402.
  *
@@ -95,13 +95,13 @@ const LIMIT_REACHED = {
 export const requireWorkspaceQuota =
   (limit: PlanLimit) => async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!req.member) {
+      if (!req.workspace) {
         throw new Error(
-          'requireWorkspaceQuota: req.member is missing (mount requireWorkspaceAccess first)'
+          'requireWorkspaceQuota: req.workspace is missing (mount requireWorkspaceAccess first)'
         );
       }
 
-      const { workspaceId } = req.member;
+      const { id: workspaceId } = req.workspace;
 
       const subscription = await getDb().query.workspaceSubscription.findFirst({
         where: and(

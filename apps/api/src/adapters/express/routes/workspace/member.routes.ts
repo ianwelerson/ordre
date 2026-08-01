@@ -29,7 +29,7 @@ memberRouter.get(
   memberCollectionPath,
   requireWorkspaceAccess,
   requireWorkspacePermission('workspace:member:manage'),
-  sendMemberResult((req) => workspaceMemberGetAll(req.member))
+  sendMemberResult((req) => workspaceMemberGetAll(req.workspace))
 );
 
 /**
@@ -41,47 +41,51 @@ memberRouter.get(
 memberRouter.get(
   memberSelfPath,
   requireWorkspaceAccess,
-  sendMemberResult((req) => workspaceMemberGetSelf(req.member))
+  sendMemberResult((req) => workspaceMemberGetSelf(req.workspace, req.member))
 );
 
 memberRouter.patch(
   memberSelfPath,
   requireWorkspaceAccess,
-  sendMemberResult((req) => workspaceMemberUpdate(req.member, req.body))
+  sendMemberResult((req) => workspaceMemberUpdate(req.workspace, req.member, req.body))
 );
 
 memberRouter.post(
   memberLeavePath,
   requireWorkspaceAccess,
-  sendMemberResult((req) => workspaceMemberLeave(req.member))
+  sendMemberResult((req) => workspaceMemberLeave(req.workspace, req.member))
 );
 
 memberRouter.get(
   memberItemPath,
   requireWorkspaceAccess,
   requireWorkspacePermission('workspace:member:manage'),
-  sendMemberResult((req) => workspaceMemberGetById(req.member, req.params.memberId))
+  sendMemberResult((req) => workspaceMemberGetById(req.workspace, req.params.memberId))
 );
 
 memberRouter.patch(
   memberItemPath,
   requireWorkspaceAccess,
   requireWorkspacePermission('workspace:member:manage'),
-  sendMemberResult((req) => workspaceMemberUpdateById(req.member, req.params.memberId, req.body))
+  sendMemberResult((req) => workspaceMemberUpdateById(req.workspace, req.params.memberId, req.body))
 );
 
 memberRouter.delete(
   memberItemPath,
   requireWorkspaceAccess,
   requireWorkspacePermission('workspace:member:manage'),
-  sendMemberResult((req) => workspaceMemberRemove(req.member, req.params.memberId, req.body))
+  sendMemberResult((req) =>
+    workspaceMemberRemove(req.workspace, req.member, req.params.memberId, req.body)
+  )
 );
 
 memberRouter.post(
   memberRolePath,
   requireWorkspaceAccess,
   requireWorkspacePermission('workspace:member:manage'),
-  sendMemberResult((req) => workspaceMemberChangeRole(req.member, req.params.memberId, req.body))
+  sendMemberResult((req) =>
+    workspaceMemberChangeRole(req.workspace, req.member, req.params.memberId, req.body)
+  )
 );
 
 export default memberRouter;

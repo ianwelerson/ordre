@@ -61,11 +61,11 @@ export const sendAuthResult = <T>(
 
 /**
  * Wraps a controller for a workspace member route, narrowing `req` to
- * `WorkspaceMemberRequest` so the controller can read `req.user` and `req.member`
- * without a null check.
+ * `WorkspaceMemberRequest` so the controller can read `req.user`, `req.workspace`
+ * and `req.member` without a null check.
  *
  * Builds on `sendAuthResult`: the `requireWorkspaceAccess` middleware already
- * guarantees `req.member` is populated before the handler runs, so the
+ * guarantees `req.workspace` and `req.member` are populated before the handler runs, so the
  * `isWorkspaceMember` guard only narrows the type (and throws if the wrapper is ever
  * mounted on a route that skipped it).
  *

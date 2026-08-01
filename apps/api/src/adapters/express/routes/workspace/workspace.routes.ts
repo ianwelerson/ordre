@@ -81,7 +81,7 @@ workspaceRouter.patch(
   workspaceItemByIdPath,
   requireWorkspaceAccess,
   requireWorkspacePermission('workspace:update'),
-  sendMemberResult((req) => workspaceUpdate(req.member, req.body))
+  sendMemberResult((req) => workspaceUpdate(req.workspace, req.member, req.body))
 );
 
 /**
