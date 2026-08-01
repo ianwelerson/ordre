@@ -184,7 +184,7 @@ describe('controllers/workspace/invite', () => {
       expect(result.body).toMatchObject({ code: 'INVITE_ALREADY_PENDING' });
     });
 
-    it('returns INVITE_CREATING_ERROR when the insert yields no row', async () => {
+    it('returns INVITE_CREATE_FAILED when the insert yields no row', async () => {
       mockExpireStale();
       mockActiveMember([]);
       mockDb.query.workspaceInvite.findFirst.mockResolvedValueOnce(undefined);
@@ -192,10 +192,10 @@ describe('controllers/workspace/invite', () => {
 
       const result = await workspaceInviteCreate(member, createPayload());
 
-      expect(result.body).toMatchObject({ code: 'INVITE_CREATING_ERROR' });
+      expect(result.body).toMatchObject({ code: 'INVITE_CREATE_FAILED' });
     });
 
-    it('returns SOMETHING_WRONG on an unexpected (non-unique) error', async () => {
+    it('returns INTERNAL_ERROR on an unexpected (non-unique) error', async () => {
       mockExpireStale();
       mockActiveMember([]);
       mockDb.query.workspaceInvite.findFirst.mockResolvedValueOnce(undefined);
@@ -268,7 +268,7 @@ describe('controllers/workspace/invite', () => {
       expect(result.body).toHaveLength(2);
     });
 
-    it('returns SOMETHING_WRONG on an unexpected error', async () => {
+    it('returns INTERNAL_ERROR on an unexpected error', async () => {
       mockDb.query.workspaceInvite.findMany.mockRejectedValueOnce(new Error('db down'));
 
       const result = await workspaceInviteGetAll(member);
@@ -347,7 +347,7 @@ describe('controllers/workspace/invite', () => {
     });
 
     it('returns INVITE_NOT_FOUND for any other status', async () => {
-      mockAccept('NOT_FOUND');
+      mockAccept('WORKSPACE_NOT_FOUND');
 
       const result = await workspaceInviteAccept('tok_abc');
 

@@ -139,7 +139,7 @@ until it is accepted, and only then does a member row exist. Removing a member
 (or a member leaving) **soft-removes**: `status` becomes `suspended`, `role` resets
 to `member` and `phone` is cleared, while `displayName` and `title` are kept for
 audit and for reactivation on re-invite. `requireWorkspaceAccess` rejects a
-suspended member with `403 MEMBER_ACCESS_SUSPENDED` before any permission check
+suspended member with `403 MEMBER_SELF_SUSPENDED` before any permission check
 runs, but the row stays visible in the member list - an admin has to see it to
 lift the suspension.
 
@@ -659,7 +659,7 @@ consume one (see [Authorization](/internal-docs/engineering/authorization)).
 Because the blob is JSONB, Postgres will accept a typo'd key that the type system
 never sees, and an unrecognised key would read as "unlimited". The guard therefore
 re-validates `entitlements` against its Zod schema on every check and refuses the
-request (`500 INVALID_PLAN_ENTITLEMENTS`) rather than treating a malformed plan as
+request (`500 PLAN_ENTITLEMENTS_INVALID`) rather than treating a malformed plan as
 uncapped.
 
 ### `Addon`

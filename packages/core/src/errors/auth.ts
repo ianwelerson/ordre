@@ -12,12 +12,16 @@ import type { ErrorMap } from '../types/index.ts';
  * - `status` is the HTTP status Better Auth throws the code with in its route
  *   handlers. A handful of codes are thrown with different statuses depending
  *   on the route; in those cases the most representative one is used and the
- *   alternates are noted inline.
+ *   alternates are noted inline. The status here is what the client actually
+ *   receives - `remapAuthError` replaces Better Auth's with ours - so a code
+ *   Better Auth throws with the wrong status is corrected here and noted.
  *
  * Validation-related codes (`VALIDATION_ERROR`, `MISSING_FIELD`,
  * `FIELD_NOT_ALLOWED`, `BODY_MUST_BE_AN_OBJECT`,
  * `ASYNC_VALIDATION_NOT_SUPPORTED`) live in `VALIDATION_ERRORS` so input
- * errors have a single source of truth across the API.
+ * errors have a single source of truth across the API. `UNAUTHORIZED` and
+ * `FORBIDDEN` are ours rather than Better Auth's and live in `BASE_ERRORS`,
+ * keeping this file a pure mirror.
  *
  * Source: better-auth@1.6.12 `@better-auth/core/error` codes + route handlers.
  */
@@ -88,7 +92,7 @@ export const AUTH_ERRORS = {
     message: 'Failed to get session',
   },
   SESSION_EXPIRED: {
-    status: 400,
+    status: 401, // Better Auth throws 400; an expired session is an authentication failure
     message: 'Session expired. Re-authenticate to perform this action.',
   },
   SESSION_NOT_FRESH: {
@@ -212,15 +216,5 @@ export const AUTH_ERRORS = {
   METHOD_NOT_ALLOWED_DEFER_SESSION_REQUIRED: {
     status: 405,
     message: 'POST method requires deferSessionRefresh to be enabled in session config',
-  },
-
-  // --- Authentication and Authorization ---
-  UNAUTHORIZED: {
-    status: 401,
-    message: 'Authentication is required to access this resource',
-  },
-  FORBIDDEN: {
-    status: 403,
-    message: "You don't have permission to access this resource",
   },
 } satisfies ErrorMap;

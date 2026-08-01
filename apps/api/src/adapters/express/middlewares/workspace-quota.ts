@@ -69,8 +69,8 @@ const USAGE = {
 
 /** The error each limit reports once the workspace has no room left. */
 const LIMIT_REACHED = {
-  location: 'LOCATION_LIMIT_REACHED',
-  seat: 'SEAT_LIMIT_REACHED',
+  location: 'PLAN_LOCATION_LIMIT_REACHED',
+  seat: 'PLAN_SEAT_LIMIT_REACHED',
 } satisfies Record<PlanLimit, keyof typeof BILLING_ERRORS>;
 
 /**
@@ -81,7 +81,7 @@ const LIMIT_REACHED = {
  * after `requireWorkspacePermission`, so a caller who isn't allowed to perform
  * the action never learns the plan is at its cap. A missing `req.member` means
  * the guard wasn't mounted in that order - that's a misconfiguration, so it
- * throws (surfacing as a 500) rather than masking the wiring bug as a 403.
+ * throws (surfacing as a 500) rather than masking the wiring bug as a 402.
  *
  * A plan that doesn't cap the limit passes through without a count query, while
  * a plan whose entitlements don't validate is rejected rather than treated as
@@ -112,7 +112,7 @@ export const requireWorkspaceQuota =
       });
 
       if (!subscription?.plan) {
-        const { status, body } = errorResponse(BILLING_ERRORS, 'NO_ACTIVE_PLAN');
+        const { status, body } = errorResponse(BILLING_ERRORS, 'PLAN_MISSING');
 
         return res.status(status).json(body);
       }
@@ -128,7 +128,7 @@ export const requireWorkspaceQuota =
           'Plan entitlements failed validation'
         );
 
-        const { status, body } = errorResponse(BILLING_ERRORS, 'INVALID_PLAN_ENTITLEMENTS');
+        const { status, body } = errorResponse(BILLING_ERRORS, 'PLAN_ENTITLEMENTS_INVALID');
 
         return res.status(status).json(body);
       }

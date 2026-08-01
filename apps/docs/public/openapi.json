@@ -1668,8 +1668,18 @@
               }
             }
           },
+          "402": {
+            "description": "The plan's seat limit is reached (a pending invite holds a seat)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          },
           "403": {
-            "description": "The caller lacks workspace:member:manage, or the plan's seat limit is reached (a pending invite holds a seat)",
+            "description": "The caller lacks workspace:member:manage",
             "content": {
               "application/json": {
                 "schema": {
@@ -2102,8 +2112,18 @@
               }
             }
           },
+          "402": {
+            "description": "The plan's location limit is reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseError"
+                }
+              }
+            }
+          },
           "403": {
-            "description": "The caller lacks workspace:location:manage, or the plan's location limit is reached",
+            "description": "The caller lacks workspace:location:manage",
             "content": {
               "application/json": {
                 "schema": {
@@ -3092,7 +3112,7 @@
             }
           },
           "403": {
-            "description": "The caller lacks workspace:member:manage",
+            "description": "The caller lacks workspace:member:manage, is removing themselves, or (as an admin) is removing an owner/admin",
             "content": {
               "application/json": {
                 "schema": {
@@ -3112,7 +3132,7 @@
             }
           },
           "409": {
-            "description": "Cannot remove yourself, the last owner, or (as an admin) an owner/admin",
+            "description": "The member is the last active owner",
             "content": {
               "application/json": {
                 "schema": {
@@ -3200,7 +3220,7 @@
             }
           },
           "403": {
-            "description": "The caller lacks workspace:member:manage",
+            "description": "The caller lacks workspace:member:manage, is changing their own role, or is granting/altering the owner role as a non-owner",
             "content": {
               "application/json": {
                 "schema": {
@@ -3220,7 +3240,7 @@
             }
           },
           "409": {
-            "description": "Cannot change your own role, grant/alter the owner role as a non-owner, act on a suspended member, or demote the last owner",
+            "description": "The target member is suspended, or the change would demote the last owner",
             "content": {
               "application/json": {
                 "schema": {

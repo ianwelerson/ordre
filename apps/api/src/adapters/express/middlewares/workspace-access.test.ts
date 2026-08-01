@@ -2,8 +2,9 @@ import { db } from '#/config/db.ts';
 import type { NextFunction, Request, Response } from 'express';
 
 import {
-  AUTH_ERRORS,
+  BASE_ERRORS,
   errorResponse,
+  MEMBER_ERRORS,
   VALIDATION_ERRORS,
   WORKSPACE_ERRORS,
 } from '@ordre/core/errors';
@@ -48,7 +49,7 @@ describe('middleware/requireWorkspaceAccess', () => {
 
     await requireWorkspaceAccess(req, res, next);
 
-    const { status: expectedStatus, body } = errorResponse(AUTH_ERRORS, 'UNAUTHORIZED');
+    const { status: expectedStatus, body } = errorResponse(BASE_ERRORS, 'UNAUTHORIZED');
     expect(status).toHaveBeenCalledWith(expectedStatus);
     expect(json).toHaveBeenCalledWith(body);
     expect(next).not.toHaveBeenCalled();
@@ -108,7 +109,7 @@ describe('middleware/requireWorkspaceAccess', () => {
     await requireWorkspaceAccess(req, res, next);
 
     expect(findWorkspace).toHaveBeenCalledOnce();
-    const { status: expectedStatus, body } = errorResponse(WORKSPACE_ERRORS, 'NOT_FOUND');
+    const { status: expectedStatus, body } = errorResponse(WORKSPACE_ERRORS, 'WORKSPACE_NOT_FOUND');
     expect(status).toHaveBeenCalledWith(expectedStatus);
     expect(json).toHaveBeenCalledWith(body);
     expect(next).not.toHaveBeenCalled();
@@ -126,7 +127,7 @@ describe('middleware/requireWorkspaceAccess', () => {
     await requireWorkspaceAccess(req, res, next);
 
     expect(findWorkspace).not.toHaveBeenCalled();
-    const { status: expectedStatus, body } = errorResponse(WORKSPACE_ERRORS, 'NOT_FOUND');
+    const { status: expectedStatus, body } = errorResponse(WORKSPACE_ERRORS, 'WORKSPACE_NOT_FOUND');
     expect(status).toHaveBeenCalledWith(expectedStatus);
     expect(json).toHaveBeenCalledWith(body);
     expect(next).not.toHaveBeenCalled();
@@ -145,10 +146,7 @@ describe('middleware/requireWorkspaceAccess', () => {
 
     await requireWorkspaceAccess(req, res, next);
 
-    const { status: expectedStatus, body } = errorResponse(
-      WORKSPACE_ERRORS,
-      'MEMBER_ACCESS_SUSPENDED'
-    );
+    const { status: expectedStatus, body } = errorResponse(MEMBER_ERRORS, 'MEMBER_SELF_SUSPENDED');
     expect(status).toHaveBeenCalledWith(expectedStatus);
     expect(json).toHaveBeenCalledWith(body);
     expect(req.member).toBeUndefined();

@@ -50,13 +50,13 @@ Two middlewares split the work; both run after `authenticate` and `rlsContext` (
 **`requireWorkspaceAccess`** - resource-level. Resolves the workspace from `:id` or `:slug`, loads the caller's `workspace_member` row, requires it to be `active`, and sets `req.member` (`{ id, workspaceId, role }`).
 
 <Callout type="warn">
-  It returns **`404 NOT_FOUND` both when the workspace doesn't exist and when the
+  It returns **`404 WORKSPACE_NOT_FOUND` both when the workspace doesn't exist and when the
   caller isn't a member** - deliberately indistinguishable, so membership can't be
   used to probe which workspaces exist. A non-member never learns the difference
   between "no such workspace" and "not yours".
 </Callout>
 
-A **suspended** member is the exception to that masking: they get `403 MEMBER_ACCESS_SUSPENDED` instead of a `404`. They already know the workspace exists - they used to be in it - so hiding it would leak nothing and would only obscure why they're locked out. Because the check sits in the access guard, it holds for every workspace route including the self-service ones (`/me`, `/leave`) that need no permission at all.
+A **suspended** member is the exception to that masking: they get `403 MEMBER_SELF_SUSPENDED` instead of a `404`. They already know the workspace exists - they used to be in it - so hiding it would leak nothing and would only obscure why they're locked out. Because the check sits in the access guard, it holds for every workspace route including the self-service ones (`/me`, `/leave`) that need no permission at all.
 
 **`requireWorkspacePermission(permission)`** - action-level. Reads `req.member.role` and tests it with `can()`; a role lacking the permission gets `403 FORBIDDEN`. If `req.member` is missing it **throws (500)** rather than returning 403 - a missing member means the route forgot to mount `requireWorkspaceAccess` first, and masking a wiring bug as a permission error would hide it.
 

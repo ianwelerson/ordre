@@ -4,11 +4,12 @@ import type { ErrorMap, ErrorStatus, ResponseErrorBody } from '../types/index.ts
  * Builds the error branch of a `Response` from an error catalog entry.
  *
  * The `code` returned to the client is the map key itself, so it can never drift
- * from the definition (no hand-typed string literal to keep in sync). Pass
- * `details` for field-level context (e.g. validation errors).
+ * from the definition (no hand-typed string literal to keep in sync) - which is
+ * why keys carry their resource prefix, since the client sees them without the
+ * catalog name. Pass `details` for field-level context (e.g. validation errors).
  *
  * @example
- *   if (exists) return errorResponse(WORKSPACE_ERRORS, 'SLUG_ALREADY_EXISTS');
+ *   if (exists) return errorResponse(WORKSPACE_ERRORS, 'WORKSPACE_SLUG_ALREADY_EXISTS');
  */
 export const errorResponse = <M extends ErrorMap, K extends keyof M & string>(
   map: M,

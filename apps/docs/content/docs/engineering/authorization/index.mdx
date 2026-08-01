@@ -25,9 +25,9 @@ authenticate → rlsContext → requireWorkspaceAccess → requireWorkspacePermi
 | ---------------------------- | ---------------------------------------------------------- | ------- |
 | `authenticate`               | Resolve the session, set `req.user`                        | `401 UNAUTHORIZED` |
 | `rlsContext`                 | Open the RLS transaction, pin `app.user_id` (RLS layer)    | -       |
-| `requireWorkspaceAccess`     | Resolve the workspace, load the caller's **active** membership, set `req.member` | `404 NOT_FOUND` / `403 MEMBER_ACCESS_SUSPENDED` |
+| `requireWorkspaceAccess`     | Resolve the workspace, load the caller's **active** membership, set `req.member` | `404 WORKSPACE_NOT_FOUND` / `403 MEMBER_SELF_SUSPENDED` |
 | `requireWorkspacePermission` | Check the role holds the required permission               | `403 FORBIDDEN` |
-| `requireWorkspaceQuota`      | Only on routes that consume a metered resource: check the plan has room | `403 SEAT_LIMIT_REACHED` / `403 LOCATION_LIMIT_REACHED` |
+| `requireWorkspaceQuota`      | Only on routes that consume a metered resource: check the plan has room | `402 PLAN_SEAT_LIMIT_REACHED` / `402 PLAN_LOCATION_LIMIT_REACHED` |
 | controller                   | Do the work; shape the payload by role (`scopeRelations`)  | -       |
 
 So the two layers interleave: `rlsContext` (RLS) sets identity before the RBAC guards run, so the guards' own membership lookup already runs under RLS too.
@@ -38,7 +38,7 @@ So the two layers interleave: `rlsContext` (RLS) sets identity before the RBAC g
 
 **Order matters, and it's deliberate: quota runs last.** A caller who lacks the permission must get a plain `403 FORBIDDEN` and never learn that the workspace is at its plan cap - that's billing state, and only someone allowed to perform the action has any business seeing it.
 
-The limits themselves come from `plan.entitlements` (see [Data Model](/internal-docs/engineering/data-model)). A plan that doesn't cap a limit passes through without a count query; a plan whose entitlements fail validation is refused (`500 INVALID_PLAN_ENTITLEMENTS`) rather than treated as uncapped.
+The limits themselves come from `plan.entitlements` (see [Data Model](/internal-docs/engineering/data-model)). A plan that doesn't cap a limit passes through without a count query; a plan whose entitlements fail validation is refused (`500 PLAN_ENTITLEMENTS_INVALID`) rather than treated as uncapped.
 
 <Callout type="info">
   Quotas gate **creation only**. A workspace that downgrades below its current

@@ -133,7 +133,7 @@ export const findUserWorkspaces = (userId: string): Promise<WorkspaceSummary[]> 
  * Checks that a slug is both allowed (not reserved/protected/banned) and free.
  * Shared by create and update so both apply the identical rule. The duplicate
  * pre-check is best-effort - the unique index on `slug` is the real guard - so
- * callers still map a unique violation to `SLUG_ALREADY_EXISTS`.
+ * callers still map a unique violation to `WORKSPACE_SLUG_ALREADY_EXISTS`.
  *
  * @param slug - The normalized candidate slug.
  * @param excludeId - A workspace id to ignore when checking for a duplicate (the
@@ -147,7 +147,7 @@ export const checkSlugAvailability = async (
   const restricted = getSlugRestriction(slug);
 
   if (restricted) {
-    return errorResponse(WORKSPACE_ERRORS, `${restricted}_SLUG`);
+    return errorResponse(WORKSPACE_ERRORS, `WORKSPACE_SLUG_${restricted}`);
   }
 
   const existing = await getDb().query.workspace.findFirst({
@@ -155,7 +155,7 @@ export const checkSlugAvailability = async (
   });
 
   if (existing && existing.id !== excludeId) {
-    return errorResponse(WORKSPACE_ERRORS, 'SLUG_ALREADY_EXISTS');
+    return errorResponse(WORKSPACE_ERRORS, 'WORKSPACE_SLUG_ALREADY_EXISTS');
   }
 
   return null;
@@ -221,12 +221,12 @@ export const toWorkspaceResponse = (workspace: WorkspaceWithRelations): Workspac
 
 /**
  * Builds the standard 200 response for a single workspace (with role-scoped
- * relations), or `NOT_FOUND`. Shared by the read controllers and update so every
+ * relations), or `WORKSPACE_NOT_FOUND`. Shared by the read controllers and update so every
  * path returns an identical shape.
  *
  * @param role - The caller's workspace role, used to gate relations.
  * @param where - The Drizzle condition selecting the workspace.
- * @returns The `Workspace` (200) response, or `NOT_FOUND` (404).
+ * @returns The `Workspace` (200) response, or `WORKSPACE_NOT_FOUND` (404).
  */
 export const respondWithWorkspace = async (
   role: WorkspaceMemberRole,
@@ -235,7 +235,7 @@ export const respondWithWorkspace = async (
   const workspace = await findWorkspace(role, where);
 
   if (!workspace) {
-    return errorResponse(WORKSPACE_ERRORS, 'NOT_FOUND');
+    return errorResponse(WORKSPACE_ERRORS, 'WORKSPACE_NOT_FOUND');
   }
 
   return { status: 200, body: toWorkspaceResponse(workspace) };

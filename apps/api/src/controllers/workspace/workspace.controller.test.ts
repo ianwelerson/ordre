@@ -62,7 +62,7 @@ describe('controllers/workspace', () => {
   });
 
   describe('workspaceSlugExists', () => {
-    it('returns SOMETHING_WRONG when the availability query throws', async () => {
+    it('returns INTERNAL_ERROR when the availability query throws', async () => {
       mockDb.execute.mockRejectedValue(new Error('db down'));
 
       const result = await workspaceSlugExists('valid-workspace');
@@ -86,7 +86,7 @@ describe('controllers/workspace', () => {
       ...overrides,
     });
 
-    it('maps a concurrent unique violation to SLUG_ALREADY_EXISTS', async () => {
+    it('maps a concurrent unique violation to WORKSPACE_SLUG_ALREADY_EXISTS', async () => {
       // Pre-check passes, but the write loses a race and the unique index fires.
       mockDb.query.workspace.findFirst.mockResolvedValueOnce(undefined);
       mockDb.query.plan.findFirst.mockResolvedValueOnce(planRow());
@@ -97,19 +97,19 @@ describe('controllers/workspace', () => {
       expect(result.status).toBe(409);
     });
 
-    it('returns CREATING_ERROR when no active free plan is seeded', async () => {
+    it('returns WORKSPACE_CREATE_FAILED when no active free plan is seeded', async () => {
       // Pre-check passes, but the plan catalog has no active free plan.
       mockDb.query.workspace.findFirst.mockResolvedValueOnce(undefined);
       mockDb.query.plan.findFirst.mockResolvedValueOnce(undefined);
 
       const result = await workspaceCreate('user-1', validCreatePayload);
 
-      expect(result.body).toMatchObject({ code: 'CREATING_ERROR' });
+      expect(result.body).toMatchObject({ code: 'WORKSPACE_CREATE_FAILED' });
       // The transaction is never opened when the plan can't be resolved.
       expect(mockDb.transaction).not.toHaveBeenCalled();
     });
 
-    it('returns SOMETHING_WRONG on an unexpected error', async () => {
+    it('returns INTERNAL_ERROR on an unexpected error', async () => {
       mockDb.query.workspace.findFirst.mockRejectedValueOnce(new Error('db down'));
 
       const result = await workspaceCreate('user-1', validCreatePayload);
@@ -117,7 +117,7 @@ describe('controllers/workspace', () => {
       expect(result.status).toBe(500);
     });
 
-    it('returns CREATING_ERROR when the created workspace cannot be read back', async () => {
+    it('returns WORKSPACE_CREATE_FAILED when the created workspace cannot be read back', async () => {
       // Pre-check: no existing slug. Transaction succeeds, but the re-read finds
       // nothing (findWorkspace -> undefined).
       mockDb.query.workspace.findFirst
@@ -128,12 +128,12 @@ describe('controllers/workspace', () => {
 
       const result = await workspaceCreate('user-1', validCreatePayload);
 
-      expect(result.body).toMatchObject({ code: 'CREATING_ERROR' });
+      expect(result.body).toMatchObject({ code: 'WORKSPACE_CREATE_FAILED' });
     });
   });
 
   describe('workspaceGetById', () => {
-    it('returns NOT_FOUND when no workspace matches', async () => {
+    it('returns WORKSPACE_NOT_FOUND when no workspace matches', async () => {
       mockDb.query.workspace.findFirst.mockResolvedValueOnce(undefined);
 
       const result = await workspaceGetById(member, WORKSPACE_ID);
@@ -143,7 +143,7 @@ describe('controllers/workspace', () => {
   });
 
   describe('workspaceDelete', () => {
-    it('returns NOT_FOUND when no row is deleted', async () => {
+    it('returns WORKSPACE_NOT_FOUND when no row is deleted', async () => {
       mockDelete([]);
 
       const result = await workspaceDelete(WORKSPACE_ID);
@@ -151,7 +151,7 @@ describe('controllers/workspace', () => {
       expect(result.status).toBe(404);
     });
 
-    it('returns SOMETHING_WRONG on an unexpected error', async () => {
+    it('returns INTERNAL_ERROR on an unexpected error', async () => {
       mockDb.delete.mockImplementation(() => {
         throw new Error('db down');
       });
@@ -171,7 +171,7 @@ describe('controllers/workspace', () => {
       expect(result.body).toMatchObject({ code: 'INVALID_INPUT' });
     });
 
-    it('returns NOT_FOUND when a valid id matches no row', async () => {
+    it('returns WORKSPACE_NOT_FOUND when a valid id matches no row', async () => {
       mockUpdate([]);
 
       const result = await workspaceUpdate(member, { name: 'New' } as Parameters<
@@ -181,7 +181,7 @@ describe('controllers/workspace', () => {
       expect(result.status).toBe(404);
     });
 
-    it('maps a concurrent unique violation to SLUG_ALREADY_EXISTS', async () => {
+    it('maps a concurrent unique violation to WORKSPACE_SLUG_ALREADY_EXISTS', async () => {
       mockUpdate(uniqueViolation());
 
       const result = await workspaceUpdate(member, { name: 'New' } as Parameters<
@@ -191,7 +191,7 @@ describe('controllers/workspace', () => {
       expect(result.status).toBe(409);
     });
 
-    it('returns SOMETHING_WRONG on an unexpected error', async () => {
+    it('returns INTERNAL_ERROR on an unexpected error', async () => {
       mockUpdate(new Error('db down'));
 
       const result = await workspaceUpdate(member, { name: 'New' } as Parameters<

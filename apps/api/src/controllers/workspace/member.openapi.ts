@@ -190,9 +190,11 @@ registry.registerPath({
   responses: {
     204: { description: 'The member was removed' },
     400: jsonError('The member id or payload failed validation'),
-    403: jsonError('The caller lacks workspace:member:manage'),
+    403: jsonError(
+      'The caller lacks workspace:member:manage, is removing themselves, or (as an admin) is removing an owner/admin'
+    ),
     404: jsonError('No member matches the id in this workspace'),
-    409: jsonError('Cannot remove yourself, the last owner, or (as an admin) an owner/admin'),
+    409: jsonError('The member is the last active owner'),
   },
 });
 
@@ -219,10 +221,10 @@ registry.registerPath({
       content: { 'application/json': { schema: WorkspaceMember } },
     },
     400: jsonError('The payload or member id failed validation'),
-    403: jsonError('The caller lacks workspace:member:manage'),
-    404: jsonError('No member matches the id in this workspace'),
-    409: jsonError(
-      'Cannot change your own role, grant/alter the owner role as a non-owner, act on a suspended member, or demote the last owner'
+    403: jsonError(
+      'The caller lacks workspace:member:manage, is changing their own role, or is granting/altering the owner role as a non-owner'
     ),
+    404: jsonError('No member matches the id in this workspace'),
+    409: jsonError('The target member is suspended, or the change would demote the last owner'),
   },
 });

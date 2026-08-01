@@ -51,7 +51,7 @@ try {
   await db.insert(schema.workspace).values(data);
 } catch (error) {
   if (isUniqueViolation(error)) {
-    return errorResponse(WORKSPACE_ERRORS, 'SLUG_ALREADY_EXISTS');
+    return errorResponse(WORKSPACE_ERRORS, 'WORKSPACE_SLUG_ALREADY_EXISTS');
   }
   throw error;
 }
@@ -72,7 +72,7 @@ if (isUniqueViolation(error, 'workspace_slug_unique')) { ... }
 
 Guards workspace slug creation against names that must never be granted. It runs
 **before** the uniqueness check in `workspaceCreate`, and backs the
-`RESERVED_SLUG` / `PROTECTED_SLUG` / `BANNED_SLUG` errors in
+`WORKSPACE_SLUG_RESERVED` / `WORKSPACE_SLUG_PROTECTED` / `WORKSPACE_SLUG_BANNED` errors in
 [Error Codes](/internal-docs/reference/error-codes).
 
 Checks run in priority order:
@@ -100,7 +100,7 @@ Checks run in priority order:
 | `SlugRestriction`          | type     | `'RESERVED' \| 'PROTECTED' \| 'BANNED'`                            |
 | `getSlugRestriction(slug)` | function | Returns the matched restriction, or `null` when the slug is allowed |
 
-**Usage** - the returned value maps straight onto the matching `*_SLUG` error:
+**Usage** - the returned value maps straight onto the matching `WORKSPACE_SLUG_*` error:
 
 ```ts
 import { getSlugRestriction } from '#/utils/slug-restrictions.ts';
@@ -108,8 +108,8 @@ import { getSlugRestriction } from '#/utils/slug-restrictions.ts';
 const restriction = getSlugRestriction(data.slug);
 
 if (restriction) {
-  // 'RESERVED' -> RESERVED_SLUG, 'PROTECTED' -> PROTECTED_SLUG, ...
-  return errorResponse(WORKSPACE_ERRORS, `${restriction}_SLUG`);
+  // 'RESERVED' -> WORKSPACE_SLUG_RESERVED, 'PROTECTED' -> WORKSPACE_SLUG_PROTECTED, ...
+  return errorResponse(WORKSPACE_ERRORS, `WORKSPACE_SLUG_${restriction}`);
 }
 ```
 

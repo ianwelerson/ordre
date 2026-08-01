@@ -5,7 +5,7 @@ import { INVITE_IDS, USER_IDS, userFixtures, WORKSPACE_IDS } from '#/test/fixtur
 import { parseBody } from '#/utils/testing.ts';
 import request from 'supertest';
 
-import { AUTH_ERRORS } from '@ordre/core/errors';
+import { BASE_ERRORS } from '@ordre/core/errors';
 import { ResponseErrorSchema, WorkspaceInviteSchema } from '@ordre/core/schemas';
 
 import { inviteItemPath, workspaceBasePath, workspaceInviteBasePath } from './workspace.paths.ts';
@@ -121,12 +121,12 @@ describe('Workspace Invite (admin)', () => {
       expect(parseBody(ResponseErrorSchema, response.body).code).toBe('FORBIDDEN');
     });
 
-    test('POST hides the workspace from a non-member with NOT_FOUND', async () => {
+    test('POST hides the workspace from a non-member with WORKSPACE_NOT_FOUND', async () => {
       mockUserSession({ id: USER_IDS.outsider });
 
       const response = await request(app).post(collectionUrl(WS)).send(invite()).expect(404);
 
-      expect(parseBody(ResponseErrorSchema, response.body).code).toBe('NOT_FOUND');
+      expect(parseBody(ResponseErrorSchema, response.body).code).toBe('WORKSPACE_NOT_FOUND');
     });
 
     test('POST rejects an unauthenticated request with UNAUTHORIZED', async () => {
@@ -135,7 +135,7 @@ describe('Workspace Invite (admin)', () => {
       const error = parseBody(ResponseErrorSchema, response.body);
 
       expect(error.code).toBe('UNAUTHORIZED');
-      expect(error.message).toBe(AUTH_ERRORS.UNAUTHORIZED.message);
+      expect(error.message).toBe(BASE_ERRORS.UNAUTHORIZED.message);
     });
 
     // --- Plan quota ---
@@ -147,9 +147,9 @@ describe('Workspace Invite (admin)', () => {
       await setFreePlanLimits({ seat: 1 });
       mockUserSession({ id: USER_IDS.owner });
 
-      const response = await request(app).post(collectionUrl(WS)).send(invite()).expect(403);
+      const response = await request(app).post(collectionUrl(WS)).send(invite()).expect(402);
 
-      expect(parseBody(ResponseErrorSchema, response.body).code).toBe('SEAT_LIMIT_REACHED');
+      expect(parseBody(ResponseErrorSchema, response.body).code).toBe('PLAN_SEAT_LIMIT_REACHED');
     });
 
     test('POST reports FORBIDDEN, not the seat cap, for a member who lacks the permission', async () => {

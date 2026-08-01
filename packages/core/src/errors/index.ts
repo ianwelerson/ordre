@@ -1,6 +1,9 @@
 export { BASE_ERRORS } from './base.ts';
 export { AUTH_ERRORS } from './auth.ts';
 export { WORKSPACE_ERRORS } from './workspace.ts';
+export { LOCATION_ERRORS } from './location.ts';
+export { MEMBER_ERRORS } from './member.ts';
+export { INVITE_ERRORS } from './invite.ts';
 export { VALIDATION_ERRORS } from './validation.ts';
 export { BILLING_ERRORS } from './billing.ts';
 export { errorResponse } from './response.ts';

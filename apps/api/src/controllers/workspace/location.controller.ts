@@ -6,7 +6,7 @@ import { validateField, validateRequestBody } from '#/utils/validation.ts';
 import { and, eq, inArray } from 'drizzle-orm';
 import z from 'zod';
 
-import { BASE_ERRORS, errorResponse, WORKSPACE_ERRORS } from '@ordre/core/errors';
+import { BASE_ERRORS, errorResponse, LOCATION_ERRORS, MEMBER_ERRORS } from '@ordre/core/errors';
 import {
   WorkspaceLocationCreateSchema,
   WorkspaceLocationMemberRemoveSchema,
@@ -63,14 +63,14 @@ export const workspaceLocationCreate = async (
     const newLocation = await createLocation(member.workspaceId, data);
 
     if (!newLocation) {
-      return errorResponse(WORKSPACE_ERRORS, 'LOCATION_CREATING_ERROR');
+      return errorResponse(LOCATION_ERRORS, 'LOCATION_CREATE_FAILED');
     }
 
     return { status: 201, body: toLocationResponse(newLocation) };
   } catch (error) {
     logger.error(error);
 
-    return errorResponse(BASE_ERRORS, 'SOMETHING_WRONG');
+    return errorResponse(BASE_ERRORS, 'INTERNAL_ERROR');
   }
 };
 
@@ -90,7 +90,7 @@ export const workspaceLocationGetAll = async (
   } catch (error) {
     logger.error(error);
 
-    return errorResponse(BASE_ERRORS, 'SOMETHING_WRONG');
+    return errorResponse(BASE_ERRORS, 'INTERNAL_ERROR');
   }
 };
 
@@ -118,14 +118,14 @@ export const workspaceLocationGetById = async (
     const location = await findLocation(member.workspaceId, parsedLocationId.data);
 
     if (!location) {
-      return errorResponse(WORKSPACE_ERRORS, 'LOCATION_NOT_FOUND');
+      return errorResponse(LOCATION_ERRORS, 'LOCATION_NOT_FOUND');
     }
 
     return { status: 200, body: toLocationResponse(location) };
   } catch (error) {
     logger.error(error);
 
-    return errorResponse(BASE_ERRORS, 'SOMETHING_WRONG');
+    return errorResponse(BASE_ERRORS, 'INTERNAL_ERROR');
   }
 };
 
@@ -170,7 +170,7 @@ export const workspaceLocationUpdate = async (
       const current = await findLocation(member.workspaceId, parsedLocationId.data);
 
       if (!current) {
-        return errorResponse(WORKSPACE_ERRORS, 'LOCATION_NOT_FOUND');
+        return errorResponse(LOCATION_ERRORS, 'LOCATION_NOT_FOUND');
       }
 
       return { status: 200, body: toLocationResponse(current) };
@@ -179,14 +179,14 @@ export const workspaceLocationUpdate = async (
     const updated = await updateLocation(member.workspaceId, parsedLocationId.data, data);
 
     if (!updated) {
-      return errorResponse(WORKSPACE_ERRORS, 'LOCATION_NOT_FOUND');
+      return errorResponse(LOCATION_ERRORS, 'LOCATION_NOT_FOUND');
     }
 
     return { status: 200, body: toLocationResponse(updated) };
   } catch (error) {
     logger.error(error);
 
-    return errorResponse(BASE_ERRORS, 'SOMETHING_WRONG');
+    return errorResponse(BASE_ERRORS, 'INTERNAL_ERROR');
   }
 };
 
@@ -245,14 +245,14 @@ export const workspaceLocationSetDefault = async (
     });
 
     if (!promoted) {
-      return errorResponse(WORKSPACE_ERRORS, 'LOCATION_NOT_FOUND');
+      return errorResponse(LOCATION_ERRORS, 'LOCATION_NOT_FOUND');
     }
 
     return { status: 200, body: toLocationResponse(promoted) };
   } catch (error) {
     logger.error(error);
 
-    return errorResponse(BASE_ERRORS, 'SOMETHING_WRONG');
+    return errorResponse(BASE_ERRORS, 'INTERNAL_ERROR');
   }
 };
 
@@ -266,7 +266,7 @@ export const workspaceLocationSetDefault = async (
  *
  * @param member - The caller's workspace membership; scopes the delete to their workspace.
  * @param locationId - The location id; must be a valid UUID or `INVALID_INPUT` is returned.
- * @returns `204 No Content` on success, `CANNOT_DELETE_DEFAULT_LOCATION` (409),
+ * @returns `204 No Content` on success, `LOCATION_IS_DEFAULT` (409),
  *   `LOCATION_NOT_FOUND` (404), or an error response.
  */
 export const workspaceLocationDelete = async (
@@ -290,11 +290,11 @@ export const workspaceLocationDelete = async (
     const defaultLocation = await findDefaultLocation(member.workspaceId);
 
     if (!defaultLocation) {
-      return errorResponse(WORKSPACE_ERRORS, 'LOCATION_NOT_FOUND');
+      return errorResponse(LOCATION_ERRORS, 'LOCATION_NOT_FOUND');
     }
 
     if (defaultLocation.id === parsedLocationId.data) {
-      return errorResponse(WORKSPACE_ERRORS, 'CANNOT_DELETE_DEFAULT_LOCATION');
+      return errorResponse(LOCATION_ERRORS, 'LOCATION_IS_DEFAULT');
     }
 
     const [result] = await getDb().transaction(async (tx) => {
@@ -343,14 +343,14 @@ export const workspaceLocationDelete = async (
     });
 
     if (!result) {
-      return errorResponse(WORKSPACE_ERRORS, 'LOCATION_NOT_FOUND');
+      return errorResponse(LOCATION_ERRORS, 'LOCATION_NOT_FOUND');
     }
 
     return { status: 204, body: null };
   } catch (error) {
     logger.error(error);
 
-    return errorResponse(BASE_ERRORS, 'SOMETHING_WRONG');
+    return errorResponse(BASE_ERRORS, 'INTERNAL_ERROR');
   }
 };
 
@@ -390,7 +390,7 @@ export const workspaceLocationMemberAssign = async (
     const location = await findLocation(member.workspaceId, parsedLocationId.data);
 
     if (!location) {
-      return errorResponse(WORKSPACE_ERRORS, 'LOCATION_NOT_FOUND');
+      return errorResponse(LOCATION_ERRORS, 'LOCATION_NOT_FOUND');
     }
 
     // A suspended member is soft-removed, so treat them as not-found here rather
@@ -398,13 +398,13 @@ export const workspaceLocationMemberAssign = async (
     const target = await findMember(member.workspaceId, parsedMemberId.data);
 
     if (!target || target.status === 'suspended') {
-      return errorResponse(WORKSPACE_ERRORS, 'MEMBER_NOT_FOUND');
+      return errorResponse(MEMBER_ERRORS, 'MEMBER_NOT_FOUND');
     }
 
     const assigned = await assignMemberToLocation(parsedLocationId.data, parsedMemberId.data);
 
     if (!assigned) {
-      return errorResponse(WORKSPACE_ERRORS, 'LOCATION_MEMBER_ASSIGN');
+      return errorResponse(LOCATION_ERRORS, 'LOCATION_MEMBER_ASSIGN_FAILED');
     }
 
     return { status: 204, body: null };
@@ -417,7 +417,7 @@ export const workspaceLocationMemberAssign = async (
 
     logger.error(error);
 
-    return errorResponse(BASE_ERRORS, 'SOMETHING_WRONG');
+    return errorResponse(BASE_ERRORS, 'INTERNAL_ERROR');
   }
 };
 
@@ -471,6 +471,6 @@ export const workspaceLocationMemberUnassign = async (
   } catch (error) {
     logger.error(error);
 
-    return errorResponse(BASE_ERRORS, 'SOMETHING_WRONG');
+    return errorResponse(BASE_ERRORS, 'INTERNAL_ERROR');
   }
 };

@@ -12,7 +12,7 @@ import type { ErrorMap } from '../types/index.ts';
 export const VALIDATION_ERRORS = {
   INVALID_INPUT: {
     status: 400,
-    message: 'Validation error',
+    message: "Some of the information you entered isn't valid",
   },
   VALIDATION_ERROR: {
     status: 400,

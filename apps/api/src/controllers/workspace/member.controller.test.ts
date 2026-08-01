@@ -94,7 +94,7 @@ describe('controllers/workspace/member', () => {
       expect(result.body).toHaveLength(2);
     });
 
-    it('returns SOMETHING_WRONG on an unexpected error', async () => {
+    it('returns INTERNAL_ERROR on an unexpected error', async () => {
       mockDb.query.workspaceMember.findMany.mockRejectedValueOnce(new Error('db down'));
 
       const result = await workspaceMemberGetAll(owner);
@@ -146,7 +146,7 @@ describe('controllers/workspace/member', () => {
       expect(result.status).toBe(404);
     });
 
-    it('returns SOMETHING_WRONG on an unexpected error', async () => {
+    it('returns INTERNAL_ERROR on an unexpected error', async () => {
       mockDb.query.workspaceMember.findFirst.mockRejectedValueOnce(new Error('db down'));
 
       const result = await workspaceMemberGetSelf(owner);
@@ -171,7 +171,7 @@ describe('controllers/workspace/member', () => {
     it('refuses to let a caller change their own role', async () => {
       const result = await workspaceMemberChangeRole(owner, CALLER_ID, changePayload('admin'));
 
-      expect(result.status).toBe(409);
+      expect(result.status).toBe(403);
       expect(result.body).toMatchObject({ code: 'MEMBER_SELF_ROLE_UPDATE' });
       expect(mockDb.transaction).not.toHaveBeenCalled();
     });
@@ -190,7 +190,7 @@ describe('controllers/workspace/member', () => {
 
       const result = await workspaceMemberChangeRole(admin, TARGET_ID, changePayload('owner'));
 
-      expect(result.status).toBe(409);
+      expect(result.status).toBe(403);
       expect(result.body).toMatchObject({ code: 'MEMBER_OWNER_ROLE_FORBIDDEN' });
       expect(mockDb.transaction).not.toHaveBeenCalled();
     });
@@ -200,7 +200,7 @@ describe('controllers/workspace/member', () => {
 
       const result = await workspaceMemberChangeRole(admin, TARGET_ID, changePayload('member'));
 
-      expect(result.status).toBe(409);
+      expect(result.status).toBe(403);
       expect(result.body).toMatchObject({ code: 'MEMBER_OWNER_ROLE_FORBIDDEN' });
       expect(mockDb.transaction).not.toHaveBeenCalled();
     });
@@ -257,7 +257,7 @@ describe('controllers/workspace/member', () => {
       const result = await workspaceMemberChangeRole(owner, TARGET_ID, changePayload('admin'));
 
       expect(result.status).toBe(409);
-      expect(result.body).toMatchObject({ code: 'MEMBER_SUSPENDED' });
+      expect(result.body).toMatchObject({ code: 'MEMBER_TARGET_SUSPENDED' });
       expect(mockDb.transaction).not.toHaveBeenCalled();
     });
 
@@ -271,7 +271,7 @@ describe('controllers/workspace/member', () => {
       expect(result.body).toMatchObject({ code: 'MEMBER_NOT_FOUND' });
     });
 
-    it('returns SOMETHING_WRONG on an unexpected error', async () => {
+    it('returns INTERNAL_ERROR on an unexpected error', async () => {
       mockDb.query.workspaceMember.findFirst.mockRejectedValueOnce(new Error('db down'));
 
       const result = await workspaceMemberChangeRole(owner, TARGET_ID, changePayload('admin'));
@@ -292,7 +292,7 @@ describe('controllers/workspace/member', () => {
     it('refuses to let a caller remove themselves', async () => {
       const result = await workspaceMemberRemove(owner, CALLER_ID, removePayload);
 
-      expect(result.status).toBe(409);
+      expect(result.status).toBe(403);
       expect(result.body).toMatchObject({ code: 'MEMBER_SELF_REMOVE' });
       expect(mockDb.transaction).not.toHaveBeenCalled();
     });
@@ -321,7 +321,7 @@ describe('controllers/workspace/member', () => {
 
       const result = await workspaceMemberRemove(admin, TARGET_ID, removePayload);
 
-      expect(result.status).toBe(409);
+      expect(result.status).toBe(403);
       expect(result.body).toMatchObject({ code: 'MEMBER_REMOVE_FORBIDDEN' });
       expect(mockDb.transaction).not.toHaveBeenCalled();
     });
@@ -362,7 +362,7 @@ describe('controllers/workspace/member', () => {
       expect(result.body).toBeNull();
     });
 
-    it('returns SOMETHING_WRONG on an unexpected error', async () => {
+    it('returns INTERNAL_ERROR on an unexpected error', async () => {
       mockDb.query.workspaceMember.findFirst.mockRejectedValueOnce(new Error('db down'));
 
       const result = await workspaceMemberRemove(owner, TARGET_ID, removePayload);
@@ -429,7 +429,7 @@ describe('controllers/workspace/member', () => {
       expect(result.body).toBeNull();
     });
 
-    it('returns SOMETHING_WRONG on an unexpected error', async () => {
+    it('returns INTERNAL_ERROR on an unexpected error', async () => {
       mockDb.query.workspaceMember.findFirst.mockRejectedValueOnce(new Error('db down'));
 
       const result = await workspaceMemberLeave(owner);

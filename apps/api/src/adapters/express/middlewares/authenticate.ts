@@ -2,7 +2,7 @@ import { auth } from '#/config/auth.ts';
 import { fromNodeHeaders } from 'better-auth/node';
 import type { NextFunction, Request, Response } from 'express';
 
-import { AUTH_ERRORS, errorResponse } from '@ordre/core/errors';
+import { BASE_ERRORS, errorResponse } from '@ordre/core/errors';
 
 /**
  * Middleware to get the user session based on the request cookies.
@@ -16,7 +16,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     const session = await auth.api.getSession({ headers: fromNodeHeaders(req.headers) });
 
     if (!session) {
-      const { status, body } = errorResponse(AUTH_ERRORS, 'UNAUTHORIZED');
+      const { status, body } = errorResponse(BASE_ERRORS, 'UNAUTHORIZED');
 
       return res.status(status).json(body);
     }

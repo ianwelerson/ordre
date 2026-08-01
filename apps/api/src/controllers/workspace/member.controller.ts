@@ -5,7 +5,7 @@ import { validateField, validateRequestBody } from '#/utils/validation.ts';
 import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { BASE_ERRORS, errorResponse, WORKSPACE_ERRORS } from '@ordre/core/errors';
+import { BASE_ERRORS, errorResponse, MEMBER_ERRORS } from '@ordre/core/errors';
 import {
   WorkspaceMemberRemoveSchema,
   WorkspaceMemberRoleUpdateSchema,
@@ -46,7 +46,7 @@ export const workspaceMemberGetAll = async (
   } catch (error) {
     logger.error(error);
 
-    return errorResponse(BASE_ERRORS, 'SOMETHING_WRONG');
+    return errorResponse(BASE_ERRORS, 'INTERNAL_ERROR');
   }
 };
 
@@ -67,14 +67,14 @@ export const workspaceMemberGetSelf = async (
     const self = await findMember(member.workspaceId, member.id);
 
     if (!self) {
-      return errorResponse(WORKSPACE_ERRORS, 'MEMBER_NOT_FOUND');
+      return errorResponse(MEMBER_ERRORS, 'MEMBER_NOT_FOUND');
     }
 
     return { status: 200, body: toMemberResponse(self) };
   } catch (error) {
     logger.error(error);
 
-    return errorResponse(BASE_ERRORS, 'SOMETHING_WRONG');
+    return errorResponse(BASE_ERRORS, 'INTERNAL_ERROR');
   }
 };
 
@@ -102,14 +102,14 @@ export const workspaceMemberGetById = async (
     const result = await findMember(member.workspaceId, parsedMemberId.data);
 
     if (!result) {
-      return errorResponse(WORKSPACE_ERRORS, 'MEMBER_NOT_FOUND');
+      return errorResponse(MEMBER_ERRORS, 'MEMBER_NOT_FOUND');
     }
 
     return { status: 200, body: toMemberResponse(result) };
   } catch (error) {
     logger.error(error);
 
-    return errorResponse(BASE_ERRORS, 'SOMETHING_WRONG');
+    return errorResponse(BASE_ERRORS, 'INTERNAL_ERROR');
   }
 };
 
@@ -125,7 +125,8 @@ export const workspaceMemberGetById = async (
  * @param member - The caller's workspace membership; supplies their role and scopes the change.
  * @param memberId - The target member id; must be a valid UUID or `INVALID_INPUT` is returned.
  * @param payload - The new role; validated against `WorkspaceMemberRoleUpdateSchema`.
- * @returns The updated `WorkspaceMember` (200), a guard error (409), `MEMBER_NOT_FOUND` (404), or an error response.
+ * @returns The updated `WorkspaceMember` (200), a caller-policy error (403), a
+ *   member-state error (409), `MEMBER_NOT_FOUND` (404), or an error response.
  */
 export const workspaceMemberChangeRole = async (
   member: WorkspaceMemberContext,
@@ -146,17 +147,17 @@ export const workspaceMemberChangeRole = async (
     }
 
     if (parsedMemberId.data === member.id) {
-      return errorResponse(WORKSPACE_ERRORS, 'MEMBER_SELF_ROLE_UPDATE');
+      return errorResponse(MEMBER_ERRORS, 'MEMBER_SELF_ROLE_UPDATE');
     }
 
     const target = await findMember(member.workspaceId, parsedMemberId.data);
 
     if (!target) {
-      return errorResponse(WORKSPACE_ERRORS, 'MEMBER_NOT_FOUND');
+      return errorResponse(MEMBER_ERRORS, 'MEMBER_NOT_FOUND');
     }
 
     if (target.status === 'suspended') {
-      return errorResponse(WORKSPACE_ERRORS, 'MEMBER_SUSPENDED');
+      return errorResponse(MEMBER_ERRORS, 'MEMBER_TARGET_SUSPENDED');
     }
 
     const newRole = parsedPayload.data.role;
@@ -165,7 +166,7 @@ export const workspaceMemberChangeRole = async (
     // role. The second half also stops an admin from demoting an owner - the
     // only other path that could leave the workspace with zero owners.
     if (member.role !== 'owner' && (newRole === 'owner' || target.role === 'owner')) {
-      return errorResponse(WORKSPACE_ERRORS, 'MEMBER_OWNER_ROLE_FORBIDDEN');
+      return errorResponse(MEMBER_ERRORS, 'MEMBER_OWNER_ROLE_FORBIDDEN');
     }
 
     // No-op: nothing to change, and skipping the write avoids a needless
@@ -201,18 +202,18 @@ export const workspaceMemberChangeRole = async (
     });
 
     if (result === 'LAST_OWNER') {
-      return errorResponse(WORKSPACE_ERRORS, 'MEMBER_LAST_OWNER');
+      return errorResponse(MEMBER_ERRORS, 'MEMBER_LAST_OWNER');
     }
 
     if (!result) {
-      return errorResponse(WORKSPACE_ERRORS, 'MEMBER_NOT_FOUND');
+      return errorResponse(MEMBER_ERRORS, 'MEMBER_NOT_FOUND');
     }
 
     return { status: 200, body: toMemberResponse(result) };
   } catch (error) {
     logger.error(error);
 
-    return errorResponse(BASE_ERRORS, 'SOMETHING_WRONG');
+    return errorResponse(BASE_ERRORS, 'INTERNAL_ERROR');
   }
 };
 
@@ -228,7 +229,8 @@ export const workspaceMemberChangeRole = async (
  * @param member - The caller's workspace membership; supplies their role and scopes the removal.
  * @param memberId - The target member id; must be a valid UUID or `INVALID_INPUT` is returned.
  * @param payload - Removal options; validated against `WorkspaceMemberRemoveSchema`.
- * @returns `204 No Content` on success, a guard error (409), `MEMBER_NOT_FOUND` (404), or an error response.
+ * @returns `204 No Content` on success, a caller-policy error (403),
+ *   `MEMBER_LAST_OWNER` (409), `MEMBER_NOT_FOUND` (404), or an error response.
  */
 export const workspaceMemberRemove = async (
   member: WorkspaceMemberContext,
@@ -251,34 +253,34 @@ export const workspaceMemberRemove = async (
     }
 
     if (parsedMemberId.data === member.id) {
-      return errorResponse(WORKSPACE_ERRORS, 'MEMBER_SELF_REMOVE');
+      return errorResponse(MEMBER_ERRORS, 'MEMBER_SELF_REMOVE');
     }
 
     const target = await findMember(member.workspaceId, parsedMemberId.data);
 
     if (!target || target.status === 'suspended') {
-      return errorResponse(WORKSPACE_ERRORS, 'MEMBER_NOT_FOUND');
+      return errorResponse(MEMBER_ERRORS, 'MEMBER_NOT_FOUND');
     }
 
     if (member.role === 'admin' && target.role !== 'member') {
-      return errorResponse(WORKSPACE_ERRORS, 'MEMBER_REMOVE_FORBIDDEN');
+      return errorResponse(MEMBER_ERRORS, 'MEMBER_REMOVE_FORBIDDEN');
     }
 
     const result = await suspendMember(target);
 
     if (result === 'LAST_OWNER') {
-      return errorResponse(WORKSPACE_ERRORS, 'MEMBER_LAST_OWNER');
+      return errorResponse(MEMBER_ERRORS, 'MEMBER_LAST_OWNER');
     }
 
     if (!result) {
-      return errorResponse(WORKSPACE_ERRORS, 'MEMBER_NOT_FOUND');
+      return errorResponse(MEMBER_ERRORS, 'MEMBER_NOT_FOUND');
     }
 
     return { status: 204, body: null };
   } catch (error) {
     logger.error(error);
 
-    return errorResponse(BASE_ERRORS, 'SOMETHING_WRONG');
+    return errorResponse(BASE_ERRORS, 'INTERNAL_ERROR');
   }
 };
 
@@ -300,24 +302,24 @@ export const workspaceMemberLeave = async (
     const self = await findMember(member.workspaceId, member.id);
 
     if (!self || self.status === 'suspended') {
-      return errorResponse(WORKSPACE_ERRORS, 'MEMBER_NOT_FOUND');
+      return errorResponse(MEMBER_ERRORS, 'MEMBER_NOT_FOUND');
     }
 
     const result = await suspendMember(self);
 
     if (result === 'LAST_OWNER') {
-      return errorResponse(WORKSPACE_ERRORS, 'MEMBER_LAST_OWNER');
+      return errorResponse(MEMBER_ERRORS, 'MEMBER_LAST_OWNER');
     }
 
     if (!result) {
-      return errorResponse(WORKSPACE_ERRORS, 'MEMBER_NOT_FOUND');
+      return errorResponse(MEMBER_ERRORS, 'MEMBER_NOT_FOUND');
     }
 
     return { status: 204, body: null };
   } catch (error) {
     logger.error(error);
 
-    return errorResponse(BASE_ERRORS, 'SOMETHING_WRONG');
+    return errorResponse(BASE_ERRORS, 'INTERNAL_ERROR');
   }
 };
 
@@ -346,7 +348,7 @@ export const workspaceMemberUpdate = async (
     const self = await findMember(member.workspaceId, member.id);
 
     if (!self || self.status === 'suspended') {
-      return errorResponse(WORKSPACE_ERRORS, 'MEMBER_NOT_FOUND');
+      return errorResponse(MEMBER_ERRORS, 'MEMBER_NOT_FOUND');
     }
 
     // Empty payload: return the member unchanged rather than let Drizzle throw on `.set({})`.
@@ -357,7 +359,7 @@ export const workspaceMemberUpdate = async (
     const updated = await updateMember(member.workspaceId, member.id, parsedPayload.data);
 
     if (!updated) {
-      return errorResponse(WORKSPACE_ERRORS, 'MEMBER_NOT_FOUND');
+      return errorResponse(MEMBER_ERRORS, 'MEMBER_NOT_FOUND');
     }
 
     return {
@@ -367,7 +369,7 @@ export const workspaceMemberUpdate = async (
   } catch (error) {
     logger.error(error);
 
-    return errorResponse(BASE_ERRORS, 'SOMETHING_WRONG');
+    return errorResponse(BASE_ERRORS, 'INTERNAL_ERROR');
   }
 };
 
@@ -381,7 +383,7 @@ export const workspaceMemberUpdate = async (
  * @param member - The caller's workspace membership; scopes the update to their workspace.
  * @param memberId - The target member id; must be a valid UUID or `INVALID_INPUT` is returned.
  * @param payload - The profile fields to change; validated against `WorkspaceMemberUpdateSchema`.
- * @returns The updated `WorkspaceMember` (200), `MEMBER_SUSPENDED` (409), `MEMBER_NOT_FOUND` (404), or an error response.
+ * @returns The updated `WorkspaceMember` (200), `MEMBER_TARGET_SUSPENDED` (409), `MEMBER_NOT_FOUND` (404), or an error response.
  */
 export const workspaceMemberUpdateById = async (
   member: WorkspaceMemberContext,
@@ -404,11 +406,11 @@ export const workspaceMemberUpdateById = async (
     const target = await findMember(member.workspaceId, parsedMemberId.data);
 
     if (!target) {
-      return errorResponse(WORKSPACE_ERRORS, 'MEMBER_NOT_FOUND');
+      return errorResponse(MEMBER_ERRORS, 'MEMBER_NOT_FOUND');
     }
 
     if (target.status === 'suspended') {
-      return errorResponse(WORKSPACE_ERRORS, 'MEMBER_SUSPENDED');
+      return errorResponse(MEMBER_ERRORS, 'MEMBER_TARGET_SUSPENDED');
     }
 
     // Empty payload: return the member unchanged rather than let Drizzle throw on `.set({})`.
@@ -419,7 +421,7 @@ export const workspaceMemberUpdateById = async (
     const updated = await updateMember(member.workspaceId, parsedMemberId.data, parsedPayload.data);
 
     if (!updated) {
-      return errorResponse(WORKSPACE_ERRORS, 'MEMBER_NOT_FOUND');
+      return errorResponse(MEMBER_ERRORS, 'MEMBER_NOT_FOUND');
     }
 
     return {
@@ -429,6 +431,6 @@ export const workspaceMemberUpdateById = async (
   } catch (error) {
     logger.error(error);
 
-    return errorResponse(BASE_ERRORS, 'SOMETHING_WRONG');
+    return errorResponse(BASE_ERRORS, 'INTERNAL_ERROR');
   }
 };

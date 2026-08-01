@@ -101,7 +101,7 @@ describe('middleware/requireWorkspaceQuota', () => {
 
     const { status: expectedStatus, body } = errorResponse(
       BILLING_ERRORS,
-      'LOCATION_LIMIT_REACHED'
+      'PLAN_LOCATION_LIMIT_REACHED'
     );
     expect(status).toHaveBeenCalledWith(expectedStatus);
     expect(json).toHaveBeenCalledWith(body);
@@ -132,8 +132,10 @@ describe('middleware/requireWorkspaceQuota', () => {
 
     await requireWorkspaceQuota('location')(req, res, next);
 
-    expect(status).toHaveBeenCalledWith(BILLING_ERRORS.LOCATION_LIMIT_REACHED.status);
-    expect(json).toHaveBeenCalledWith(expect.objectContaining({ code: 'LOCATION_LIMIT_REACHED' }));
+    expect(status).toHaveBeenCalledWith(BILLING_ERRORS.PLAN_LOCATION_LIMIT_REACHED.status);
+    expect(json).toHaveBeenCalledWith(
+      expect.objectContaining({ code: 'PLAN_LOCATION_LIMIT_REACHED' })
+    );
     expect(next).not.toHaveBeenCalled();
   });
 
@@ -146,8 +148,10 @@ describe('middleware/requireWorkspaceQuota', () => {
 
     await requireWorkspaceQuota('location')(req, res, next);
 
-    expect(status).toHaveBeenCalledWith(BILLING_ERRORS.LOCATION_LIMIT_REACHED.status);
-    expect(json).toHaveBeenCalledWith(expect.objectContaining({ code: 'LOCATION_LIMIT_REACHED' }));
+    expect(status).toHaveBeenCalledWith(BILLING_ERRORS.PLAN_LOCATION_LIMIT_REACHED.status);
+    expect(json).toHaveBeenCalledWith(
+      expect.objectContaining({ code: 'PLAN_LOCATION_LIMIT_REACHED' })
+    );
     expect(next).not.toHaveBeenCalled();
   });
 
@@ -188,7 +192,10 @@ describe('middleware/requireWorkspaceQuota', () => {
 
     await requireWorkspaceQuota('seat')(req, res, next);
 
-    const { status: expectedStatus, body } = errorResponse(BILLING_ERRORS, 'SEAT_LIMIT_REACHED');
+    const { status: expectedStatus, body } = errorResponse(
+      BILLING_ERRORS,
+      'PLAN_SEAT_LIMIT_REACHED'
+    );
     expect(status).toHaveBeenCalledWith(expectedStatus);
     expect(json).toHaveBeenCalledWith(body);
     expect(next).not.toHaveBeenCalled();
@@ -216,7 +223,7 @@ describe('middleware/requireWorkspaceQuota', () => {
 
     await requireWorkspaceQuota('location')(req, res, next);
 
-    const { status: expectedStatus, body } = errorResponse(BILLING_ERRORS, 'NO_ACTIVE_PLAN');
+    const { status: expectedStatus, body } = errorResponse(BILLING_ERRORS, 'PLAN_MISSING');
     expect(status).toHaveBeenCalledWith(expectedStatus);
     expect(json).toHaveBeenCalledWith(body);
     expect(next).not.toHaveBeenCalled();
@@ -232,7 +239,7 @@ describe('middleware/requireWorkspaceQuota', () => {
 
     await requireWorkspaceQuota('location')(req, res, next);
 
-    const { status: expectedStatus, body } = errorResponse(BILLING_ERRORS, 'NO_ACTIVE_PLAN');
+    const { status: expectedStatus, body } = errorResponse(BILLING_ERRORS, 'PLAN_MISSING');
     expect(status).toHaveBeenCalledWith(expectedStatus);
     expect(json).toHaveBeenCalledWith(body);
     expect(next).not.toHaveBeenCalled();
@@ -250,7 +257,7 @@ describe('middleware/requireWorkspaceQuota', () => {
 
     const { status: expectedStatus, body } = errorResponse(
       BILLING_ERRORS,
-      'INVALID_PLAN_ENTITLEMENTS'
+      'PLAN_ENTITLEMENTS_INVALID'
     );
     expect(status).toHaveBeenCalledWith(expectedStatus);
     expect(json).toHaveBeenCalledWith(body);
@@ -270,9 +277,9 @@ describe('middleware/requireWorkspaceQuota', () => {
 
     await requireWorkspaceQuota('location')(req, res, next);
 
-    expect(status).toHaveBeenCalledWith(BILLING_ERRORS.INVALID_PLAN_ENTITLEMENTS.status);
+    expect(status).toHaveBeenCalledWith(BILLING_ERRORS.PLAN_ENTITLEMENTS_INVALID.status);
     expect(json).toHaveBeenCalledWith(
-      expect.objectContaining({ code: 'INVALID_PLAN_ENTITLEMENTS' })
+      expect.objectContaining({ code: 'PLAN_ENTITLEMENTS_INVALID' })
     );
     expect(next).not.toHaveBeenCalled();
   });

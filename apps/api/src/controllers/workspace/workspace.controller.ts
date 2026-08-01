@@ -62,7 +62,7 @@ export const workspaceSlugExists = async (
   } catch (error) {
     logger.error(error);
 
-    return errorResponse(BASE_ERRORS, 'SOMETHING_WRONG');
+    return errorResponse(BASE_ERRORS, 'INTERNAL_ERROR');
   }
 };
 
@@ -72,7 +72,7 @@ export const workspaceSlugExists = async (
  * Rejects reserved, protected, or banned slugs, then fails fast on a duplicate
  * slug before inserting. The pre-check is best-effort - the unique index on
  * `slug` is the real guard, so a concurrent collision surfacing as a unique
- * violation is also mapped to `SLUG_ALREADY_EXISTS`.
+ * violation is also mapped to `WORKSPACE_SLUG_ALREADY_EXISTS`.
  *
  * @param userId - The id of the creating user; recorded as the workspace owner.
  * @param payload - The workspace fields to create; validated against `WorkspaceCreateSchema`.
@@ -106,7 +106,7 @@ export const workspaceCreate = async (
     if (!freePlan) {
       logger.error('No active plan found for the "free" tier - is the plan catalog seeded?');
 
-      return errorResponse(WORKSPACE_ERRORS, 'CREATING_ERROR');
+      return errorResponse(WORKSPACE_ERRORS, 'WORKSPACE_CREATE_FAILED');
     }
 
     // Create the new workspace with all the relations. Any thrown error rolls
@@ -186,19 +186,19 @@ export const workspaceCreate = async (
     const created = await findWorkspace('owner', eq(schema.workspace.id, workspaceId));
 
     if (!created) {
-      return errorResponse(WORKSPACE_ERRORS, 'CREATING_ERROR');
+      return errorResponse(WORKSPACE_ERRORS, 'WORKSPACE_CREATE_FAILED');
     }
 
     return { status: 201, body: toWorkspaceResponse(created) };
   } catch (error) {
     // A concurrent insert can slip past the pre-check; the unique index is the real guard.
     if (isUniqueViolation(error)) {
-      return errorResponse(WORKSPACE_ERRORS, 'SLUG_ALREADY_EXISTS');
+      return errorResponse(WORKSPACE_ERRORS, 'WORKSPACE_SLUG_ALREADY_EXISTS');
     }
 
     logger.error(error);
 
-    return errorResponse(BASE_ERRORS, 'SOMETHING_WRONG');
+    return errorResponse(BASE_ERRORS, 'INTERNAL_ERROR');
   }
 };
 
@@ -221,7 +221,7 @@ export const workspaceGetAll = async (userId: string): Promise<Response<Workspac
   } catch (error) {
     logger.error(error);
 
-    return errorResponse(BASE_ERRORS, 'SOMETHING_WRONG');
+    return errorResponse(BASE_ERRORS, 'INTERNAL_ERROR');
   }
 };
 
@@ -230,7 +230,7 @@ export const workspaceGetAll = async (userId: string): Promise<Response<Workspac
  *
  * @param member - The caller's workspace membership; its role scopes which relations load.
  * @param id - The workspace id; must be a valid UUID or `INVALID_INPUT` is returned.
- * @returns The `Workspace` (200), `NOT_FOUND` (404), or an error response.
+ * @returns The `Workspace` (200), `WORKSPACE_NOT_FOUND` (404), or an error response.
  */
 export const workspaceGetById = async (
   member: WorkspaceMemberContext,
@@ -247,7 +247,7 @@ export const workspaceGetById = async (
   } catch (error) {
     logger.error(error);
 
-    return errorResponse(BASE_ERRORS, 'SOMETHING_WRONG');
+    return errorResponse(BASE_ERRORS, 'INTERNAL_ERROR');
   }
 };
 
@@ -259,7 +259,7 @@ export const workspaceGetById = async (
  *
  * @param member - The caller's workspace membership; its role scopes which relations load.
  * @param slug - The workspace slug; validated/normalized before lookup.
- * @returns The `Workspace` (200), `NOT_FOUND` (404), or an error response.
+ * @returns The `Workspace` (200), `WORKSPACE_NOT_FOUND` (404), or an error response.
  */
 export const workspaceGetBySlug = async (
   member: WorkspaceMemberContext,
@@ -276,7 +276,7 @@ export const workspaceGetBySlug = async (
   } catch (error) {
     logger.error(error);
 
-    return errorResponse(BASE_ERRORS, 'SOMETHING_WRONG');
+    return errorResponse(BASE_ERRORS, 'INTERNAL_ERROR');
   }
 };
 
@@ -284,7 +284,7 @@ export const workspaceGetBySlug = async (
  * Deletes a workspace by its id.
  *
  * @param id - The workspace id; must be a valid UUID or `INVALID_INPUT` is returned.
- * @returns `204 No Content` on success, `NOT_FOUND` (404), or an error response.
+ * @returns `204 No Content` on success, `WORKSPACE_NOT_FOUND` (404), or an error response.
  */
 export const workspaceDelete = async (id: unknown): Promise<NoContentResponse> => {
   try {
@@ -300,14 +300,14 @@ export const workspaceDelete = async (id: unknown): Promise<NoContentResponse> =
       .returning();
 
     if (!result) {
-      return errorResponse(WORKSPACE_ERRORS, 'NOT_FOUND');
+      return errorResponse(WORKSPACE_ERRORS, 'WORKSPACE_NOT_FOUND');
     }
 
     return { status: 204, body: null };
   } catch (error) {
     logger.error(error);
 
-    return errorResponse(BASE_ERRORS, 'SOMETHING_WRONG');
+    return errorResponse(BASE_ERRORS, 'INTERNAL_ERROR');
   }
 };
 
@@ -318,12 +318,12 @@ export const workspaceDelete = async (id: unknown): Promise<NoContentResponse> =
  * fails fast on a duplicate held by another workspace. The pre-check is
  * best-effort - the unique index on `slug` is the real guard, so a concurrent
  * collision surfacing as a unique violation is also mapped to
- * `SLUG_ALREADY_EXISTS`. An empty payload is a no-op that returns the current
+ * `WORKSPACE_SLUG_ALREADY_EXISTS`. An empty payload is a no-op that returns the current
  * workspace unchanged.
  *
  * @param member - The caller's workspace membership; identifies the workspace and scopes relations.
  * @param payload - The workspace fields to update; validated against `WorkspaceUpdateSchema`.
- * @returns The updated `Workspace` (200) on success, `NOT_FOUND` (404) if no row matches, or an error response.
+ * @returns The updated `Workspace` (200) on success, `WORKSPACE_NOT_FOUND` (404) if no row matches, or an error response.
  */
 export const workspaceUpdate = async (
   member: WorkspaceMemberContext,
@@ -368,7 +368,7 @@ export const workspaceUpdate = async (
     // A valid id that matches no row means the workspace doesn't exist - the
     // `.set()` above always returns the row when the id matches.
     if (!workspace) {
-      return errorResponse(WORKSPACE_ERRORS, 'NOT_FOUND');
+      return errorResponse(WORKSPACE_ERRORS, 'WORKSPACE_NOT_FOUND');
     }
 
     // Re-read through the shared path so the response matches every other
@@ -377,11 +377,11 @@ export const workspaceUpdate = async (
   } catch (error) {
     // A concurrent update can slip past the pre-check; the unique index is the real guard.
     if (isUniqueViolation(error)) {
-      return errorResponse(WORKSPACE_ERRORS, 'SLUG_ALREADY_EXISTS');
+      return errorResponse(WORKSPACE_ERRORS, 'WORKSPACE_SLUG_ALREADY_EXISTS');
     }
 
     logger.error(error);
 
-    return errorResponse(BASE_ERRORS, 'SOMETHING_WRONG');
+    return errorResponse(BASE_ERRORS, 'INTERNAL_ERROR');
   }
 };

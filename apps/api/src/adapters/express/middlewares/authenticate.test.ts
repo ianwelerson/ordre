@@ -1,7 +1,7 @@
 import { auth } from '#/config/auth.ts';
 import type { NextFunction, Request, Response } from 'express';
 
-import { AUTH_ERRORS, errorResponse } from '@ordre/core/errors';
+import { BASE_ERRORS, errorResponse } from '@ordre/core/errors';
 
 import { authenticate } from './authenticate.ts';
 
@@ -40,7 +40,7 @@ describe('middleware/authenticate', () => {
 
     await authenticate(req, res, next);
 
-    const { status: expectedStatus, body } = errorResponse(AUTH_ERRORS, 'UNAUTHORIZED');
+    const { status: expectedStatus, body } = errorResponse(BASE_ERRORS, 'UNAUTHORIZED');
     expect(status).toHaveBeenCalledWith(expectedStatus);
     expect(json).toHaveBeenCalledWith(body);
     expect(next).not.toHaveBeenCalled();

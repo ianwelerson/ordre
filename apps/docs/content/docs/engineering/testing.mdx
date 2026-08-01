@@ -36,9 +36,9 @@ A guard in [`db.ts`](../../../../apps/api/src/test/db.ts) refuses to reset unles
 
 Co-located with the controller, these mock the database entirely (`vi.mock('#/config/db-context.ts')`) and exist purely for **fault injection** - the failure and edge branches that a healthy real database cannot be coaxed into producing on demand:
 
-- **Race conditions** - the slug pre-check passes but the write loses a race and the unique index fires (`SLUG_ALREADY_EXISTS`).
-- **Infrastructure failures** - the DB throws, mapping to `SOMETHING_WRONG` (500).
-- **Impossible-by-construction states** - a transaction commits but the read-back returns nothing (`CREATING_ERROR`); no active plan is seeded.
+- **Race conditions** - the slug pre-check passes but the write loses a race and the unique index fires (`WORKSPACE_SLUG_ALREADY_EXISTS`).
+- **Infrastructure failures** - the DB throws, mapping to `INTERNAL_ERROR` (500).
+- **Impossible-by-construction states** - a transaction commits but the read-back returns nothing (`WORKSPACE_CREATE_FAILED`); no active plan is seeded.
 
 See [`workspace.controller.test.ts`](../../../../apps/api/src/controllers/workspace/workspace.controller.test.ts): every case is a `catch` block or error mapping, and there are **zero** happy-path or RBAC assertions. It does not re-test anything the integration suite covers.
 

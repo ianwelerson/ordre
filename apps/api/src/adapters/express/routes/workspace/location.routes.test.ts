@@ -5,7 +5,12 @@ import { LOCATION_IDS, USER_IDS, userFixtures, WORKSPACE_IDS } from '#/test/fixt
 import { parseBody } from '#/utils/testing.ts';
 import request from 'supertest';
 
-import { AUTH_ERRORS, VALIDATION_ERRORS, WORKSPACE_ERRORS } from '@ordre/core/errors';
+import {
+  BASE_ERRORS,
+  LOCATION_ERRORS,
+  VALIDATION_ERRORS,
+  WORKSPACE_ERRORS,
+} from '@ordre/core/errors';
 import { ResponseErrorSchema, WorkspaceLocationSchema } from '@ordre/core/schemas';
 
 import {
@@ -81,7 +86,7 @@ const mockUserSession = (user?: Record<string, string>) => {
  *
  * `read` is held by every role; `manage` only by owner and admin. A non-member
  * (`outsider`) is authenticated but has no membership row, so
- * `requireWorkspaceAccess` returns NOT_FOUND before any permission check.
+ * `requireWorkspaceAccess` returns WORKSPACE_NOT_FOUND before any permission check.
  */
 describe('Workspace Location', () => {
   const WS = WORKSPACE_IDS.primary;
@@ -114,15 +119,15 @@ describe('Workspace Location', () => {
       parseBody(WorkspaceLocationSchema.array(), response.body);
     });
 
-    test('GET hides the workspace from a non-member with NOT_FOUND', async () => {
+    test('GET hides the workspace from a non-member with WORKSPACE_NOT_FOUND', async () => {
       mockUserSession({ id: USER_IDS.outsider });
 
       const response = await request(app).get(collectionUrl(WS)).send().expect(404);
 
       const error = parseBody(ResponseErrorSchema, response.body);
 
-      expect(error.code).toBe('NOT_FOUND');
-      expect(error.message).toBe(WORKSPACE_ERRORS.NOT_FOUND.message);
+      expect(error.code).toBe('WORKSPACE_NOT_FOUND');
+      expect(error.message).toBe(WORKSPACE_ERRORS.WORKSPACE_NOT_FOUND.message);
     });
 
     test('GET rejects an unauthenticated request with UNAUTHORIZED', async () => {
@@ -131,7 +136,7 @@ describe('Workspace Location', () => {
       const error = parseBody(ResponseErrorSchema, response.body);
 
       expect(error.code).toBe('UNAUTHORIZED');
-      expect(error.message).toBe(AUTH_ERRORS.UNAUTHORIZED.message);
+      expect(error.message).toBe(BASE_ERRORS.UNAUTHORIZED.message);
     });
 
     // Behavior
@@ -189,10 +194,10 @@ describe('Workspace Location', () => {
       const error = parseBody(ResponseErrorSchema, response.body);
 
       expect(error.code).toBe('FORBIDDEN');
-      expect(error.message).toBe(AUTH_ERRORS.FORBIDDEN.message);
+      expect(error.message).toBe(BASE_ERRORS.FORBIDDEN.message);
     });
 
-    test('POST hides the workspace from a non-member with NOT_FOUND', async () => {
+    test('POST hides the workspace from a non-member with WORKSPACE_NOT_FOUND', async () => {
       mockUserSession({ id: USER_IDS.outsider });
 
       const response = await request(app)
@@ -202,7 +207,7 @@ describe('Workspace Location', () => {
 
       const error = parseBody(ResponseErrorSchema, response.body);
 
-      expect(error.code).toBe('NOT_FOUND');
+      expect(error.code).toBe('WORKSPACE_NOT_FOUND');
     });
 
     test('POST rejects an unauthenticated request with UNAUTHORIZED', async () => {
@@ -239,11 +244,11 @@ describe('Workspace Location', () => {
       const response = await request(app)
         .post(collectionUrl(WS))
         .send({ name: 'Warehouse' })
-        .expect(403);
+        .expect(402);
 
       const error = parseBody(ResponseErrorSchema, response.body);
 
-      expect(error.code).toBe('LOCATION_LIMIT_REACHED');
+      expect(error.code).toBe('PLAN_LOCATION_LIMIT_REACHED');
     });
 
     test('POST reports FORBIDDEN, not the plan cap, for a member who lacks the permission', async () => {
@@ -304,7 +309,7 @@ describe('Workspace Location', () => {
       parseBody(WorkspaceLocationSchema, response.body);
     });
 
-    test('GET hides the workspace from a non-member with NOT_FOUND', async () => {
+    test('GET hides the workspace from a non-member with WORKSPACE_NOT_FOUND', async () => {
       mockUserSession({ id: USER_IDS.outsider });
 
       const response = await request(app)
@@ -314,7 +319,7 @@ describe('Workspace Location', () => {
 
       const error = parseBody(ResponseErrorSchema, response.body);
 
-      expect(error.code).toBe('NOT_FOUND');
+      expect(error.code).toBe('WORKSPACE_NOT_FOUND');
     });
 
     test('GET rejects an unauthenticated request with UNAUTHORIZED', async () => {
@@ -337,7 +342,7 @@ describe('Workspace Location', () => {
       const error = parseBody(ResponseErrorSchema, response.body);
 
       expect(error.code).toBe('LOCATION_NOT_FOUND');
-      expect(error.message).toBe(WORKSPACE_ERRORS.LOCATION_NOT_FOUND.message);
+      expect(error.message).toBe(LOCATION_ERRORS.LOCATION_NOT_FOUND.message);
     });
 
     test('GET rejects a malformed location id with INVALID_INPUT', async () => {
@@ -564,8 +569,8 @@ describe('Workspace Location', () => {
 
       const error = parseBody(ResponseErrorSchema, response.body);
 
-      expect(error.code).toBe('CANNOT_DELETE_DEFAULT_LOCATION');
-      expect(error.message).toBe(WORKSPACE_ERRORS.CANNOT_DELETE_DEFAULT_LOCATION.message);
+      expect(error.code).toBe('LOCATION_IS_DEFAULT');
+      expect(error.message).toBe(LOCATION_ERRORS.LOCATION_IS_DEFAULT.message);
     });
 
     test('DELETE returns LOCATION_NOT_FOUND for an unknown location', async () => {

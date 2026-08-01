@@ -109,7 +109,7 @@ const RESERVED: string[] = [
 ];
 
 // Well-known brands / trademarks reserved to prevent impersonation and squatting.
-// Grantable only to a verified owner (see PROTECTED_SLUG message -> "get in contact with us").
+// Grantable only to a verified owner (see WORKSPACE_SLUG_PROTECTED message -> "get in contact with us").
 const PROTECTED: string[] = [
   'adidas',
   'adobe',

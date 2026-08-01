@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 
-import { AUTH_ERRORS, errorResponse } from '@ordre/core/errors';
+import { BASE_ERRORS, errorResponse } from '@ordre/core/errors';
 import { can, type WorkspacePermission } from '@ordre/core/permissions';
 
 /**
@@ -27,7 +27,7 @@ export const requireWorkspacePermission =
       }
 
       if (!can(req.member.role, permission)) {
-        const { status, body } = errorResponse(AUTH_ERRORS, 'FORBIDDEN');
+        const { status, body } = errorResponse(BASE_ERRORS, 'FORBIDDEN');
 
         return res.status(status).json(body);
       }

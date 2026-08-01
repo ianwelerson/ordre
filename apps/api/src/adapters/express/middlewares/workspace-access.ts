@@ -4,8 +4,9 @@ import type { NextFunction, Request, Response } from 'express';
 import z from 'zod';
 
 import {
-  AUTH_ERRORS,
+  BASE_ERRORS,
   errorResponse,
+  MEMBER_ERRORS,
   VALIDATION_ERRORS,
   WORKSPACE_ERRORS,
 } from '@ordre/core/errors';
@@ -23,17 +24,17 @@ import * as schema from '@ordre/db/schemas';
  * augmentation in `src/types/express.d.ts`) with the member id, workspace id,
  * and role, so the downstream permission check can read the role.
  *
- * Returns `NOT_FOUND` both when the workspace can't be resolved and when the
- * caller isn't a member - the two are intentionally indistinguishable, so
- * membership can't be used to probe which workspaces exist. A suspended member
- * instead gets `MEMBER_ACCESS_SUSPENDED` (403): they already know the workspace
+ * Returns `WORKSPACE_NOT_FOUND` both when the workspace can't be resolved and
+ * when the caller isn't a member - the two are intentionally indistinguishable,
+ * so membership can't be used to probe which workspaces exist. A suspended member
+ * instead gets `MEMBER_SELF_SUSPENDED` (403): they already know the workspace
  * exists, so masking it as a 404 would only hide why they're locked out. Any
  * thrown error is forwarded to the central error handler.
  */
 export const requireWorkspaceAccess = async (req: Request, res: Response, next: NextFunction) => {
   try {
     if (!req.user) {
-      const { status, body } = errorResponse(AUTH_ERRORS, 'UNAUTHORIZED');
+      const { status, body } = errorResponse(BASE_ERRORS, 'UNAUTHORIZED');
 
       return res.status(status).json(body);
     }
@@ -64,7 +65,7 @@ export const requireWorkspaceAccess = async (req: Request, res: Response, next: 
     }
 
     if (!workspaceId) {
-      const { status, body } = errorResponse(WORKSPACE_ERRORS, 'NOT_FOUND');
+      const { status, body } = errorResponse(WORKSPACE_ERRORS, 'WORKSPACE_NOT_FOUND');
       return res.status(status).json(body);
     }
 
@@ -76,13 +77,13 @@ export const requireWorkspaceAccess = async (req: Request, res: Response, next: 
     });
 
     if (!member) {
-      const { status, body } = errorResponse(WORKSPACE_ERRORS, 'NOT_FOUND');
+      const { status, body } = errorResponse(WORKSPACE_ERRORS, 'WORKSPACE_NOT_FOUND');
 
       return res.status(status).json(body);
     }
 
     if (member.status !== 'active') {
-      const { status, body } = errorResponse(WORKSPACE_ERRORS, 'MEMBER_ACCESS_SUSPENDED');
+      const { status, body } = errorResponse(MEMBER_ERRORS, 'MEMBER_SELF_SUSPENDED');
 
       return res.status(status).json(body);
     }

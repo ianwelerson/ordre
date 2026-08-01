@@ -4,7 +4,7 @@ import { MEMBER_IDS, USER_IDS, userFixtures, WORKSPACE_IDS } from '#/test/fixtur
 import { parseBody } from '#/utils/testing.ts';
 import request from 'supertest';
 
-import { AUTH_ERRORS } from '@ordre/core/errors';
+import { BASE_ERRORS } from '@ordre/core/errors';
 import { ResponseErrorSchema, WorkspaceMemberSchema } from '@ordre/core/schemas';
 
 import {
@@ -92,12 +92,12 @@ describe('Workspace Member', () => {
 
     // The suspended member also lacks `member:manage`, so a status check placed
     // after the permission guard would answer FORBIDDEN here instead.
-    test('GET rejects a suspended member with MEMBER_ACCESS_SUSPENDED, not FORBIDDEN', async () => {
+    test('GET rejects a suspended member with MEMBER_SELF_SUSPENDED, not FORBIDDEN', async () => {
       mockUserSession({ id: USER_IDS.suspended });
 
       const response = await request(app).get(listUrl(WS)).send().expect(403);
 
-      expect(parseBody(ResponseErrorSchema, response.body).code).toBe('MEMBER_ACCESS_SUSPENDED');
+      expect(parseBody(ResponseErrorSchema, response.body).code).toBe('MEMBER_SELF_SUSPENDED');
     });
 
     test('GET forbids a member (lacks member:manage) with FORBIDDEN', async () => {
@@ -108,22 +108,22 @@ describe('Workspace Member', () => {
       expect(parseBody(ResponseErrorSchema, response.body).code).toBe('FORBIDDEN');
     });
 
-    test('GET hides the workspace from a non-member with NOT_FOUND', async () => {
+    test('GET hides the workspace from a non-member with WORKSPACE_NOT_FOUND', async () => {
       mockUserSession({ id: USER_IDS.outsider });
 
       const response = await request(app).get(listUrl(WS)).send().expect(404);
 
-      expect(parseBody(ResponseErrorSchema, response.body).code).toBe('NOT_FOUND');
+      expect(parseBody(ResponseErrorSchema, response.body).code).toBe('WORKSPACE_NOT_FOUND');
     });
 
     // Self-service, so it needs only workspace access - proving the rejection comes
     // from the membership guard and not from a missing `member:manage`.
-    test('GET /me rejects a suspended member with MEMBER_ACCESS_SUSPENDED', async () => {
+    test('GET /me rejects a suspended member with MEMBER_SELF_SUSPENDED', async () => {
       mockUserSession({ id: USER_IDS.suspended });
 
       const response = await request(app).get(selfUrl(WS)).send().expect(403);
 
-      expect(parseBody(ResponseErrorSchema, response.body).code).toBe('MEMBER_ACCESS_SUSPENDED');
+      expect(parseBody(ResponseErrorSchema, response.body).code).toBe('MEMBER_SELF_SUSPENDED');
     });
 
     test('GET rejects an unauthenticated request with UNAUTHORIZED', async () => {
@@ -132,7 +132,7 @@ describe('Workspace Member', () => {
       const error = parseBody(ResponseErrorSchema, response.body);
 
       expect(error.code).toBe('UNAUTHORIZED');
-      expect(error.message).toBe(AUTH_ERRORS.UNAUTHORIZED.message);
+      expect(error.message).toBe(BASE_ERRORS.UNAUTHORIZED.message);
     });
   });
 
@@ -246,7 +246,7 @@ describe('Workspace Member', () => {
     test('DELETE /:memberId refuses self-removal with MEMBER_SELF_REMOVE', async () => {
       mockUserSession({ id: USER_IDS.owner });
 
-      const response = await request(app).delete(itemUrl(WS, MEMBER_IDS.owner)).send().expect(409);
+      const response = await request(app).delete(itemUrl(WS, MEMBER_IDS.owner)).send().expect(403);
 
       expect(parseBody(ResponseErrorSchema, response.body).code).toBe('MEMBER_SELF_REMOVE');
     });
@@ -254,7 +254,7 @@ describe('Workspace Member', () => {
     test('DELETE /:memberId forbids an admin removing an owner with MEMBER_REMOVE_FORBIDDEN', async () => {
       mockUserSession({ id: USER_IDS.admin });
 
-      const response = await request(app).delete(itemUrl(WS, MEMBER_IDS.owner)).send().expect(409);
+      const response = await request(app).delete(itemUrl(WS, MEMBER_IDS.owner)).send().expect(403);
 
       expect(parseBody(ResponseErrorSchema, response.body).code).toBe('MEMBER_REMOVE_FORBIDDEN');
     });
@@ -286,7 +286,7 @@ describe('Workspace Member', () => {
       const response = await request(app)
         .post(roleUrl(WS, MEMBER_IDS.owner))
         .send({ role: 'admin' })
-        .expect(409);
+        .expect(403);
 
       expect(parseBody(ResponseErrorSchema, response.body).code).toBe('MEMBER_SELF_ROLE_UPDATE');
     });
@@ -297,7 +297,7 @@ describe('Workspace Member', () => {
       const response = await request(app)
         .post(roleUrl(WS, MEMBER_IDS.member))
         .send({ role: 'owner' })
-        .expect(409);
+        .expect(403);
 
       expect(parseBody(ResponseErrorSchema, response.body).code).toBe(
         'MEMBER_OWNER_ROLE_FORBIDDEN'

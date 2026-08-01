@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 
-import { AUTH_ERRORS, errorResponse } from '@ordre/core/errors';
+import { BASE_ERRORS, errorResponse } from '@ordre/core/errors';
 
 import { requireWorkspacePermission } from './workspace-permission.ts';
 
@@ -40,7 +40,7 @@ describe('middleware/requireWorkspacePermission', () => {
 
     requireWorkspacePermission('workspace:delete')(req, res, next);
 
-    const { status: expectedStatus, body } = errorResponse(AUTH_ERRORS, 'FORBIDDEN');
+    const { status: expectedStatus, body } = errorResponse(BASE_ERRORS, 'FORBIDDEN');
     expect(status).toHaveBeenCalledWith(expectedStatus);
     expect(json).toHaveBeenCalledWith(body);
     expect(next).not.toHaveBeenCalled();

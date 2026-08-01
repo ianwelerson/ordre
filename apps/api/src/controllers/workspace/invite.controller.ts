@@ -8,7 +8,13 @@ import { randomBytes } from 'node:crypto';
 import { z } from 'zod';
 
 import { INVITE_TTL_MS } from '@ordre/core/constants';
-import { AUTH_ERRORS, BASE_ERRORS, errorResponse, WORKSPACE_ERRORS } from '@ordre/core/errors';
+import {
+  BASE_ERRORS,
+  errorResponse,
+  INVITE_ERRORS,
+  LOCATION_ERRORS,
+  MEMBER_ERRORS,
+} from '@ordre/core/errors';
 import { WorkspaceInviteCreateSchema } from '@ordre/core/schemas';
 import type {
   NoContentResponse,
@@ -69,12 +75,12 @@ export const workspaceInviteCreate = async (
       parsedPayload.data.email
     );
     if (hasActiveMember) {
-      return errorResponse(WORKSPACE_ERRORS, 'MEMBER_ALREADY_EXISTS');
+      return errorResponse(MEMBER_ERRORS, 'MEMBER_ALREADY_EXISTS');
     }
 
     const hasPending = await hasPendingInvite(member.workspaceId, parsedPayload.data.email);
     if (hasPending) {
-      return errorResponse(WORKSPACE_ERRORS, 'INVITE_ALREADY_PENDING');
+      return errorResponse(INVITE_ERRORS, 'INVITE_ALREADY_PENDING');
     }
 
     // Check if the Location received exists in the workspace
@@ -82,7 +88,7 @@ export const workspaceInviteCreate = async (
       parsedPayload.data.locationId &&
       !(await locationInWorkspace(member.workspaceId, parsedPayload.data.locationId))
     ) {
-      return errorResponse(WORKSPACE_ERRORS, 'LOCATION_NOT_FOUND');
+      return errorResponse(LOCATION_ERRORS, 'LOCATION_NOT_FOUND');
     }
 
     const now = new Date();
@@ -103,7 +109,7 @@ export const workspaceInviteCreate = async (
       .returning();
 
     if (!invite) {
-      return errorResponse(WORKSPACE_ERRORS, 'INVITE_CREATING_ERROR');
+      return errorResponse(INVITE_ERRORS, 'INVITE_CREATE_FAILED');
     }
 
     return { status: 201, body: toInviteResponse(invite) };
@@ -111,12 +117,12 @@ export const workspaceInviteCreate = async (
     // A concurrent invite can slip past the pending-invite pre-check; the partial
     // unique index is the real guard, so map its violation to the same 409.
     if (isUniqueViolation(error, 'workspace_invite_workspace_email_pending_unique')) {
-      return errorResponse(WORKSPACE_ERRORS, 'INVITE_ALREADY_PENDING');
+      return errorResponse(INVITE_ERRORS, 'INVITE_ALREADY_PENDING');
     }
 
     logger.error(error);
 
-    return errorResponse(BASE_ERRORS, 'SOMETHING_WRONG');
+    return errorResponse(BASE_ERRORS, 'INTERNAL_ERROR');
   }
 };
 
@@ -166,14 +172,14 @@ export const workspaceInviteDelete = async (
       .returning();
 
     if (!revoked) {
-      return errorResponse(WORKSPACE_ERRORS, 'INVITE_NOT_FOUND');
+      return errorResponse(INVITE_ERRORS, 'INVITE_NOT_FOUND');
     }
 
     return { status: 204, body: null };
   } catch (error) {
     logger.error(error);
 
-    return errorResponse(BASE_ERRORS, 'SOMETHING_WRONG');
+    return errorResponse(BASE_ERRORS, 'INTERNAL_ERROR');
   }
 };
 
@@ -203,7 +209,7 @@ export const workspaceInviteGetById = async (
     const invite = await findInvite(member.workspaceId, parsedInviteId.data);
 
     if (!invite) {
-      return errorResponse(WORKSPACE_ERRORS, 'INVITE_NOT_FOUND');
+      return errorResponse(INVITE_ERRORS, 'INVITE_NOT_FOUND');
     }
 
     return {
@@ -213,7 +219,7 @@ export const workspaceInviteGetById = async (
   } catch (error) {
     logger.error(error);
 
-    return errorResponse(BASE_ERRORS, 'SOMETHING_WRONG');
+    return errorResponse(BASE_ERRORS, 'INTERNAL_ERROR');
   }
 };
 
@@ -239,7 +245,7 @@ export const workspaceInviteGetAll = async (
   } catch (error) {
     logger.error(error);
 
-    return errorResponse(BASE_ERRORS, 'SOMETHING_WRONG');
+    return errorResponse(BASE_ERRORS, 'INTERNAL_ERROR');
   }
 };
 
@@ -274,7 +280,7 @@ export const workspaceInvitePreviewByToken = async (
     const invite = result.rows[0];
 
     if (!invite) {
-      return errorResponse(WORKSPACE_ERRORS, 'INVITE_NOT_FOUND');
+      return errorResponse(INVITE_ERRORS, 'INVITE_NOT_FOUND');
     }
 
     return {
@@ -284,7 +290,7 @@ export const workspaceInvitePreviewByToken = async (
   } catch (error) {
     logger.error(error);
 
-    return errorResponse(BASE_ERRORS, 'SOMETHING_WRONG');
+    return errorResponse(BASE_ERRORS, 'INTERNAL_ERROR');
   }
 };
 
@@ -323,11 +329,11 @@ export const workspaceInviteAccept = async (token: unknown): Promise<NoContentRe
     const status = result.rows[0]?.app_invite_accept;
 
     if (status === 'INVITE_EMAIL_MISMATCH') {
-      return errorResponse(WORKSPACE_ERRORS, 'INVITE_EMAIL_MISMATCH');
+      return errorResponse(INVITE_ERRORS, 'INVITE_EMAIL_MISMATCH');
     }
 
     if (status === 'UNAUTHORIZED') {
-      return errorResponse(AUTH_ERRORS, 'UNAUTHORIZED');
+      return errorResponse(BASE_ERRORS, 'UNAUTHORIZED');
     }
 
     // Idempotent: re-accepting an already-joined invite is a success.
@@ -335,10 +341,10 @@ export const workspaceInviteAccept = async (token: unknown): Promise<NoContentRe
       return { status: 204, body: null };
     }
 
-    return errorResponse(WORKSPACE_ERRORS, 'INVITE_NOT_FOUND');
+    return errorResponse(INVITE_ERRORS, 'INVITE_NOT_FOUND');
   } catch (error) {
     logger.error(error);
-    return errorResponse(BASE_ERRORS, 'SOMETHING_WRONG');
+    return errorResponse(BASE_ERRORS, 'INTERNAL_ERROR');
   }
 };
 
@@ -367,13 +373,13 @@ export const workspaceInviteDecline = async (token: unknown): Promise<NoContentR
     );
 
     if (!result.rows[0]?.app_invite_decline) {
-      return errorResponse(WORKSPACE_ERRORS, 'INVITE_NOT_FOUND');
+      return errorResponse(INVITE_ERRORS, 'INVITE_NOT_FOUND');
     }
 
     return { status: 204, body: null };
   } catch (error) {
     logger.error(error);
 
-    return errorResponse(BASE_ERRORS, 'SOMETHING_WRONG');
+    return errorResponse(BASE_ERRORS, 'INTERNAL_ERROR');
   }
 };

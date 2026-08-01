@@ -117,7 +117,7 @@ describe('controllers/workspace/location', () => {
       expect(result.body).toMatchObject([{ isDefault: true }, { id: LOCATION_ID }]);
     });
 
-    it('returns SOMETHING_WRONG on an unexpected error', async () => {
+    it('returns INTERNAL_ERROR on an unexpected error', async () => {
       mockDb.query.workspaceLocation.findMany.mockRejectedValueOnce(new Error('db down'));
 
       const result = await workspaceLocationGetAll(member);
@@ -163,12 +163,12 @@ describe('controllers/workspace/location', () => {
       expect(result.body).toMatchObject({ name: 'Second' });
     });
 
-    it('returns LOCATION_CREATING_ERROR when the insert returns no row', async () => {
+    it('returns LOCATION_CREATE_FAILED when the insert returns no row', async () => {
       mockInsert([]);
 
       const result = await workspaceLocationCreate(member, payload);
 
-      expect(result.body).toMatchObject({ code: 'LOCATION_CREATING_ERROR' });
+      expect(result.body).toMatchObject({ code: 'LOCATION_CREATE_FAILED' });
     });
   });
 
@@ -252,7 +252,7 @@ describe('controllers/workspace/location', () => {
       expect(result.status).toBe(404);
     });
 
-    it('returns SOMETHING_WRONG on an unexpected error', async () => {
+    it('returns INTERNAL_ERROR on an unexpected error', async () => {
       mockDb.transaction.mockRejectedValueOnce(new Error('db down'));
 
       const result = await workspaceLocationSetDefault(member, LOCATION_ID);
@@ -278,7 +278,7 @@ describe('controllers/workspace/location', () => {
       const result = await workspaceLocationDelete(member, LOCATION_ID);
 
       expect(result.status).toBe(409);
-      expect(result.body).toMatchObject({ code: 'CANNOT_DELETE_DEFAULT_LOCATION' });
+      expect(result.body).toMatchObject({ code: 'LOCATION_IS_DEFAULT' });
     });
 
     it('deletes a non-default location and returns 204', async () => {
@@ -360,17 +360,17 @@ describe('controllers/workspace/location', () => {
       expect(result.body).toBeNull();
     });
 
-    it('returns LOCATION_MEMBER_ASSIGN when the insert returns no row', async () => {
+    it('returns LOCATION_MEMBER_ASSIGN_FAILED when the insert returns no row', async () => {
       mockDb.query.workspaceLocation.findFirst.mockResolvedValueOnce(locationRow());
       mockDb.query.workspaceMember.findFirst.mockResolvedValueOnce(memberRow());
       mockInsert([]);
 
       const result = await workspaceLocationMemberAssign(member, LOCATION_ID, MEMBER_ID);
 
-      expect(result.body).toMatchObject({ code: 'LOCATION_MEMBER_ASSIGN' });
+      expect(result.body).toMatchObject({ code: 'LOCATION_MEMBER_ASSIGN_FAILED' });
     });
 
-    it('returns SOMETHING_WRONG on an unexpected error', async () => {
+    it('returns INTERNAL_ERROR on an unexpected error', async () => {
       mockDb.query.workspaceLocation.findFirst.mockRejectedValueOnce(new Error('db down'));
 
       const result = await workspaceLocationMemberAssign(member, LOCATION_ID, MEMBER_ID);
@@ -430,7 +430,7 @@ describe('controllers/workspace/location', () => {
       expect(result.body).toBeNull();
     });
 
-    it('returns SOMETHING_WRONG on an unexpected error', async () => {
+    it('returns INTERNAL_ERROR on an unexpected error', async () => {
       mockDb.delete.mockImplementationOnce(() => {
         throw new Error('db down');
       });

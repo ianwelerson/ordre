@@ -5,7 +5,7 @@ import { parseBody } from '#/utils/testing.ts';
 import request from 'supertest';
 import { z } from 'zod';
 
-import { AUTH_ERRORS, VALIDATION_ERRORS, WORKSPACE_ERRORS } from '@ordre/core/errors';
+import { BASE_ERRORS, VALIDATION_ERRORS, WORKSPACE_ERRORS } from '@ordre/core/errors';
 import {
   ResponseErrorSchema,
   WorkspaceSchema,
@@ -59,7 +59,7 @@ const mockUserSession = (user?: Record<string, string>) => {
  * | PATCH /:id(workspace:update)|  200  |  200  |  403   |    404     |  401   |
  *
  * A non-member (`outsider`) is authenticated but has no membership row, so
- * `requireWorkspaceAccess` returns NOT_FOUND to avoid leaking existence.
+ * `requireWorkspaceAccess` returns WORKSPACE_NOT_FOUND to avoid leaking existence.
  */
 describe('Workspace', () => {
   beforeEach(() => {
@@ -114,7 +114,7 @@ describe('Workspace', () => {
       const error = parseBody(ResponseErrorSchema, response.body);
 
       expect(error.code).toBe('UNAUTHORIZED');
-      expect(error.message).toBe(AUTH_ERRORS.UNAUTHORIZED.message);
+      expect(error.message).toBe(BASE_ERRORS.UNAUTHORIZED.message);
     });
 
     // --- POST /workspace (create) ---
@@ -181,7 +181,7 @@ describe('Workspace', () => {
       const error = parseBody(ResponseErrorSchema, response.body);
 
       expect(error.code).toBe('UNAUTHORIZED');
-      expect(error.message).toBe(AUTH_ERRORS.UNAUTHORIZED.message);
+      expect(error.message).toBe(BASE_ERRORS.UNAUTHORIZED.message);
     });
 
     // Behavior & validation
@@ -278,7 +278,7 @@ describe('Workspace', () => {
       });
     });
 
-    test('POST rejects an already-taken slug with SLUG_ALREADY_EXISTS', async () => {
+    test('POST rejects an already-taken slug with WORKSPACE_SLUG_ALREADY_EXISTS', async () => {
       mockUserSession();
 
       const response = await request(app)
@@ -294,11 +294,11 @@ describe('Workspace', () => {
 
       const error = parseBody(ResponseErrorSchema, response.body);
 
-      expect(error.code).toBe('SLUG_ALREADY_EXISTS');
-      expect(error.message).toBe(WORKSPACE_ERRORS.SLUG_ALREADY_EXISTS.message);
+      expect(error.code).toBe('WORKSPACE_SLUG_ALREADY_EXISTS');
+      expect(error.message).toBe(WORKSPACE_ERRORS.WORKSPACE_SLUG_ALREADY_EXISTS.message);
     });
 
-    test('POST rejects a protected slug with PROTECTED_SLUG', async () => {
+    test('POST rejects a protected slug with WORKSPACE_SLUG_PROTECTED', async () => {
       mockUserSession();
 
       const response = await request(app)
@@ -314,11 +314,11 @@ describe('Workspace', () => {
 
       const error = parseBody(ResponseErrorSchema, response.body);
 
-      expect(error.code).toBe('PROTECTED_SLUG');
-      expect(error.message).toBe(WORKSPACE_ERRORS.PROTECTED_SLUG.message);
+      expect(error.code).toBe('WORKSPACE_SLUG_PROTECTED');
+      expect(error.message).toBe(WORKSPACE_ERRORS.WORKSPACE_SLUG_PROTECTED.message);
     });
 
-    test('POST rejects a reserved slug with RESERVED_SLUG', async () => {
+    test('POST rejects a reserved slug with WORKSPACE_SLUG_RESERVED', async () => {
       mockUserSession();
 
       const response = await request(app)
@@ -334,11 +334,11 @@ describe('Workspace', () => {
 
       const error = parseBody(ResponseErrorSchema, response.body);
 
-      expect(error.code).toBe('RESERVED_SLUG');
-      expect(error.message).toBe(WORKSPACE_ERRORS.RESERVED_SLUG.message);
+      expect(error.code).toBe('WORKSPACE_SLUG_RESERVED');
+      expect(error.message).toBe(WORKSPACE_ERRORS.WORKSPACE_SLUG_RESERVED.message);
     });
 
-    test('POST rejects a banned slug with BANNED_SLUG', async () => {
+    test('POST rejects a banned slug with WORKSPACE_SLUG_BANNED', async () => {
       mockUserSession();
 
       const response = await request(app)
@@ -354,8 +354,8 @@ describe('Workspace', () => {
 
       const error = parseBody(ResponseErrorSchema, response.body);
 
-      expect(error.code).toBe('BANNED_SLUG');
-      expect(error.message).toBe(WORKSPACE_ERRORS.BANNED_SLUG.message);
+      expect(error.code).toBe('WORKSPACE_SLUG_BANNED');
+      expect(error.message).toBe(WORKSPACE_ERRORS.WORKSPACE_SLUG_BANNED.message);
     });
 
     // --- DELETE /workspace/:id ---
@@ -387,7 +387,7 @@ describe('Workspace', () => {
       const error = parseBody(ResponseErrorSchema, response.body);
 
       expect(error.code).toBe('FORBIDDEN');
-      expect(error.message).toBe(AUTH_ERRORS.FORBIDDEN.message);
+      expect(error.message).toBe(BASE_ERRORS.FORBIDDEN.message);
     });
 
     test('DELETE forbids a member (lacks workspace:delete) with FORBIDDEN', async () => {
@@ -403,10 +403,10 @@ describe('Workspace', () => {
       const error = parseBody(ResponseErrorSchema, response.body);
 
       expect(error.code).toBe('FORBIDDEN');
-      expect(error.message).toBe(AUTH_ERRORS.FORBIDDEN.message);
+      expect(error.message).toBe(BASE_ERRORS.FORBIDDEN.message);
     });
 
-    test('DELETE hides the workspace from a non-member with NOT_FOUND', async () => {
+    test('DELETE hides the workspace from a non-member with WORKSPACE_NOT_FOUND', async () => {
       mockUserSession({
         id: USER_IDS.outsider,
       });
@@ -418,8 +418,8 @@ describe('Workspace', () => {
 
       const error = parseBody(ResponseErrorSchema, response.body);
 
-      expect(error.code).toBe('NOT_FOUND');
-      expect(error.message).toBe(WORKSPACE_ERRORS.NOT_FOUND.message);
+      expect(error.code).toBe('WORKSPACE_NOT_FOUND');
+      expect(error.message).toBe(WORKSPACE_ERRORS.WORKSPACE_NOT_FOUND.message);
     });
 
     test('DELETE rejects an unauthenticated request with UNAUTHORIZED', async () => {
@@ -431,11 +431,11 @@ describe('Workspace', () => {
       const error = parseBody(ResponseErrorSchema, response.body);
 
       expect(error.code).toBe('UNAUTHORIZED');
-      expect(error.message).toBe(AUTH_ERRORS.UNAUTHORIZED.message);
+      expect(error.message).toBe(BASE_ERRORS.UNAUTHORIZED.message);
     });
 
     // Behavior & validation
-    test('DELETE returns NOT_FOUND for an unknown workspace', async () => {
+    test('DELETE returns WORKSPACE_NOT_FOUND for an unknown workspace', async () => {
       mockUserSession({
         id: USER_IDS.owner,
       });
@@ -447,7 +447,7 @@ describe('Workspace', () => {
 
       const error = parseBody(ResponseErrorSchema, response.body);
 
-      expect(error.code).toBe('NOT_FOUND');
+      expect(error.code).toBe('WORKSPACE_NOT_FOUND');
       expect(error.message).toBe("We couldn't find the workspace you're looking for");
     });
 
@@ -522,10 +522,10 @@ describe('Workspace', () => {
       const error = parseBody(ResponseErrorSchema, response.body);
 
       expect(error.code).toBe('FORBIDDEN');
-      expect(error.message).toBe(AUTH_ERRORS.FORBIDDEN.message);
+      expect(error.message).toBe(BASE_ERRORS.FORBIDDEN.message);
     });
 
-    test('PATCH hides the workspace from a non-member with NOT_FOUND', async () => {
+    test('PATCH hides the workspace from a non-member with WORKSPACE_NOT_FOUND', async () => {
       mockUserSession({
         id: USER_IDS.outsider,
       });
@@ -539,8 +539,8 @@ describe('Workspace', () => {
 
       const error = parseBody(ResponseErrorSchema, response.body);
 
-      expect(error.code).toBe('NOT_FOUND');
-      expect(error.message).toBe(WORKSPACE_ERRORS.NOT_FOUND.message);
+      expect(error.code).toBe('WORKSPACE_NOT_FOUND');
+      expect(error.message).toBe(WORKSPACE_ERRORS.WORKSPACE_NOT_FOUND.message);
     });
 
     test('PATCH rejects an unauthenticated request with UNAUTHORIZED', async () => {
@@ -554,7 +554,7 @@ describe('Workspace', () => {
       const error = parseBody(ResponseErrorSchema, response.body);
 
       expect(error.code).toBe('UNAUTHORIZED');
-      expect(error.message).toBe(AUTH_ERRORS.UNAUTHORIZED.message);
+      expect(error.message).toBe(BASE_ERRORS.UNAUTHORIZED.message);
     });
 
     // Behavior & validation
@@ -598,7 +598,7 @@ describe('Workspace', () => {
       });
     });
 
-    test('PATCH rejects an already-taken slug with SLUG_ALREADY_EXISTS', async () => {
+    test('PATCH rejects an already-taken slug with WORKSPACE_SLUG_ALREADY_EXISTS', async () => {
       mockUserSession({
         id: USER_IDS.owner,
       });
@@ -612,11 +612,11 @@ describe('Workspace', () => {
 
       const error = parseBody(ResponseErrorSchema, response.body);
 
-      expect(error.code).toBe('SLUG_ALREADY_EXISTS');
-      expect(error.message).toBe(WORKSPACE_ERRORS.SLUG_ALREADY_EXISTS.message);
+      expect(error.code).toBe('WORKSPACE_SLUG_ALREADY_EXISTS');
+      expect(error.message).toBe(WORKSPACE_ERRORS.WORKSPACE_SLUG_ALREADY_EXISTS.message);
     });
 
-    test('PATCH rejects a protected slug with PROTECTED_SLUG', async () => {
+    test('PATCH rejects a protected slug with WORKSPACE_SLUG_PROTECTED', async () => {
       mockUserSession({
         id: USER_IDS.owner,
       });
@@ -630,11 +630,11 @@ describe('Workspace', () => {
 
       const error = parseBody(ResponseErrorSchema, response.body);
 
-      expect(error.code).toBe('PROTECTED_SLUG');
-      expect(error.message).toBe(WORKSPACE_ERRORS.PROTECTED_SLUG.message);
+      expect(error.code).toBe('WORKSPACE_SLUG_PROTECTED');
+      expect(error.message).toBe(WORKSPACE_ERRORS.WORKSPACE_SLUG_PROTECTED.message);
     });
 
-    test('PATCH rejects a reserved slug with RESERVED_SLUG', async () => {
+    test('PATCH rejects a reserved slug with WORKSPACE_SLUG_RESERVED', async () => {
       mockUserSession({
         id: USER_IDS.owner,
       });
@@ -648,11 +648,11 @@ describe('Workspace', () => {
 
       const error = parseBody(ResponseErrorSchema, response.body);
 
-      expect(error.code).toBe('RESERVED_SLUG');
-      expect(error.message).toBe(WORKSPACE_ERRORS.RESERVED_SLUG.message);
+      expect(error.code).toBe('WORKSPACE_SLUG_RESERVED');
+      expect(error.message).toBe(WORKSPACE_ERRORS.WORKSPACE_SLUG_RESERVED.message);
     });
 
-    test('PATCH rejects a banned slug with BANNED_SLUG', async () => {
+    test('PATCH rejects a banned slug with WORKSPACE_SLUG_BANNED', async () => {
       mockUserSession({
         id: USER_IDS.owner,
       });
@@ -666,8 +666,8 @@ describe('Workspace', () => {
 
       const error = parseBody(ResponseErrorSchema, response.body);
 
-      expect(error.code).toBe('BANNED_SLUG');
-      expect(error.message).toBe(WORKSPACE_ERRORS.BANNED_SLUG.message);
+      expect(error.code).toBe('WORKSPACE_SLUG_BANNED');
+      expect(error.message).toBe(WORKSPACE_ERRORS.WORKSPACE_SLUG_BANNED.message);
     });
 
     test('PATCH accepts the workspace keeping its own slug', async () => {
@@ -703,7 +703,7 @@ describe('Workspace', () => {
       expect(workspace.slug).toBe(workspaceFixtures[0]?.slug);
     });
 
-    test('PATCH returns NOT_FOUND for an unknown workspace', async () => {
+    test('PATCH returns WORKSPACE_NOT_FOUND for an unknown workspace', async () => {
       mockUserSession({
         id: USER_IDS.owner,
       });
@@ -717,8 +717,8 @@ describe('Workspace', () => {
 
       const error = parseBody(ResponseErrorSchema, response.body);
 
-      expect(error.code).toBe('NOT_FOUND');
-      expect(error.message).toBe(WORKSPACE_ERRORS.NOT_FOUND.message);
+      expect(error.code).toBe('WORKSPACE_NOT_FOUND');
+      expect(error.message).toBe(WORKSPACE_ERRORS.WORKSPACE_NOT_FOUND.message);
     });
 
     test('PATCH rejects a malformed id with INVALID_INPUT', async () => {
@@ -785,7 +785,7 @@ describe('Workspace', () => {
 
     // The suspended member holds the `member` role, so `workspace:read` would let
     // them through - only the membership status stops them.
-    test('GET rejects a suspended member with MEMBER_ACCESS_SUSPENDED', async () => {
+    test('GET rejects a suspended member with MEMBER_SELF_SUSPENDED', async () => {
       mockUserSession({
         id: USER_IDS.suspended,
       });
@@ -795,10 +795,10 @@ describe('Workspace', () => {
         .send()
         .expect(403);
 
-      expect(parseBody(ResponseErrorSchema, response.body).code).toBe('MEMBER_ACCESS_SUSPENDED');
+      expect(parseBody(ResponseErrorSchema, response.body).code).toBe('MEMBER_SELF_SUSPENDED');
     });
 
-    test('GET hides the workspace from a non-member with NOT_FOUND', async () => {
+    test('GET hides the workspace from a non-member with WORKSPACE_NOT_FOUND', async () => {
       mockUserSession({
         id: USER_IDS.outsider,
       });
@@ -810,8 +810,8 @@ describe('Workspace', () => {
 
       const error = parseBody(ResponseErrorSchema, response.body);
 
-      expect(error.code).toBe('NOT_FOUND');
-      expect(error.message).toBe(WORKSPACE_ERRORS.NOT_FOUND.message);
+      expect(error.code).toBe('WORKSPACE_NOT_FOUND');
+      expect(error.message).toBe(WORKSPACE_ERRORS.WORKSPACE_NOT_FOUND.message);
     });
 
     test('GET rejects an unauthenticated request with UNAUTHORIZED', async () => {
@@ -823,7 +823,7 @@ describe('Workspace', () => {
       const error = parseBody(ResponseErrorSchema, response.body);
 
       expect(error.code).toBe('UNAUTHORIZED');
-      expect(error.message).toBe(AUTH_ERRORS.UNAUTHORIZED.message);
+      expect(error.message).toBe(BASE_ERRORS.UNAUTHORIZED.message);
     });
 
     // Behavior & validation
@@ -875,7 +875,7 @@ describe('Workspace', () => {
       expect(workspace.subscription).toBeUndefined();
     });
 
-    test('GET returns NOT_FOUND for an unknown id', async () => {
+    test('GET returns WORKSPACE_NOT_FOUND for an unknown id', async () => {
       mockUserSession({
         id: USER_IDS.owner,
       });
@@ -887,8 +887,8 @@ describe('Workspace', () => {
 
       const error = parseBody(ResponseErrorSchema, response.body);
 
-      expect(error.code).toBe('NOT_FOUND');
-      expect(error.message).toBe(WORKSPACE_ERRORS.NOT_FOUND.message);
+      expect(error.code).toBe('WORKSPACE_NOT_FOUND');
+      expect(error.message).toBe(WORKSPACE_ERRORS.WORKSPACE_NOT_FOUND.message);
     });
 
     test('GET rejects a malformed id with INVALID_INPUT', async () => {
@@ -951,7 +951,7 @@ describe('Workspace', () => {
       parseBody(WorkspaceSchema, response.body);
     });
 
-    test('GET hides the workspace from a non-member with NOT_FOUND', async () => {
+    test('GET hides the workspace from a non-member with WORKSPACE_NOT_FOUND', async () => {
       mockUserSession({
         id: USER_IDS.outsider,
       });
@@ -963,8 +963,8 @@ describe('Workspace', () => {
 
       const error = parseBody(ResponseErrorSchema, response.body);
 
-      expect(error.code).toBe('NOT_FOUND');
-      expect(error.message).toBe(WORKSPACE_ERRORS.NOT_FOUND.message);
+      expect(error.code).toBe('WORKSPACE_NOT_FOUND');
+      expect(error.message).toBe(WORKSPACE_ERRORS.WORKSPACE_NOT_FOUND.message);
     });
 
     test('GET rejects an unauthenticated request with UNAUTHORIZED', async () => {
@@ -976,7 +976,7 @@ describe('Workspace', () => {
       const error = parseBody(ResponseErrorSchema, response.body);
 
       expect(error.code).toBe('UNAUTHORIZED');
-      expect(error.message).toBe(AUTH_ERRORS.UNAUTHORIZED.message);
+      expect(error.message).toBe(BASE_ERRORS.UNAUTHORIZED.message);
     });
 
     // Behavior & validation
@@ -997,7 +997,7 @@ describe('Workspace', () => {
       expect(workspace.billingEmail).toBeNull();
     });
 
-    test('GET returns NOT_FOUND for an unknown slug', async () => {
+    test('GET returns WORKSPACE_NOT_FOUND for an unknown slug', async () => {
       mockUserSession({
         id: USER_IDS.owner,
       });
@@ -1009,8 +1009,8 @@ describe('Workspace', () => {
 
       const error = parseBody(ResponseErrorSchema, response.body);
 
-      expect(error.code).toBe('NOT_FOUND');
-      expect(error.message).toBe(WORKSPACE_ERRORS.NOT_FOUND.message);
+      expect(error.code).toBe('WORKSPACE_NOT_FOUND');
+      expect(error.message).toBe(WORKSPACE_ERRORS.WORKSPACE_NOT_FOUND.message);
     });
   });
 

@@ -5,16 +5,17 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { APIError, createAuthMiddleware, isAPIError } from 'better-auth/api';
 import { openAPI } from 'better-auth/plugins';
 
-import { AUTH_ERRORS, VALIDATION_ERRORS } from '@ordre/core/errors';
+import { AUTH_ERRORS, BASE_ERRORS, VALIDATION_ERRORS } from '@ordre/core/errors';
 import type { ErrorMap } from '@ordre/core/types';
 import * as schema from '@ordre/db/schemas';
 
 /**
  * Our error catalog keyed by Better Auth's error `code`. The `after` hook below
  * uses it to replace Better Auth's status/message with our own version while
- * keeping the `code` so the client can still map it.
+ * keeping the `code` so the client can still map it. `BASE_ERRORS` is included
+ * for the access codes (`UNAUTHORIZED`, `FORBIDDEN`) Better Auth can also throw.
  */
-const ERROR_CATALOG: ErrorMap = { ...AUTH_ERRORS, ...VALIDATION_ERRORS };
+const ERROR_CATALOG: ErrorMap = { ...BASE_ERRORS, ...AUTH_ERRORS, ...VALIDATION_ERRORS };
 
 /**
  * Remaps a Better Auth API error onto our own catalog definition, keeping the

@@ -151,17 +151,17 @@ describe('controllers/workspace/workspace.utils', () => {
 
       const result = await checkSlugAvailability('admin');
 
-      expect(result?.body).toMatchObject({ code: 'RESERVED_SLUG' });
+      expect(result?.body).toMatchObject({ code: 'WORKSPACE_SLUG_RESERVED' });
       expect(mockDb.query.workspace.findFirst).not.toHaveBeenCalled();
     });
 
-    it('returns SLUG_ALREADY_EXISTS when another workspace owns the slug', async () => {
+    it('returns WORKSPACE_SLUG_ALREADY_EXISTS when another workspace owns the slug', async () => {
       getSlugRestriction.mockReturnValueOnce(null);
       mockDb.query.workspace.findFirst.mockResolvedValueOnce({ id: 'other-workspace' });
 
       const result = await checkSlugAvailability('taken-slug');
 
-      expect(result?.body).toMatchObject({ code: 'SLUG_ALREADY_EXISTS' });
+      expect(result?.body).toMatchObject({ code: 'WORKSPACE_SLUG_ALREADY_EXISTS' });
     });
 
     it('returns null when the slug is free', async () => {
@@ -189,12 +189,12 @@ describe('controllers/workspace/workspace.utils', () => {
       expect(result.body).toMatchObject({ id: WORKSPACE_ID });
     });
 
-    it('returns NOT_FOUND when no workspace matches', async () => {
+    it('returns WORKSPACE_NOT_FOUND when no workspace matches', async () => {
       mockDb.query.workspace.findFirst.mockResolvedValueOnce(undefined);
 
       const result = await respondWithWorkspace('owner', {} as never);
 
-      expect(result.body).toMatchObject({ code: 'NOT_FOUND' });
+      expect(result.body).toMatchObject({ code: 'WORKSPACE_NOT_FOUND' });
     });
   });
 
