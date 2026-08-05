@@ -1,5 +1,6 @@
 import { db } from '#/config/db.ts';
 import { parseBetterAuthValidationDetails } from '#/utils/validation.ts';
+import { env } from '#env';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { APIError, createAuthMiddleware, isAPIError } from 'better-auth/api';
@@ -67,6 +68,7 @@ export const auth = betterAuth({
     provider: 'pg',
     schema,
   }),
+  secret: env.BETTER_AUTH_SECRET,
   baseURL: {
     allowedHosts: [
       // Prod URLs

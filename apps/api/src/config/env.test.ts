@@ -1,5 +1,7 @@
 import { envSchema } from './env.ts';
 
+const TEST_AUTH_SECRET = 'a'.repeat(32);
+
 describe('config/env', () => {
   describe('envSchema', () => {
     const validEnv = {
@@ -8,6 +10,7 @@ describe('config/env', () => {
       PORT: '8080',
       DATABASE_URL: 'postgresql://user:pass@localhost:5432/db',
       DATABASE_OWNER_URL: 'postgresql://owner:pass@localhost:5432/db',
+      BETTER_AUTH_SECRET: TEST_AUTH_SECRET,
     };
 
     it('should parse a valid environment and coerce PORT to a number', () => {
@@ -26,6 +29,7 @@ describe('config/env', () => {
       const result = envSchema.safeParse({
         DATABASE_URL: 'postgresql://localhost/db',
         DATABASE_OWNER_URL: 'postgresql://localhost/db',
+        BETTER_AUTH_SECRET: TEST_AUTH_SECRET,
       });
 
       expect(result.success).toBe(true);
@@ -93,6 +97,22 @@ describe('config/env', () => {
       expect(result.success).toBe(false);
     });
 
+    it('should fail when BETTER_AUTH_SECRET is missing', () => {
+      const { BETTER_AUTH_SECRET: _omitted, ...withoutSecret } = validEnv;
+      const result = envSchema.safeParse(withoutSecret);
+
+      expect(result.success).toBe(false);
+    });
+
+    it('should fail when BETTER_AUTH_SECRET is shorter than 32 characters', () => {
+      const result = envSchema.safeParse({ ...validEnv, BETTER_AUTH_SECRET: 'a'.repeat(31) });
+
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.some((issue) => issue.path.includes('BETTER_AUTH_SECRET'))).toBe(
+        true
+      );
+    });
+
     it('should fail when PORT is not a positive number', () => {
       const result = envSchema.safeParse({ ...validEnv, PORT: '-1' });
 
@@ -113,6 +133,7 @@ describe('config/env', () => {
       vi.stubEnv('NODE_ENV', 'development');
       vi.stubEnv('DATABASE_URL', 'postgresql://localhost/db');
       vi.stubEnv('DATABASE_OWNER_URL', 'postgresql://localhost/db');
+      vi.stubEnv('BETTER_AUTH_SECRET', TEST_AUTH_SECRET);
       // Don't actually touch the filesystem; just prove the dev branch calls it.
       const loadEnvFile = vi.spyOn(process, 'loadEnvFile').mockImplementation(() => {});
 
@@ -128,6 +149,7 @@ describe('config/env', () => {
       vi.stubEnv('NODE_ENV', 'production');
       vi.stubEnv('DATABASE_URL', 'postgresql://localhost/db');
       vi.stubEnv('DATABASE_OWNER_URL', 'postgresql://localhost/db');
+      vi.stubEnv('BETTER_AUTH_SECRET', TEST_AUTH_SECRET);
 
       const mod = await import('./env.ts');
 
@@ -143,6 +165,7 @@ describe('config/env', () => {
       vi.stubEnv('NODE_ENV', 'production');
       vi.stubEnv('DATABASE_URL', 'postgresql://localhost/db');
       vi.stubEnv('DATABASE_OWNER_URL', 'postgresql://localhost/db');
+      vi.stubEnv('BETTER_AUTH_SECRET', TEST_AUTH_SECRET);
 
       const mod = await import('./env.ts');
 

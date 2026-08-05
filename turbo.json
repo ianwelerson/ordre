@@ -9,7 +9,12 @@
     "VERCEL_ENV",
     "DATABASE_URL",
     "DATABASE_OWNER_URL",
-    "LOG_LEVEL"
+    "LOG_LEVEL",
+    "BETTER_AUTH_SECRET",
+    "BETTER_AUTH_URL",
+    "RESEND_API_KEY",
+    "APP_BASE_URL",
+    "APP_DASHBOARD_URL"
   ],
   "tasks": {
     "build": {

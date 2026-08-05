@@ -53,7 +53,7 @@ Both are validated to start with `postgresql://`. The two-role split is what let
 | `APP_STAGE`           | no       | `development`   | `development` \| `test` \| `production`; must match `NODE_ENV`         |
 | `NODE_ENV`            | no       | `development`   | Must match `APP_STAGE` (enforced by the schema)                       |
 | `PORT`                | no       | `3000`          | HTTP port for the raw server (`api:dev:app`)                          |
-| `BETTER_AUTH_SECRET`  | yes      | -               | Secret used by Better Auth for session signing                        |
+| `BETTER_AUTH_SECRET`  | yes      | -               | Session signing secret, min 32 chars.       |
 | `BETTER_AUTH_URL`     | yes      | -               | Base URL of the auth server, e.g. `http://ordre.localhost` in dev     |
 
 <Callout>

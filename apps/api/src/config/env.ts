@@ -38,6 +38,7 @@ export const envSchema = z
     PORT: z.coerce.number().positive().default(3000),
     DATABASE_URL: z.string().startsWith('postgresql://'),
     DATABASE_OWNER_URL: z.string().startsWith('postgresql://'),
+    BETTER_AUTH_SECRET: z.string().min(32),
   })
   .refine((data) => !DEPLOYED_STAGES.includes(data.APP_STAGE) || data.NODE_ENV === 'production', {
     message: `NODE_ENV must be "production" when APP_STAGE is one of: ${DEPLOYED_STAGES.join(', ')}`,
