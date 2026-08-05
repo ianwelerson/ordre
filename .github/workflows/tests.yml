@@ -86,7 +86,14 @@ jobs:
           DATABASE_URL: postgresql://ordre_app:ordre_app@localhost:5432/ordre-test
           # Owner connection - migrations, TRUNCATE and seeding (see src/test/owner-db.ts).
           DATABASE_OWNER_URL: postgresql://postgres:postgres@localhost:5432/ordre-test
-          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
+          # Fake by design: Resend is mocked wherever it is used, and the auth
+          # secret only signs sessions inside this process.
+          BETTER_AUTH_SECRET: ci-not-a-real-secret-000000000000
+          RESEND_API_KEY: re_ci_not_a_real_key
+          # Public origins. Nothing is dispatched in CI, so these only have to be
+          # valid URLs for env.ts to parse.
+          APP_BASE_URL: https://ordre.localhost
+          APP_DASHBOARD_URL: https://dashboard.ordre.localhost
 
       # - name: Run E2E Tests
       #   run: pnpm run test:e2e:ci
