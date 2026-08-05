@@ -36,15 +36,45 @@ describe('config/env', () => {
       });
     });
 
-    it('should fail when NODE_ENV and APP_STAGE do not match', () => {
+    it.each(['staging', 'production'])(
+      'should fail when APP_STAGE is %s without NODE_ENV=production',
+      (stage) => {
+        const result = envSchema.safeParse({
+          ...validEnv,
+          NODE_ENV: 'development',
+          APP_STAGE: stage,
+        });
+
+        expect(result.success).toBe(false);
+        expect(result.error?.issues.some((issue) => issue.path.includes('NODE_ENV'))).toBe(true);
+      }
+    );
+
+    it('should allow a staging stage to run with NODE_ENV=production', () => {
+      const result = envSchema.safeParse({
+        ...validEnv,
+        NODE_ENV: 'production',
+        APP_STAGE: 'staging',
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.data).toMatchObject({ NODE_ENV: 'production', APP_STAGE: 'staging' });
+    });
+
+    it('should allow local stages to diverge from NODE_ENV', () => {
       const result = envSchema.safeParse({
         ...validEnv,
         NODE_ENV: 'production',
         APP_STAGE: 'development',
       });
 
+      expect(result.success).toBe(true);
+    });
+
+    it('should reject an unknown APP_STAGE', () => {
+      const result = envSchema.safeParse({ ...validEnv, APP_STAGE: 'preview' });
+
       expect(result.success).toBe(false);
-      expect(result.error?.issues.some((issue) => issue.path.includes('APP_STAGE'))).toBe(true);
     });
 
     it('should fail when DATABASE_URL is not a postgresql:// url', () => {
@@ -90,6 +120,35 @@ describe('config/env', () => {
 
       expect(loadEnvFile).toHaveBeenCalled();
       expect(mod.isDev()).toBe(true);
+    });
+
+    it('treats a staging stage as deployed without treating it as production', async () => {
+      vi.resetModules();
+      vi.stubEnv('APP_STAGE', 'staging');
+      vi.stubEnv('NODE_ENV', 'production');
+      vi.stubEnv('DATABASE_URL', 'postgresql://localhost/db');
+      vi.stubEnv('DATABASE_OWNER_URL', 'postgresql://localhost/db');
+
+      const mod = await import('./env.ts');
+
+      expect(mod.isStaging()).toBe(true);
+      expect(mod.isDeployed()).toBe(true);
+      expect(mod.isProd()).toBe(false);
+      expect(mod.isDev()).toBe(false);
+    });
+
+    it('treats production as deployed', async () => {
+      vi.resetModules();
+      vi.stubEnv('APP_STAGE', 'production');
+      vi.stubEnv('NODE_ENV', 'production');
+      vi.stubEnv('DATABASE_URL', 'postgresql://localhost/db');
+      vi.stubEnv('DATABASE_OWNER_URL', 'postgresql://localhost/db');
+
+      const mod = await import('./env.ts');
+
+      expect(mod.isProd()).toBe(true);
+      expect(mod.isDeployed()).toBe(true);
+      expect(mod.isStaging()).toBe(false);
     });
 
     it('throws when the environment is invalid at load time', async () => {
