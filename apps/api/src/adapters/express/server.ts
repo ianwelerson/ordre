@@ -14,6 +14,28 @@ const BASE_PATH = '/api';
 
 app.set('trust proxy', true);
 
+/**
+ * Everything this service serves lives under `/api`, so anything else is a
+ * scanner. Answering here, above helmet/cors/the access log, keeps that traffic
+ * from touching the stack at all - and keeps it out of the logs entirely.
+ *
+ * `robots.txt` is answered rather than dropped so well-behaved crawlers stop
+ * asking, leaving what remains unambiguously hostile.
+ */
+app.use((req, res, next) => {
+  if (req.path === '/robots.txt') {
+    res.type('text/plain').send('User-agent: *\nDisallow: /\n');
+    return;
+  }
+
+  if (req.path !== BASE_PATH && !req.path.startsWith(`${BASE_PATH}/`)) {
+    res.status(404).end();
+    return;
+  }
+
+  next();
+});
+
 app.use(helmet());
 
 // Credentialed CORS against an explicit origin list.

@@ -42,6 +42,24 @@ describe('adapters/express/server', () => {
     });
   });
 
+  describe('non-API paths', () => {
+    it('serves a robots.txt that disallows everything', async () => {
+      const response = await request(app).get('/robots.txt').expect(200);
+
+      expect(response.headers['content-type']).toMatch(/text\/plain/);
+      expect(response.text).toBe('User-agent: *\nDisallow: /\n');
+    });
+
+    it.each(['/', '/.env', '/.well-known/mcp', '/apifoo'])(
+      'rejects %s with an empty 404',
+      async (path) => {
+        const response = await request(app).get(path).expect(404);
+
+        expect(response.text).toBe('');
+      }
+    );
+  });
+
   it('responds 404 with a Not Found body for an unmatched route', async () => {
     const response = await request(app).get('/api/does-not-exist').expect(404);
 
