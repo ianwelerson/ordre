@@ -47,7 +47,14 @@ can(role, permission); // e.g. can('admin', 'workspace:delete') -> false
 
 Two middlewares split the work; both run after `authenticate` and `rlsContext` (see the [pipeline](/internal-docs/engineering/authorization)).
 
-**`requireWorkspaceAccess`** - resource-level. Resolves the workspace from `:id` or `:slug`, loads the caller's `workspace_member` row, requires it to be `active`, and sets `req.member` (`{ id, workspaceId, role }`).
+**`requireWorkspaceAccess`** - resource-level. Resolves the workspace from `:id` or `:slug`, loads the caller's `workspace_member` row, requires it to be `active`, and attaches **two** separate contexts to the request:
+
+| Property       | Shape                                   | What it is                          |
+| -------------- | --------------------------------------- | ----------------------------------- |
+| `req.workspace`| `{ id, name }`                          | The tenant scope the request operates on |
+| `req.member`   | `{ id, role }`                          | The caller's membership in it       |
+
+They are split on purpose. Most handlers need to know *which workspace* they act on without caring *who* is calling, and taking only `WorkspaceContext` makes that explicit in the signature. `req.member` deliberately carries **no** `workspaceId` - that lives on `req.workspace` alone, so the two can never drift. `req.workspace` is also where workspace-wide state belongs as it is added (plan entitlements, cached workspace fields).
 
 <Callout type="warn">
   It returns **`404 WORKSPACE_NOT_FOUND` both when the workspace doesn't exist and when the

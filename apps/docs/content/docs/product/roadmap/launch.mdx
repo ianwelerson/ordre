@@ -42,6 +42,7 @@ Backend capabilities in [`apps/api`](/internal-docs/engineering/architecture) th
 | Workspace management        | Create, read (by id/slug), update, delete, and slug-availability check               | ✅ |
 | Members & invitations       | Member endpoints (list, read, self-service profile/leave, update, remove, role change) plus admin invites (create, list, read, revoke) and the public invite flow (preview, accept, decline) | ✅ |
 | Locations                   | Location CRUD, default-location management, and assigning members to locations       | ✅ |
+| Transactional email         | Outbox worker delivering account, workspace, and invite emails through Resend - see [Transactional Outbox](/internal-docs/engineering/outbox) | ✅ |
 | Billing & subscriptions     | Billing data model in place; Stripe integration pending                             | 🚧 |
 | Boards                      | Board lifecycle, access tokens, and client-facing read model                        | 📋 |
 | Timeline & updates          | Posting and retrieving timeline entries with real-time fan-out                       | 📋 |
@@ -59,7 +60,7 @@ The runnable surfaces of the product.
 | --------------------------------------- | ---------------------------------------- | ------ |
 | API (`api.ordre.app`)                   | Express on Railway                       | 🚧 |
 | Dashboard (`dashboard.ordre.app`)       | Next.js - used by workspace members      | 🚧 |
-| Client board (`go.ordre.app`)           | React Router v7, framework mode (SSR)    | 🚧 |
+| Client board (`go.ordre.app`)           | React Router v8, framework mode (SSR)    | 🚧 |
 | Marketing site (`ordre.app`)            | Next.js                                  | 🚧 |
 | Storybook (`storybook.ordre.app`)       | Component docs for `@ordre/ui`           | ✅ |
 | Docs & API reference (`docs.ordre.app`) | Fumadocs - guides plus the API reference | ✅ |
@@ -74,13 +75,13 @@ Hosting and third-party services. See [Infrastructure](/internal-docs/engineerin
 | Cloudflare DNS    | Domain and DNS for `ordre.app`                                 | ✅ |
 | Better Auth       | Workspace member authentication (clients excluded)            | ✅ |
 | pino logging      | Structured logs via `@ordre/monitoring`                       | ✅ |
+| Resend            | Transactional email, delivered through the outbox worker      | ✅ |
 | Railway           | Backend compute; Express as a persistent containerised service | 🚧 |
 | Neon              | Serverless PostgreSQL database                                 | 🚧 |
 | Sentry            | Error tracking (release tracking in CI; SDK integration pending) | 🚧 |
 | Cloudflare R2     | Image storage (S3-compatible, zero egress)                    | 📋 |
 | Upstash Redis     | Real-time pub/sub (Socket.io) and board caching               | 📋 |
 | Twilio            | SMS and WhatsApp delivery                                      | 📋 |
-| Resend            | Transactional and notification email                          | 📋 |
 | Stripe            | Subscription billing with localised pricing                   | 📋 |
 | Umami             | Privacy-first, cookieless analytics                           | 📋 |
 | Better Stack      | Centralised log platform and uptime monitoring                | 📋 |

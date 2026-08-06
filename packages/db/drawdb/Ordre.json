@@ -595,24 +595,24 @@
       "locked": false,
       "fields": [
         {
+          "id": "plan_f_id",
           "name": "id",
           "type": "UUID",
-          "default": "",
+          "default": "gen_random_uuid()",
           "check": "",
           "primary": true,
           "unique": false,
-          "unsigned": true,
           "notNull": true,
           "increment": false,
           "comment": "",
-          "id": "oHrrzDgZBzHHaWpNVHRad",
           "size": "",
-          "values": []
+          "values": [],
+          "unsigned": true
         },
         {
-          "id": "gGa5hWuc5EDPjgCjnJTlS",
+          "id": "plan_f_code",
           "name": "code",
-          "type": "TEXT",
+          "type": "plan_code",
           "default": "",
           "check": "",
           "primary": false,
@@ -624,8 +624,36 @@
           "values": []
         },
         {
-          "id": "RWoC--15sPOcrGbqa-7R4",
-          "name": "name",
+          "id": "plan_f_tier",
+          "name": "tier",
+          "type": "plan_tier",
+          "default": "",
+          "check": "",
+          "primary": false,
+          "unique": false,
+          "notNull": true,
+          "increment": false,
+          "comment": "Derived from code, stored so it can back the partial unique index",
+          "size": "",
+          "values": []
+        },
+        {
+          "id": "plan_f_status",
+          "name": "status",
+          "type": "plan_status",
+          "default": "",
+          "check": "",
+          "primary": false,
+          "unique": false,
+          "notNull": true,
+          "increment": false,
+          "comment": "",
+          "size": "",
+          "values": []
+        },
+        {
+          "id": "plan_f_title",
+          "name": "title",
           "type": "TEXT",
           "default": "",
           "check": "",
@@ -638,7 +666,7 @@
           "values": []
         },
         {
-          "id": "v17aCd8EbMWRmWogJZlhV",
+          "id": "plan_f_description",
           "name": "description",
           "type": "TEXT",
           "default": "",
@@ -652,52 +680,24 @@
           "values": []
         },
         {
-          "id": "EPK5-gwkBPARX74riA812",
-          "name": "boardLimit",
-          "type": "INTEGER",
-          "default": "",
+          "id": "plan_f_entitlements",
+          "name": "entitlements",
+          "type": "JSON",
+          "default": "{\"limits\":{}}",
           "check": "",
           "primary": false,
           "unique": false,
-          "notNull": false,
+          "notNull": true,
           "increment": false,
-          "comment": "",
+          "comment": "Limits live here, not in columns: { limits: { seat?, location? } }",
           "size": "",
           "values": []
         },
         {
-          "id": "Pulg2_0IgdfCavsfOPHJo",
-          "name": "seatLimit",
-          "type": "INTEGER",
-          "default": "",
-          "check": "",
-          "primary": false,
-          "unique": false,
-          "notNull": false,
-          "increment": false,
-          "comment": "",
-          "size": "",
-          "values": []
-        },
-        {
-          "id": "MNniVSMobzzBHVtcgkg51",
-          "name": "locationLimit",
-          "type": "INTEGER",
-          "default": "",
-          "check": "",
-          "primary": false,
-          "unique": false,
-          "notNull": false,
-          "increment": false,
-          "comment": "",
-          "size": "",
-          "values": []
-        },
-        {
-          "id": "cvKjSklnxq9aMalTqbhHn",
+          "id": "plan_f_created_at",
           "name": "createdAt",
           "type": "TIMESTAMPTZ",
-          "default": "",
+          "default": "now()",
           "check": "",
           "primary": false,
           "unique": false,
@@ -708,10 +708,10 @@
           "values": []
         },
         {
-          "id": "1j0veAf8Kfn5y4kJwA3wP",
+          "id": "plan_f_updated_at",
           "name": "updatedAt",
           "type": "TIMESTAMPTZ",
-          "default": "",
+          "default": "now()",
           "check": "",
           "primary": false,
           "unique": false,
@@ -722,107 +722,15 @@
           "values": []
         }
       ],
-      "comment": "",
-      "indices": [],
-      "uniqueConstraints": [],
-      "color": "#175e7a",
-      "collapsed": false
-    },
-    {
-      "id": "5mJmEFesusQHmnDjuYra-",
-      "name": "Addon",
-      "x": -1056.0678908495906,
-      "y": -77.53966203659115,
-      "locked": false,
-      "fields": [
+      "comment": "Plan catalog. Partial unique on (tier) where status = active, so \"the current free/paid plan\" is one well-defined row while legacy plans coexist.",
+      "indices": [
         {
-          "name": "id",
-          "type": "UUID",
-          "default": "",
-          "check": "",
-          "primary": true,
-          "unique": false,
-          "unsigned": true,
-          "notNull": true,
-          "increment": false,
-          "comment": "",
-          "id": "1f7BkrGUbjaHeC5NnFQR7",
-          "size": "",
-          "values": []
-        },
-        {
-          "id": "cHVyjFGKLAzsglk0Ih85t",
-          "name": "code",
-          "type": "TEXT",
-          "default": "",
-          "check": "",
-          "primary": false,
+          "id": "plan_one_active_per_tier",
+          "name": "plan_one_active_per_tier",
           "unique": true,
-          "notNull": true,
-          "increment": false,
-          "comment": "",
-          "size": "",
-          "values": []
-        },
-        {
-          "id": "d4Y08TuYfg37QfUo3KHqO",
-          "name": "name",
-          "type": "TEXT",
-          "default": "",
-          "check": "",
-          "primary": false,
-          "unique": false,
-          "notNull": true,
-          "increment": false,
-          "comment": "",
-          "size": "",
-          "values": []
-        },
-        {
-          "id": "DUoiDc2wJDb1Tny_B2Mud",
-          "name": "description",
-          "type": "TEXT",
-          "default": "",
-          "check": "",
-          "primary": false,
-          "unique": false,
-          "notNull": true,
-          "increment": false,
-          "comment": "",
-          "size": "",
-          "values": []
-        },
-        {
-          "id": "NFefq37nPgLsK5BfknIgh",
-          "name": "createdAt",
-          "type": "TIMESTAMPTZ",
-          "default": "",
-          "check": "",
-          "primary": false,
-          "unique": false,
-          "notNull": true,
-          "increment": false,
-          "comment": "",
-          "size": "",
-          "values": []
-        },
-        {
-          "id": "_gJWHJGWyH0VRebtvx7-J",
-          "name": "updatedAt",
-          "type": "TIMESTAMPTZ",
-          "default": "",
-          "check": "",
-          "primary": false,
-          "unique": false,
-          "notNull": true,
-          "increment": false,
-          "comment": "",
-          "size": "",
-          "values": []
+          "fields": ["tier"]
         }
       ],
-      "comment": "",
-      "indices": [],
       "uniqueConstraints": [],
       "color": "#175e7a",
       "collapsed": false
@@ -1146,7 +1054,7 @@
           "values": []
         }
       ],
-      "comment": "Partial unique: at most one is_default=true location per workspace \u2014 uniqueIndex workspace_location_one_default_per_workspace WHERE is_default. DrawDB cannot express the partial WHERE.",
+      "comment": "Partial unique: at most one is_default=true location per workspace — uniqueIndex workspace_location_one_default_per_workspace WHERE is_default. DrawDB cannot express the partial WHERE.",
       "indices": [
         {
           "id": "idx_wsloc_workspace_01",
@@ -1479,40 +1387,12 @@
         {
           "id": "AgilhlkvgETRdl5c4DBuW",
           "name": "status",
-          "type": "TEXT",
-          "default": "",
+          "type": "subscription_status",
+          "default": "active",
           "check": "",
           "primary": false,
           "unique": false,
           "notNull": true,
-          "increment": false,
-          "comment": "",
-          "size": "",
-          "values": []
-        },
-        {
-          "id": "cvmcomQ6hXEvl45qf6yZe",
-          "name": "stripeCustomerId",
-          "type": "TEXT",
-          "default": "",
-          "check": "",
-          "primary": false,
-          "unique": false,
-          "notNull": false,
-          "increment": false,
-          "comment": "",
-          "size": "",
-          "values": []
-        },
-        {
-          "id": "1FhA5dP7I_WZyc2TgA4sd",
-          "name": "stripeSubscriptionId",
-          "type": "TEXT",
-          "default": "",
-          "check": "",
-          "primary": false,
-          "unique": false,
-          "notNull": false,
           "increment": false,
           "comment": "",
           "size": "",
@@ -1589,8 +1469,15 @@
           "values": []
         }
       ],
-      "comment": "",
-      "indices": [],
+      "comment": "Partial unique on (workspaceId) where status = active. Stripe columns and the trial/past_due statuses arrive with the payment integration.",
+      "indices": [
+        {
+          "id": "workspace_subscription_one_active_per_workspace",
+          "name": "workspace_subscription_one_active_per_workspace",
+          "unique": true,
+          "fields": ["workspaceId"]
+        }
+      ],
       "uniqueConstraints": [
         {
           "id": 0,
@@ -1601,111 +1488,6 @@
       "color": "#175e7a",
       "collapsed": false,
       "inherits": []
-    },
-    {
-      "id": "7gyVT2vSMmCZFjj_VOuFi",
-      "name": "Workspace_Subscription_Addon",
-      "x": -604.9777364890356,
-      "y": 68.1007902606724,
-      "locked": false,
-      "fields": [
-        {
-          "name": "id",
-          "type": "UUID",
-          "default": "",
-          "check": "",
-          "primary": true,
-          "unique": false,
-          "unsigned": true,
-          "notNull": true,
-          "increment": false,
-          "comment": "",
-          "id": "_gd5lV8SMhg8sE864lH3U",
-          "size": "",
-          "values": []
-        },
-        {
-          "id": "lziRh8HX8UBvlJJXXxtaC",
-          "name": "subscriptionId",
-          "type": "UUID",
-          "default": "",
-          "check": "",
-          "primary": false,
-          "unique": false,
-          "notNull": true,
-          "increment": false,
-          "comment": "",
-          "size": "",
-          "values": []
-        },
-        {
-          "id": "7vasHP-_4KygCNTT0cUXL",
-          "name": "addonId",
-          "type": "UUID",
-          "default": "",
-          "check": "",
-          "primary": false,
-          "unique": false,
-          "notNull": true,
-          "increment": false,
-          "comment": "",
-          "size": "",
-          "values": []
-        },
-        {
-          "id": "aKuJic1af0IwnUkXpXUU4",
-          "name": "stripeSubscriptionItemId",
-          "type": "TEXT",
-          "default": "",
-          "check": "",
-          "primary": false,
-          "unique": false,
-          "notNull": true,
-          "increment": false,
-          "comment": "",
-          "size": "",
-          "values": []
-        },
-        {
-          "id": "RYGjNrzSPKbA0ybP_tl4H",
-          "name": "createdAt",
-          "type": "TIMESTAMPTZ",
-          "default": "",
-          "check": "",
-          "primary": false,
-          "unique": false,
-          "notNull": true,
-          "increment": false,
-          "comment": "",
-          "size": "",
-          "values": []
-        },
-        {
-          "id": "MIa-pRyqMpB6V0cf_mvg0",
-          "name": "updatedAt",
-          "type": "TIMESTAMPTZ",
-          "default": "",
-          "check": "",
-          "primary": false,
-          "unique": false,
-          "notNull": true,
-          "increment": false,
-          "comment": "",
-          "size": "",
-          "values": []
-        }
-      ],
-      "comment": "",
-      "indices": [],
-      "uniqueConstraints": [
-        {
-          "id": 0,
-          "name": "Workspace_Subscription_Addon_unique_0",
-          "fields": ["subscriptionId", "addonId"]
-        }
-      ],
-      "color": "#175e7a",
-      "collapsed": false
     },
     {
       "id": "IveZcMxY-MNfgdzgEFzJX",
@@ -1740,6 +1522,20 @@
           "notNull": true,
           "increment": false,
           "comment": "",
+          "size": "",
+          "values": []
+        },
+        {
+          "id": "wsinvite_f_name",
+          "name": "name",
+          "type": "TEXT",
+          "default": "",
+          "check": "",
+          "primary": false,
+          "unique": false,
+          "notNull": true,
+          "increment": false,
+          "comment": "Name of the person being invited - rendered in the invite email",
           "size": "",
           "values": []
         },
@@ -1870,7 +1666,7 @@
           "values": []
         }
       ],
-      "comment": "Partial unique: only one pending invite per (workspaceId, email) \u2014 uniqueIndex workspace_invite_workspace_email_pending_unique WHERE status = 'pending'. DrawDB cannot express the partial WHERE, so it is represented as a plain index here.",
+      "comment": "Partial unique: only one pending invite per (workspaceId, email) — uniqueIndex workspace_invite_workspace_email_pending_unique WHERE status = 'pending'. DrawDB cannot express the partial WHERE, so it is represented as a plain index here.",
       "indices": [
         {
           "id": "idx_wsinv_we_pending_01",
@@ -1898,6 +1694,373 @@
         }
       ],
       "uniqueConstraints": [],
+      "color": "#175e7a",
+      "collapsed": false
+    },
+    {
+      "id": "tbl_outbox",
+      "name": "outbox",
+      "x": 900,
+      "y": -450,
+      "locked": false,
+      "fields": [
+        {
+          "id": "outbox_f_id",
+          "name": "id",
+          "type": "UUID",
+          "default": "gen_random_uuid()",
+          "check": "",
+          "primary": true,
+          "unique": false,
+          "notNull": true,
+          "increment": false,
+          "comment": "Also the provider idempotency key - never reuse or regenerate",
+          "size": "",
+          "values": [],
+          "unsigned": true
+        },
+        {
+          "id": "outbox_f_channel",
+          "name": "channel",
+          "type": "outbox_channel",
+          "default": "",
+          "check": "",
+          "primary": false,
+          "unique": false,
+          "notNull": true,
+          "increment": false,
+          "comment": "",
+          "size": "",
+          "values": []
+        },
+        {
+          "id": "outbox_f_topic",
+          "name": "topic",
+          "type": "outbox_topic",
+          "default": "",
+          "check": "",
+          "primary": false,
+          "unique": false,
+          "notNull": true,
+          "increment": false,
+          "comment": "",
+          "size": "",
+          "values": []
+        },
+        {
+          "id": "outbox_f_payload",
+          "name": "payload",
+          "type": "JSON",
+          "default": "",
+          "check": "",
+          "primary": false,
+          "unique": false,
+          "notNull": true,
+          "increment": false,
+          "comment": "{ to, variables } only - the template is resolved from channel:topic at send time",
+          "size": "",
+          "values": []
+        },
+        {
+          "id": "outbox_f_attempts",
+          "name": "attempts",
+          "type": "INTEGER",
+          "default": "0",
+          "check": "",
+          "primary": false,
+          "unique": false,
+          "notNull": true,
+          "increment": false,
+          "comment": "",
+          "size": "",
+          "values": []
+        },
+        {
+          "id": "outbox_f_next_attempt_at",
+          "name": "nextAttemptAt",
+          "type": "TIMESTAMPTZ",
+          "default": "now()",
+          "check": "",
+          "primary": false,
+          "unique": false,
+          "notNull": true,
+          "increment": false,
+          "comment": "",
+          "size": "",
+          "values": []
+        },
+        {
+          "id": "outbox_f_claimed_at",
+          "name": "claimedAt",
+          "type": "TIMESTAMPTZ",
+          "default": "",
+          "check": "",
+          "primary": false,
+          "unique": false,
+          "notNull": false,
+          "increment": false,
+          "comment": "",
+          "size": "",
+          "values": []
+        },
+        {
+          "id": "outbox_f_processed_at",
+          "name": "processedAt",
+          "type": "TIMESTAMPTZ",
+          "default": "",
+          "check": "",
+          "primary": false,
+          "unique": false,
+          "notNull": false,
+          "increment": false,
+          "comment": "Non-null = delivered. The only terminal success state",
+          "size": "",
+          "values": []
+        },
+        {
+          "id": "outbox_f_last_error",
+          "name": "lastError",
+          "type": "TEXT",
+          "default": "",
+          "check": "",
+          "primary": false,
+          "unique": false,
+          "notNull": false,
+          "increment": false,
+          "comment": "",
+          "size": "",
+          "values": []
+        },
+        {
+          "id": "outbox_f_created_at",
+          "name": "createdAt",
+          "type": "TIMESTAMPTZ",
+          "default": "now()",
+          "check": "",
+          "primary": false,
+          "unique": false,
+          "notNull": true,
+          "increment": false,
+          "comment": "",
+          "size": "",
+          "values": []
+        },
+        {
+          "id": "outbox_f_updated_at",
+          "name": "updatedAt",
+          "type": "TIMESTAMPTZ",
+          "default": "now()",
+          "check": "",
+          "primary": false,
+          "unique": false,
+          "notNull": true,
+          "increment": false,
+          "comment": "",
+          "size": "",
+          "values": []
+        }
+      ],
+      "comment": "Transactional outbox: one row per delivery, written in the same transaction as the business data. Deliberately NOT under RLS - the worker has no app.user_id, so any policy would return zero rows and the queue would look permanently empty.",
+      "indices": [
+        {
+          "id": "outbox_pending_idx",
+          "name": "outbox_pending_idx",
+          "unique": false,
+          "fields": ["nextAttemptAt"]
+        }
+      ],
+      "uniqueConstraints": [],
+      "color": "#175e7a",
+      "collapsed": false,
+      "inherits": []
+    },
+    {
+      "id": "5mJmEFesusQHmnDjuYra-",
+      "name": "Addon",
+      "x": -1056.0678908495906,
+      "y": -77.53966203659115,
+      "locked": false,
+      "fields": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "default": "",
+          "check": "",
+          "primary": true,
+          "unique": false,
+          "unsigned": true,
+          "notNull": true,
+          "increment": false,
+          "comment": "",
+          "id": "1f7BkrGUbjaHeC5NnFQR7",
+          "size": "",
+          "values": []
+        },
+        {
+          "id": "cHVyjFGKLAzsglk0Ih85t",
+          "name": "code",
+          "type": "TEXT",
+          "default": "",
+          "check": "",
+          "primary": false,
+          "unique": true,
+          "notNull": true,
+          "increment": false,
+          "comment": "",
+          "size": "",
+          "values": []
+        },
+        {
+          "id": "d4Y08TuYfg37QfUo3KHqO",
+          "name": "name",
+          "type": "TEXT",
+          "default": "",
+          "check": "",
+          "primary": false,
+          "unique": false,
+          "notNull": true,
+          "increment": false,
+          "comment": "",
+          "size": "",
+          "values": []
+        },
+        {
+          "id": "DUoiDc2wJDb1Tny_B2Mud",
+          "name": "description",
+          "type": "TEXT",
+          "default": "",
+          "check": "",
+          "primary": false,
+          "unique": false,
+          "notNull": true,
+          "increment": false,
+          "comment": "",
+          "size": "",
+          "values": []
+        },
+        {
+          "id": "NFefq37nPgLsK5BfknIgh",
+          "name": "createdAt",
+          "type": "TIMESTAMPTZ",
+          "default": "",
+          "check": "",
+          "primary": false,
+          "unique": false,
+          "notNull": true,
+          "increment": false,
+          "comment": "",
+          "size": "",
+          "values": []
+        },
+        {
+          "id": "_gJWHJGWyH0VRebtvx7-J",
+          "name": "updatedAt",
+          "type": "TIMESTAMPTZ",
+          "default": "",
+          "check": "",
+          "primary": false,
+          "unique": false,
+          "notNull": true,
+          "increment": false,
+          "comment": "",
+          "size": "",
+          "values": []
+        }
+      ],
+      "comment": "",
+      "indices": [],
+      "uniqueConstraints": [],
+      "color": "#175e7a",
+      "collapsed": false
+    },
+    {
+      "id": "7gyVT2vSMmCZFjj_VOuFi",
+      "name": "Workspace_Subscription_Addon",
+      "x": -604.9777364890356,
+      "y": 68.1007902606724,
+      "locked": false,
+      "fields": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "default": "",
+          "check": "",
+          "primary": true,
+          "unique": false,
+          "unsigned": true,
+          "notNull": true,
+          "increment": false,
+          "comment": "",
+          "id": "_gd5lV8SMhg8sE864lH3U",
+          "size": "",
+          "values": []
+        },
+        {
+          "id": "lziRh8HX8UBvlJJXXxtaC",
+          "name": "subscriptionId",
+          "type": "UUID",
+          "default": "",
+          "check": "",
+          "primary": false,
+          "unique": false,
+          "notNull": true,
+          "increment": false,
+          "comment": "",
+          "size": "",
+          "values": []
+        },
+        {
+          "id": "7vasHP-_4KygCNTT0cUXL",
+          "name": "addonId",
+          "type": "UUID",
+          "default": "",
+          "check": "",
+          "primary": false,
+          "unique": false,
+          "notNull": true,
+          "increment": false,
+          "comment": "",
+          "size": "",
+          "values": []
+        },
+        {
+          "id": "RYGjNrzSPKbA0ybP_tl4H",
+          "name": "createdAt",
+          "type": "TIMESTAMPTZ",
+          "default": "",
+          "check": "",
+          "primary": false,
+          "unique": false,
+          "notNull": true,
+          "increment": false,
+          "comment": "",
+          "size": "",
+          "values": []
+        },
+        {
+          "id": "MIa-pRyqMpB6V0cf_mvg0",
+          "name": "updatedAt",
+          "type": "TIMESTAMPTZ",
+          "default": "",
+          "check": "",
+          "primary": false,
+          "unique": false,
+          "notNull": true,
+          "increment": false,
+          "comment": "",
+          "size": "",
+          "values": []
+        }
+      ],
+      "comment": "Add-ons attached to a subscription. Stripe item ids arrive with the payment integration.",
+      "indices": [],
+      "uniqueConstraints": [
+        {
+          "id": 0,
+          "name": "Workspace_Subscription_Addon_unique_0",
+          "fields": ["subscriptionId", "addonId"]
+        }
+      ],
       "color": "#175e7a",
       "collapsed": false
     }
@@ -1992,28 +2155,6 @@
       "id": "p96wzGkIb5rEv53Wmobmu"
     },
     {
-      "startTableId": "GcU3ql059kJeOABcdbAHV",
-      "startFieldId": "2Df_Sv6IZUECDxHGsT9ZY",
-      "endTableId": "7gyVT2vSMmCZFjj_VOuFi",
-      "endFieldId": "lziRh8HX8UBvlJJXXxtaC",
-      "cardinality": "one_to_many",
-      "updateConstraint": "No action",
-      "deleteConstraint": "Cascade",
-      "name": "fk_Workspace_Subscription_id_Workspace_Subscription_Addons",
-      "id": "vkm2nEEpx7KY8DsNCYpmj"
-    },
-    {
-      "startTableId": "5mJmEFesusQHmnDjuYra-",
-      "startFieldId": "1f7BkrGUbjaHeC5NnFQR7",
-      "endTableId": "7gyVT2vSMmCZFjj_VOuFi",
-      "endFieldId": "7vasHP-_4KygCNTT0cUXL",
-      "cardinality": "one_to_many",
-      "updateConstraint": "No action",
-      "deleteConstraint": "No action",
-      "name": "fk_Addons_id_Workspace_Subscription_Addons",
-      "id": "B_93csh1y2d0DqaStaoaL"
-    },
-    {
       "startTableId": "V0xL28ex34bV6WAuU3ifm",
       "startFieldId": "14a1QVytwveBu2eGfgfDx",
       "endTableId": "A0RHILmg46Z2XQPct6_zw",
@@ -2056,6 +2197,28 @@
       "deleteConstraint": "No action",
       "name": "fk_Workspace_Invite_locationId_Workspace_Location",
       "id": "oj5JCyDWzLmheeA9aX6uQ"
+    },
+    {
+      "startTableId": "GcU3ql059kJeOABcdbAHV",
+      "startFieldId": "2Df_Sv6IZUECDxHGsT9ZY",
+      "endTableId": "7gyVT2vSMmCZFjj_VOuFi",
+      "endFieldId": "lziRh8HX8UBvlJJXXxtaC",
+      "cardinality": "one_to_many",
+      "updateConstraint": "No action",
+      "deleteConstraint": "Cascade",
+      "name": "fk_Workspace_Subscription_id_Workspace_Subscription_Addons",
+      "id": "vkm2nEEpx7KY8DsNCYpmj"
+    },
+    {
+      "startTableId": "5mJmEFesusQHmnDjuYra-",
+      "startFieldId": "1f7BkrGUbjaHeC5NnFQR7",
+      "endTableId": "7gyVT2vSMmCZFjj_VOuFi",
+      "endFieldId": "7vasHP-_4KygCNTT0cUXL",
+      "cardinality": "one_to_many",
+      "updateConstraint": "No action",
+      "deleteConstraint": "No action",
+      "name": "fk_Addons_id_Workspace_Subscription_Addons",
+      "id": "B_93csh1y2d0DqaStaoaL"
     }
   ],
   "notes": [],
@@ -2077,11 +2240,35 @@
     },
     {
       "name": "workspace_member_status",
-      "values": ["active", "invited", "suspended"]
+      "values": ["active", "suspended"]
     },
     {
       "name": "workspace_invite_status",
       "values": ["pending", "accepted", "declined", "expired", "revoked"]
+    },
+    {
+      "name": "plan_code",
+      "values": ["free:founding", "paid:founding"]
+    },
+    {
+      "name": "plan_tier",
+      "values": ["free", "paid"]
+    },
+    {
+      "name": "plan_status",
+      "values": ["active", "legacy", "closed"]
+    },
+    {
+      "name": "subscription_status",
+      "values": ["active", "cancelled"]
+    },
+    {
+      "name": "outbox_channel",
+      "values": ["email"]
+    },
+    {
+      "name": "outbox_topic",
+      "values": ["account:created", "workspace:created", "invite:created"]
     }
   ],
   "title": "Ordre"

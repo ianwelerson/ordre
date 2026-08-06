@@ -2,7 +2,7 @@
 
 The **marketing** app is the public-facing website for Ordre - the home page, pricing, about, and legal pages. It's the first impression: fast, static-friendly, and localized.
 
-Built with **[Next.js](https://nextjs.org/) (App Router)**.
+Built with **[Next.js 16](https://nextjs.org/) (App Router)**, React 19, [`@ordre/ui`](../../packages/ui), and [`next-intl`](https://next-intl.dev/) with path-based locale routing.
 
 ---
 
@@ -17,60 +17,11 @@ Built with **[Next.js](https://nextjs.org/) (App Router)**.
 
 ## 🧰 Tech Stack
 
-- **Framework**: [Next.js 16](https://nextjs.org/) (App Router)
-- **UI**: React 19, [`@ordre/ui`](../../packages/ui), Tailwind CSS v4
-- **i18n**: [`next-intl`](https://next-intl.dev/) with path-based routing (`as-needed` mode)
-- **Testing**: [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/) (Playwright as browser provider)
+**Next.js 16** (App Router), React 19, `@ordre/ui`, and Tailwind CSS v4, with `next-intl` doing path-based locale routing.
 
----
+Everything else - TypeScript, Turborepo, Vitest, ESLint, Prettier, Syncpack - is monorepo-wide; see [Shared Tech Stack](../docs/content/docs/engineering/architecture.mdx#-shared-tech-stack).
 
-## 📁 Structure
-
-```
-apps/marketing/
-├── src/
-│   ├── app/
-│   │   └── [locale]/                 # Locale prefix wraps all marketing routes
-│   │       ├── about/
-│   │       ├── pricing/
-│   │       ├── terms-conditions/
-│   │       ├── privacy/
-│   │       ├── page.tsx              # Home
-│   │       ├── layout.tsx
-│   │       └── not-found.tsx
-│   │
-│   ├── views/                        # Page UI components (one folder per page)
-│   ├── shared/                       # Reusable app-level code
-│   │   ├── components/
-│   │   ├── hooks/
-│   │   ├── utils/
-│   │   ├── types/
-│   │   └── i18n/
-│   │       ├── routing.ts            # next-intl routing config
-│   │       ├── navigation.ts         # Locale-aware Link, useRouter, etc.
-│   │       ├── requests.ts           # getRequestConfig
-│   │       └── messages/
-│   └── proxy.ts                      # next-intl middleware
-│
-├── next.config.ts
-├── tsconfig.json
-├── vitest.config.ts
-└── package.json
-```
-
-### Three-folder convention
-
-| Folder    | Responsibility                                                 |
-| --------- | -------------------------------------------------------------- |
-| `app/`    | Next.js App Router - routes re-export views, no business logic |
-| `views/`  | Page UI and page-level logic, tests, and stories               |
-| `shared/` | Cross-cutting code reused across views (hooks, utils, i18n)    |
-
-### Import alias
-
-| Alias | Resolves to |
-| ----- | ----------- |
-| `@/*` | `src/*`     |
+Full breakdown, alongside this workspace's folder structure: **[Architecture](../docs/content/docs/engineering/architecture.mdx#-marketing)**.
 
 ---
 
@@ -104,20 +55,10 @@ pnpm --filter marketing dev
 
 ---
 
-## 🌍 i18n
-
-**Supported locales**: English (`en`, default) and Portuguese (`pt`).
-
-| Path      | Locale |
-| --------- | ------ |
-| `/`       | `en`   |
-| `/br/...` | `pt`   |
-
-Default locale carries no prefix (`as-needed` mode). Shared translations come from [`@ordre/i18n`](../../packages/i18n) and are merged with app-specific messages at runtime.
-
----
-
 ## 📚 Further Reading
 
+The folder layout (`app/` · `views/` · `shared/`), the import alias, and the locale routing (`en` unprefixed, `pt` under `/br`) are documented once in the docs project:
+
+- [Architecture → Marketing App Structure](../docs/content/docs/engineering/architecture.mdx#-marketing)
+- [Architecture → i18n Structure](../docs/content/docs/engineering/architecture.mdx#-i18n-structure)
 - [Root README](../../README.md) - monorepo overview
-- [Architecture](../docs/content/docs/engineering/architecture.mdx) - monorepo architecture (docs project)

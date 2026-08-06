@@ -25,7 +25,7 @@ authenticate → rlsContext → requireWorkspaceAccess → requireWorkspacePermi
 | ---------------------------- | ---------------------------------------------------------- | ------- |
 | `authenticate`               | Resolve the session, set `req.user`                        | `401 UNAUTHORIZED` |
 | `rlsContext`                 | Open the RLS transaction, pin `app.user_id` (RLS layer)    | -       |
-| `requireWorkspaceAccess`     | Resolve the workspace, load the caller's **active** membership, set `req.member` | `404 WORKSPACE_NOT_FOUND` / `403 MEMBER_SELF_SUSPENDED` |
+| `requireWorkspaceAccess`     | Resolve the workspace, load the caller's **active** membership, set `req.workspace` + `req.member` | `404 WORKSPACE_NOT_FOUND` / `403 MEMBER_SELF_SUSPENDED` |
 | `requireWorkspacePermission` | Check the role holds the required permission               | `403 FORBIDDEN` |
 | `requireWorkspaceQuota`      | Only on routes that consume a metered resource: check the plan has room | `402 PLAN_SEAT_LIMIT_REACHED` / `402 PLAN_LOCATION_LIMIT_REACHED` |
 | controller                   | Do the work; shape the payload by role (`scopeRelations`)  | -       |

@@ -170,6 +170,7 @@ Pending teammate invites (`Workspace_Invite`; Team → Invite modal).
 | --------------------- | --------------------------------------- | ------------------------------ |
 | `id`                  | uuid                                    |                                |
 | `email`               | text                                    |                                |
+| `name`                | text                                    | Name of the person being invited - used in the invite email |
 | `role`                | enum `admin \| member`                  |                                |
 | `workspaceId`         | fk → Workspace                          |                                |
 | `locationId`          | fk → Workspace_Location, nullable       | Location they're invited to    |
@@ -722,6 +723,44 @@ Unique: (`subscriptionId`, `addonId`).
 
 ---
 
+## 📤 Outbox
+
+`outbox` - one row per **delivery**, written in the same transaction as the
+business data that produced it. The delivery worker claims rows and sends them
+after that transaction commits. See [Transactional Outbox](/internal-docs/engineering/outbox)
+for the claim protocol, retry schedule, and how to add a topic.
+
+| Field           | Type                | Notes                                                                 |
+| --------------- | ------------------- | --------------------------------------------------------------------- |
+| `id`            | uuid                | Also the provider's idempotency key - never reuse or regenerate it     |
+| `channel`       | enum `email`        | Routes the row to a provider. Postgres enum - a new value is a migration |
+| `topic`         | enum                | `account:created \| workspace:created \| invite:created` - the business event. Postgres enum |
+| `payload`       | jsonb               | `{ to, variables }` only. The template is resolved from `channel:topic` at send time, never stored |
+| `attempts`      | int                 | Incremented at **claim** time, so a crash mid-send still counts        |
+| `nextAttemptAt` | timestamp           | When the row becomes claimable again; backoff is written here          |
+| `claimedAt`     | timestamp, nullable | Set on claim; a row stuck here >5 min is re-claimed as orphaned        |
+| `processedAt`   | timestamp, nullable | Non-null = delivered. The only terminal success state                  |
+| `lastError`     | text, nullable      | Flattened error from the last failed attempt                           |
+| `createdAt`     | timestamp           | Also the age cap - rows older than 23h stop being claimed              |
+| `updatedAt`     | timestamp           |                                                                        |
+
+Partial index `outbox_pending_idx` on (`nextAttemptAt`) **where `processedAt IS NULL`**,
+so claims stay cheap no matter how many delivered rows have accumulated.
+
+<Callout type="warn">
+  **Deliberately not under RLS.** The worker connects as `ordre_app` with no
+  `app.user_id` set, so any policy would evaluate against a NULL user, return zero
+  rows, and the queue would look permanently empty while silently sending nothing.
+  The table holds no tenant rows to leak - only a recipient address and the
+  variables for one message.
+</Callout>
+
+There is no `status` column. State is derived: unprocessed and due, unprocessed and
+waiting, delivered (`processedAt` set), or dead-lettered (attempts exhausted or past
+the age cap, so the claim filter can never pick it up again).
+
+---
+
 ## 🤖 Message Templates & Automations (optional)
 
 Surfaced under Settings → Automations / Templates. Build when needed.
@@ -765,4 +804,6 @@ Workspace ─┬─ Workspace_Member ─┬─ user (Better Auth)
 thread ── message            (thread → client, board; message → member)
 user ─┬─ notification_setting
       └─ working_hours
+
+outbox                       (standalone - no FKs, no RLS; see Transactional Outbox)
 ```

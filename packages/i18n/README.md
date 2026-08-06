@@ -61,6 +61,16 @@ The package is intentionally minimal - only strings that **more than one app use
 
 ---
 
+## 🧰 Tech Stack
+
+Plain TypeScript modules - no i18n library of its own. Each app brings its own and consumes these strings.
+
+Everything else - TypeScript, Turborepo, Vitest, ESLint, Prettier, Syncpack - is monorepo-wide; see [Shared Tech Stack](../../apps/docs/content/docs/engineering/architecture.mdx#-shared-tech-stack).
+
+Full breakdown, alongside this workspace's folder structure: **[Architecture](../../apps/docs/content/docs/engineering/architecture.mdx#ordrei18n)**.
+
+---
+
 ## 📚 Further Reading
 
 - [Root README](../../README.md) - monorepo overview

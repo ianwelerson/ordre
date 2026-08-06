@@ -29,7 +29,7 @@ packages/config/
 │   ├── base.json            # Strict TS baseline
 │   ├── nextjs.json          # Next.js override (preserve JSX, noEmit)
 │   ├── react-library.json   # Shared React library override
-│   └── react-router.json    # React Router v7 (framework mode) override
+│   └── react-router.json    # React Router v8 (framework mode) override
 │
 ├── prettier/
 │   └── index.ts             # Shared Prettier config + import sort rules
@@ -143,7 +143,7 @@ For shared React packages (e.g. `@ordre/ui`). Overrides: `jsx: "react-jsx"`, `ty
 
 ### `react-router.json`
 
-For the React Router v7 (framework mode) board app. Overrides: `jsx: "react-jsx"`, `module: "ES2022"`, `moduleResolution: "bundler"`, `verbatimModuleSyntax: true`, `types: ["node", "vite/client"]`, `noEmit: true`.
+For the React Router v8 (framework mode) board app. Overrides: `jsx: "react-jsx"`, `module: "ES2022"`, `moduleResolution: "bundler"`, `verbatimModuleSyntax: true`, `types: ["node", "vite/client"]`, `noEmit: true`.
 
 ```jsonc
 // apps/board/tsconfig.json
@@ -192,6 +192,16 @@ export { default } from "@ordre/config/prettier";
 2. Create `eslint.config.ts`, `tsconfig.json`, and `prettier.config.ts` using the snippets above.
 3. Run `pnpm lint`, `pnpm check-types`, and `pnpm format:check` locally to verify wiring.
 4. Run `pnpm packages:lint` at the repo root - Syncpack will flag any version drift introduced by the new consumer.
+
+---
+
+## 🧰 Tech Stack
+
+**ESLint 9**, **TypeScript**, and **Prettier** (with `@trivago/prettier-plugin-sort-imports`) - presets only, no runtime code.
+
+Everything else - TypeScript, Turborepo, Vitest, ESLint, Prettier, Syncpack - is monorepo-wide; see [Shared Tech Stack](../../apps/docs/content/docs/engineering/architecture.mdx#-shared-tech-stack).
+
+Full breakdown, alongside this workspace's folder structure: **[Architecture](../../apps/docs/content/docs/engineering/architecture.mdx#ordreconfig)**.
 
 ---
 

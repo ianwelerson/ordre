@@ -1,0 +1,244 @@
+---
+title: Transactional Outbox
+icon: Send
+description: How the API sends email - the outbox table, the delivery worker, the retry and dead-letter rules, and how to add a new message.
+---
+
+The API never calls an email provider from inside a request. A producer writes a
+row to the **`outbox`** table in the same transaction as the business data, and a
+background **worker** claims that row and delivers it afterwards.
+
+```
+controller / auth hook          worker (background)
+  ├─ INSERT business row        ├─ claim due rows  (one statement, commits)
+  └─ INSERT outbox row          ├─ send via provider
+        │                       └─ mark processed / record failure
+      COMMIT ──── wake ────────►
+```
+
+## Why not just send the email
+
+Two constraints make the direct call wrong, and they come from decisions
+documented elsewhere:
+
+- **Requests must stay DB-only.** Every authenticated request runs inside one
+  transaction that carries `app.user_id` (see [Row-Level Security](/internal-docs/engineering/authorization/row-level-security)).
+  Awaiting a provider's HTTP call inside it pins a pooled connection for the round
+  trip, and effective concurrency is pool size.
+- **The write and the message must agree.** A send that succeeds before a rollback
+  is an email about a workspace that does not exist; a send that fails after a
+  commit is a member who never learns they were invited. Writing the intent to the
+  same transaction makes "queued" and "happened" atomic - the row cannot survive a
+  rollback, and cannot be lost after a commit.
+
+Delivery is therefore **at-least-once**, and the design leans on that rather than
+fighting it: every send passes the row id as the provider's idempotency key.
+
+## The pieces
+
+| Piece | Location | Role |
+| ----- | -------- | ---- |
+| `outbox` table | [`packages/db/src/schemas/outbox.ts`](https://github.com/ianwelerson/ordre/blob/main/packages/db/src/schemas/outbox.ts) | The queue. One row per delivery - see [Data Model](/internal-docs/engineering/data-model) |
+| `pushToOutbox` | [`apps/api/src/utils/outbox.ts`](https://github.com/ianwelerson/ordre/blob/main/apps/api/src/utils/outbox.ts) | The producer API. Queues a row and wakes the worker after commit |
+| Delivery worker | [`apps/api/src/workers/outbox.worker.ts`](https://github.com/ianwelerson/ordre/blob/main/apps/api/src/workers/outbox.worker.ts) | Claims due rows, routes them by `channel`, retries and dead-letters |
+| `sendEmail` | [`apps/api/src/services/email.ts`](https://github.com/ianwelerson/ordre/blob/main/apps/api/src/services/email.ts) | The `email` channel provider - resolves the Resend template and sends |
+| Payload registry | [`packages/core/src/schemas/outbox.ts`](https://github.com/ianwelerson/ordre/blob/main/packages/core/src/schemas/outbox.ts) | Declares every delivery and the variables it renders |
+
+## Producing a row
+
+`pushToOutbox` takes the database handle **explicitly**, because getting it wrong
+is silent:
+
+```ts
+import { pushToOutbox } from '#/utils/outbox.ts';
+
+await pushToOutbox(tx, {
+  channel: 'email',
+  topic: 'invite:created',
+  to: invite.email,
+  variables: {
+    workspace_name: workspace.name,
+    invited_name: invite.name,
+    invited_role: invite.role,
+    invite_url: urls.invite(invite.token),
+    // ...
+  },
+});
+```
+
+- Inside a nested `getDb().transaction(...)`, pass that block's `tx` - or the row
+  survives a rollback of the very work it describes.
+- Everywhere else `getDb()` is already the request transaction.
+
+`variables` is checked at compile time against `<channel>:<topic>`, minus the
+defaults below, so a missing or misspelled variable - or a channel/topic pair with
+no delivery declared - is a type error at the call site. There is deliberately **no**
+runtime validation here: the object is a literal in our own code, and the channel
+service re-parses it against the same schema before rendering.
+
+### Default variables
+
+`base_url`, `dashboard_url`, `dashboard_login_url`, `help_url`, and `privacy_url`
+are filled in by `pushToOutbox` from [`config/urls.ts`](https://github.com/ianwelerson/ordre/blob/main/apps/api/src/config/urls.ts) -
+producers never pass them. They are read from `urls` rather than hardcoded because
+they were once literals pointing at production, which meant every email sent from
+dev linked users into the live app. They are **frozen into the row at write time**,
+so a queued row keeps the origins configured when it was produced.
+
+### Waking the worker
+
+`pushToOutbox` registers `wakeOutboxWorker` through `afterCommit()`, which is the
+only correct moment to fire it.
+
+```ts
+// config/db-context.ts
+afterCommit(fn); // queued until the request transaction COMMITs, or run inline
+                 // when there is no request transaction (script, Better Auth hook)
+```
+
+Waking any earlier runs the claim on a different pooled connection, which cannot
+see the uncommitted row - the queue looks empty and the message waits for the next
+sweep. On rollback the callbacks are dropped along with the writes they were
+reacting to. **Only latency depends on this**; the sweep delivers everything either
+way.
+
+## The worker
+
+Started from the Express entrypoint (`adapters/express/index.ts`), not `server.ts`,
+so importing the app in a test never starts a background loop.
+
+### Claiming
+
+One statement claims a batch and commits immediately, so no pooled connection is
+held across the provider's HTTP call:
+
+```sql
+WITH due AS MATERIALIZED (
+  SELECT id FROM outbox
+  WHERE processed_at IS NULL
+    AND attempts < 5
+    AND created_at > now() - interval '23 hours'
+    AND next_attempt_at <= now()
+    AND (claimed_at IS NULL OR claimed_at < now() - interval '5 minutes')
+  ORDER BY next_attempt_at
+  FOR UPDATE SKIP LOCKED
+  LIMIT 10
+)
+UPDATE outbox SET claimed_at = now(), attempts = attempts + 1, updated_at = now()
+FROM due WHERE outbox.id = due.id
+RETURNING ...
+```
+
+Four details are load-bearing:
+
+- **`FOR UPDATE SKIP LOCKED`** - concurrent workers take different rows instead of
+  blocking. This is what makes multiple API replicas safe with no coordination.
+- **`attempts` increments at claim time**, not on failure, so a crash mid-send
+  still counts and a poison message cannot retry forever.
+- **The `claimed_at` cutoff** re-claims rows orphaned by a crashed or redeployed
+  worker.
+- **`AS MATERIALIZED`** is not decoration. Written as `WHERE id IN (SELECT ... LIMIT n)`
+  this plans as a semi-join that re-runs the subquery per candidate row, so every
+  execution locks another _n_ and the batch cap is silently ignored.
+
+### Scheduling
+
+| Knob | Value | Why |
+| ---- | ----- | --- |
+| Wake | on commit | Where delivery latency actually comes from |
+| Sweep | 30 min | Safety net only. Neon's free plan suspends after five idle minutes and bills for being awake, so a faster sweep keeps compute up 24/7 against an empty table |
+| Batch | 10 | A full batch means there may be more; the loop keeps draining until one comes back short |
+
+The loop is a recursive `setTimeout`, not `setInterval` - `setInterval` does not
+await an async callback, so a slow tick would overlap the next and a throw would
+surface as an unhandled rejection. The timer is `unref`'d so it never keeps the
+process alive on its own, and `stopOutboxWorker()` resolves once the in-flight
+drain finishes so shutdown can await it before `pool.end()`.
+
+### Retry and dead-letter
+
+| Outcome | `attempts` | Next attempt |
+| ------- | ---------- | ------------ |
+| Rate limited (`429`) | handed **back** | +1 hour |
+| Any other failure | consumed | `power(4, attempts)` seconds - 4 / 16 / 64 / 256 |
+| 5 attempts consumed | - | Never claimed again (dead-lettered) |
+| Older than 23 hours | - | Never claimed again (dead-lettered) |
+
+A `429` is the account being throttled, not this message's fault, so the attempt is
+returned - a valid email must never dead-letter because of a busy afternoon.
+
+<Callout type="warn">
+  **Both caps exist because of the idempotency window.** Resend honours an
+  idempotency key for 24h. Five attempts keeps the whole retry sequence inside it,
+  and the 23-hour age cap bounds a row's lifetime that `MAX_ATTEMPTS` alone cannot -
+  the rate-limited path hands the attempt back, so a persistently throttled row
+  could otherwise retry hourly forever. Past the window a redelivery of a send that
+  actually succeeded becomes a duplicate email.
+</Callout>
+
+A dead-lettered row is logged at `error` with `outboxId` and `topic`, because
+nothing else will ever mention it - it is an email that silently never arrives.
+There is no automatic reaper: the rows stay for inspection.
+
+## Rendering
+
+The provider resolves the template from the row's `channel` and `topic`, never from
+the payload. That is what lets a template be renamed or version-bumped without the
+change having to reach rows already queued:
+
+```ts
+const RESEND_TEMPLATE_IDS: Record<OutboxDelivery, string> = {
+  'email:account:created': 'account-created-1',
+  'email:workspace:created': 'workspace-created-1',
+  'email:invite:created': 'workspace-invitation-1',
+};
+```
+
+`Record<OutboxDelivery, string>` makes a new delivery a compile error until it has a
+template to send with. Because the topic picks the schema, the payload can only be
+validated at this point - and it is, since a row queued before a schema change may
+no longer match. A mismatch throws with the offending field named, which lands in
+`last_error`.
+
+The Resend client is built on first send, not at import: the SDK throws on an empty
+key from its constructor, and this module is pulled in transitively by every
+producer, so constructing at module scope would take down anything importing a
+controller when `RESEND_API_KEY` is unset. Deferring makes a missing key a delivery
+failure the outbox records and retries.
+
+<Callout>
+  `sendEmail` **throws on failure and never returns the error.** The worker marks a
+  row processed whenever the provider call resolves, so a swallowed error silently
+  drops the email. Resend's error object is rethrown as-is because it carries the
+  `statusCode` the worker classifies on.
+</Callout>
+
+## Adding a message
+
+1. **Add the topic** to `OUTBOX_TOPICS` in [`packages/core/src/enums/outbox.ts`](https://github.com/ianwelerson/ordre/blob/main/packages/core/src/enums/outbox.ts).
+   It backs a Postgres enum, so this is **a migration** - generate one.
+2. **Add any new variables** to `OUTBOX_VARIABLES` in the same file. Add to
+   `OUTBOX_DEFAULT_VARIABLES` instead if every message should carry it, and give it
+   a value in `DEFAULT_VARIABLES` in `utils/outbox.ts`.
+3. **Declare the delivery** in `OUTBOX_PAYLOAD_SCHEMAS`, keyed `<channel>:<topic>`,
+   picking exactly the variables the template renders. Nothing is optional - a
+   missing variable is a bug, and the failure mode is an email that delivers
+   *successfully* with a blank link.
+4. **Create the template in Resend** and map its id in `RESEND_TEMPLATE_IDS`. Steps
+   3 and 4 are both compile errors until done.
+5. **Call `pushToOutbox`** from the producer, passing the transaction that writes
+   the business data.
+
+Adding a whole **channel** (SMS, push) additionally means a value in
+`OUTBOX_CHANNELS` (also a migration) and an entry in the worker's `providers`
+registry. One row per channel is the point of the split: a Twilio failure never
+re-sends an email that already went out.
+
+## Testing
+
+The worker is inert under Vitest: `stopped` starts `true`, so `wakeOutboxWorker`
+from a producer inside a test is a no-op, while the entrypoint that calls
+`startOutboxWorker` is never imported. Route tests can therefore assert that a row
+was **queued** without anything trying to deliver it. `drain()` is exported and
+driven directly by the worker's own unit tests. See [Testing](/internal-docs/engineering/testing)
+for which tier a case belongs in.

@@ -12,6 +12,7 @@ here before writing another one.
 | Utility                                | Purpose                                                        |
 | -------------------------------------- | -------------------------------------------------------------- |
 | [`db-error`](#db-error)                | Classify raw Postgres driver errors (unique violation, etc.)   |
+| [`outbox`](#outbox)                    | Queue a transactional message in the caller's transaction      |
 | [`slug-restrictions`](#slug-restrictions) | Block reserved, brand-protected, and profane workspace slugs |
 | [`validation`](#validation)            | Parse request bodies and normalize validation errors           |
 
@@ -63,6 +64,47 @@ disambiguate which one collided:
 ```ts
 if (isUniqueViolation(error, 'workspace_slug_unique')) { ... }
 ```
+
+---
+
+## `outbox`
+
+`apps/api/src/utils/outbox.ts`
+
+The producer side of the transactional outbox: queues one delivery in the caller's
+transaction and wakes the delivery worker once that transaction commits. The full
+design - worker, retries, dead-lettering, adding a topic - is on its own page:
+**[Transactional Outbox](/internal-docs/engineering/outbox)**.
+
+**Exports:**
+
+| Export                                | Kind     | Description                                                        |
+| ------------------------------------- | -------- | ------------------------------------------------------------------ |
+| `pushToOutbox(transaction, input)`    | function | Inserts an outbox row and registers the worker wake-up via `afterCommit` |
+
+`input` is `{ channel, topic, to, variables }`. `variables` is type-checked against
+`<channel>:<topic>` minus the defaults `pushToOutbox` fills in, so a missing or
+misspelled variable is a compile error at the call site.
+
+```ts
+import { pushToOutbox } from '#/utils/outbox.ts';
+
+await pushToOutbox(tx, {
+  channel: 'email',
+  topic: 'workspace:created',
+  to: user.email,
+  variables: {
+    workspace_name: data.name,
+    workspace_industry: data.industry,
+    workspace_plan: freePlan.title,
+    owner_email: user.email,
+  },
+});
+```
+
+> Pass the transaction **explicitly**. Inside a nested `getDb().transaction(...)`
+> the insert belongs to that `tx`, or the row survives a rollback of the block that
+> produced it. Everywhere else `getDb()` is already the request transaction.
 
 ---
 

@@ -48,13 +48,13 @@ Run it locally with `pnpm dev` (or just the docs app via `pnpm --filter docs doc
 and open the docs site, or read the MDX sources directly under
 [`apps/docs/content/docs`](./apps/docs/content/docs):
 
-| Section                                                                             | What's there                                                        |
-| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| [Overview](./apps/docs/content/docs/index.mdx)                                      | What Ordre is, and how the docs are organized.                      |
-| [Setup](./apps/docs/content/docs/setup)                                             | Running the project, environment variables, and database roles.     |
-| [Product](./apps/docs/content/docs/product)                                         | Feature specs, pricing & billing, and the roadmap.                  |
-| [Engineering](./apps/docs/content/docs/engineering)                                 | Architecture, data model, authorization, and infrastructure.        |
-| [Design](./apps/docs/content/docs/design/brand.mdx)                                 | Brand, color system, typography, and component patterns.            |
+| Section                                             | What's there                                                                                  |
+| --------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| [Overview](./apps/docs/content/docs/index.mdx)      | What Ordre is, and how the docs are organized.                                                |
+| [Setup](./apps/docs/content/docs/setup)             | Running the project, environment variables, and database roles.                               |
+| [Product](./apps/docs/content/docs/product)         | Feature specs, pricing & billing, and the roadmap.                                            |
+| [Engineering](./apps/docs/content/docs/engineering) | Architecture, tech stack, data model, authorization, the outbox, testing, and infrastructure. |
+| [Design](./apps/docs/content/docs/design/brand.mdx) | Brand, color system, typography, and component patterns.                                      |
 
 To keep a single source of truth, this README stays focused on repo-level
 mechanics (structure, scripts, tooling); product and infrastructure detail lives
@@ -70,7 +70,7 @@ This is a [Turborepo](https://turborepo.com/) + [pnpm workspaces](https://pnpm.i
 ordre/
 ├── apps/
 │   ├── api/            # Express (Railway) - backend API
-│   ├── board/          # React Router v7 (SSR) - client-facing board
+│   ├── board/          # React Router v8 (SSR) - client-facing board
 │   ├── dashboard/      # Next.js - workspace management app
 │   ├── marketing/      # Next.js - public marketing site
 │   ├── docs/           # Fumadocs - internal docs + API reference
@@ -82,7 +82,7 @@ ordre/
 │   ├── db/             # Drizzle ORM schemas, migrations, and connection
 │   ├── i18n/           # Shared translations
 │   ├── monitoring/     # Structured logging (pino)
-│   ├── services/       # Service interfaces and data access layer
+│   ├── services/       # [PLANNED] HTTP client layer for frontend apps
 │   └── ui/             # React component library
 │
 ├── turbo.json          # Turborepo pipeline
@@ -94,14 +94,14 @@ Apps are runnable; packages are shared. The package layer follows a strict depen
 
 ### Apps
 
-| App                               | Description                                                                                               |
-| --------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| App                               | Description                                                                                                                                |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | [**api**](./apps/api)             | Backend REST API. Express, deployed as a persistent service on Railway; framework-agnostic business logic behind a swappable HTTP adapter. |
-| [**board**](./apps/board)         | Client-facing board. React Router v7 in framework mode (SSR) - one board per job, opened via unique link. |
-| [**dashboard**](./apps/dashboard) | Authenticated workspace app for managing boards, members, and clients. Built with Next.js.                |
-| [**marketing**](./apps/marketing) | Public marketing site (home, pricing, about, legal). Built with Next.js.                                  |
-| [**docs**](./apps/docs)           | Internal documentation and the generated API reference. Built with Fumadocs.                              |
-| [**storybook**](./apps/storybook) | Component documentation for `@ordre/ui`.                                                                   |
+| [**board**](./apps/board)         | Client-facing board. React Router v8 in framework mode (SSR) - one board per job, opened via unique link.                                  |
+| [**dashboard**](./apps/dashboard) | Authenticated workspace app for managing boards, members, and clients. Built with Next.js.                                                 |
+| [**marketing**](./apps/marketing) | Public marketing site (home, pricing, about, legal). Built with Next.js.                                                                   |
+| [**docs**](./apps/docs)           | Internal documentation and the generated API reference. Built with Fumadocs.                                                               |
+| [**storybook**](./apps/storybook) | Component documentation for `@ordre/ui`.                                                                                                   |
 
 ### Packages
 
@@ -110,7 +110,7 @@ Apps are runnable; packages are shared. The package layer follows a strict depen
 | [**@ordre/ui**](./packages/ui)                 | React component library - atoms and design tokens shared across apps. |
 | [**@ordre/core**](./packages/core)             | Shared schemas and types (Zod) used across apps and packages.         |
 | [**@ordre/db**](./packages/db)                 | Drizzle ORM schemas, migrations, and the database connection.         |
-| [**@ordre/services**](./packages/services)     | Service interfaces and the data access layer.                         |
+| [**@ordre/services**](./packages/services)     | _Planned._ HTTP client layer for the frontend apps - stub only today. |
 | [**@ordre/monitoring**](./packages/monitoring) | Structured logging (pino) shared across services.                     |
 | [**@ordre/i18n**](./packages/i18n)             | Shared translations merged with app-specific strings at runtime.      |
 | [**@ordre/config**](./packages/config)         | Shared ESLint, TypeScript, and Prettier presets.                      |
@@ -120,7 +120,7 @@ Apps are runnable; packages are shared. The package layer follows a strict depen
 ## 🧰 Tech Stack
 
 - **Monorepo**: Turborepo + pnpm workspaces
-- **Frameworks**: Next.js 16 (dashboard, marketing), React Router v7 framework mode (board)
+- **Frameworks**: Next.js 16 (dashboard, marketing), React Router v8 framework mode (board)
 - **Backend**: Express (API), Drizzle ORM over PostgreSQL, Better Auth
 - **UI**: React 19, Tailwind CSS v4
 - **i18n**: `next-intl` (Next apps) and `i18next` + `remix-i18next` (board)
@@ -128,7 +128,13 @@ Apps are runnable; packages are shared. The package layer follows a strict depen
 - **Docs**: Fumadocs (internal guides + generated API reference)
 - **Tooling**: TypeScript, ESLint 9 (flat config), Prettier, Syncpack, Husky + lint-staged, Commitlint
 
-For the full hosting and service stack (Railway, Neon, Cloudflare R2, and the rest), see the [Infrastructure docs](./apps/docs/content/docs/engineering/infrastructure.mdx).
+This is the summary. The per-workspace breakdown - which libraries each app and
+package uses, alongside its folder structure - lives in
+[Architecture](./apps/docs/content/docs/engineering/architecture.mdx), with the
+monorepo-wide base in
+[Shared Tech Stack](./apps/docs/content/docs/engineering/architecture.mdx#-shared-tech-stack).
+For the hosting and service stack (Railway, Neon, Cloudflare R2, and the rest),
+see the [Infrastructure docs](./apps/docs/content/docs/engineering/infrastructure.mdx).
 
 ---
 

@@ -14,7 +14,7 @@ Environment config is split between **shared infrastructure** (things every app 
 | `.env.example`           | Shared infra template        | Yes                            | Copy to `.env` and fill in                                  |
 | `.env.test`              | Shared infra (test)          | No                             | Points at a **dedicated, disposable** test database         |
 | `.env.test.example`      | Shared infra test template   | Yes                            | Copy to `.env.test`                                         |
-| `apps/api/.env`          | API-specific (dev)           | No                             | Auth secret, stage, port                                    |
+| `apps/api/.env`          | API-specific (dev)           | No                             | Auth secret, stage, port, Resend key, app origins           |
 | `apps/api/.env.example`  | API-specific template        | Yes                            | Copy to `apps/api/.env`                                     |
 | `apps/api/.env.test`     | API-specific (test)          | No                             | API values used under `APP_STAGE=test`                      |
 
@@ -31,9 +31,18 @@ The API's [`env.ts`](https://github.com/ianwelerson/ordre/blob/main/apps/api/src
 | --------------- | ------------------------------------------ |
 | `development`   | `../../.env` → `apps/api/.env`             |
 | `test`          | `../../.env.test` → `apps/api/.env.test`  |
+| `staging`       | none - variables come from the host        |
 | `production`    | none - variables come from the host        |
 
-In production nothing is read from disk; the host (Railway, Neon, etc.) provides the variables directly.
+On a deployed stage nothing is read from disk; the host (Railway, Neon, etc.) provides the variables directly.
+
+<Callout type="warn">
+  Turborepo only forwards variables it has been told about. A new API variable
+  must be added to `globalEnv` in [`turbo.json`](https://github.com/ianwelerson/ordre/blob/main/turbo.json)
+  as well as to the schema - otherwise it is present in the shell, absent inside
+  the task, and the API fails startup validation for a variable you can see with
+  `echo`.
+</Callout>
 
 ## Shared infrastructure (`.env` / `.env.test`)
 
@@ -50,10 +59,11 @@ Both are validated to start with `postgresql://`. The two-role split is what let
 
 | Variable              | Required | Default         | Notes                                                                 |
 | --------------------- | -------- | --------------- | --------------------------------------------------------------------- |
-| `APP_STAGE`           | no       | `development`   | `development` \| `test` \| `production`; must match `NODE_ENV`         |
-| `NODE_ENV`            | no       | `development`   | Must match `APP_STAGE` (enforced by the schema)                       |
+| `APP_STAGE`           | no       | `development`   | **Which deployment this is**: `development` \| `test` \| `staging` \| `production`. The one the app branches on |
+| `NODE_ENV`            | no       | `development`   | **Whether to run optimized**: `development` \| `test` \| `production`. Must be `production` on a deployed stage (see below) |
 | `PORT`                | no       | `3000`          | HTTP port for the raw server (`api:dev:app`)                          |
 | `BETTER_AUTH_SECRET`  | yes      | -               | Session signing secret, min 32 chars.       |
+| `RESEND_API_KEY`      | yes      | -               | Resend API key used by the outbox worker to deliver email. Required at startup on every stage - see [Transactional Outbox](/internal-docs/engineering/outbox) |
 | `BETTER_AUTH_URL`     | yes      | -               | **The API's own public origin**, one per stage - `https://api.ordre.localhost` in dev, `https://api.staging.ordre.app`, `https://api.ordre.app`. Never a frontend's. |
 | `APP_BASE_URL`        | yes      | -               | Marketing site origin                                                 |
 | `APP_DASHBOARD_URL`   | yes      | -               | Dashboard origin                                                      |
@@ -67,7 +77,26 @@ Both are validated to start with `postgresql://`. The two-role split is what let
   blocked rather than 404'd. Add the origin, don't widen CORS.
 </Callout>
 
-<Callout>
-  `NODE_ENV` and `APP_STAGE` must be equal - the schema rejects a mismatch. This
-  keeps "which env files load" and "how the framework behaves" from drifting apart.
+## `APP_STAGE` vs `NODE_ENV`
+
+They answer different questions and are **not** required to match.
+
+`APP_STAGE` is *which deployment this is*. It is the variable app code branches on,
+and the only one that can tell staging from production. `NODE_ENV` is *whether to
+run optimized* - the variable third-party tooling (Express, bundlers, `pino-pretty`,
+pnpm's devDependency pruning) reads, and it has no `staging` value to offer.
+
+So a staging deploy runs `APP_STAGE=staging` with `NODE_ENV=production`, and the
+schema enforces exactly that: on any **deployed** stage (`staging`, `production`)
+`NODE_ENV` must be `production`. Every other combination is left alone.
+
+<Callout type="warn">
+  On Railway, `NODE_ENV` is injected as `production` by the builder - leave it
+  unset there and set only `APP_STAGE`.
 </Callout>
+
+Guards in [`env.ts`](https://github.com/ianwelerson/ordre/blob/main/apps/api/src/config/env.ts)
+follow the same split: `isProd()`, `isStaging()`, `isDev()`, and `isTest()` test one
+stage each, and `isDeployed()` is true on `staging` **and** `production`. Prefer
+`isDeployed()` for anything staging must also honour - rate limits, webhook signature
+checks, "don't send this to a real customer" fuses.

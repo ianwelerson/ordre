@@ -42,12 +42,25 @@ So each authenticated request runs inside one transaction that carries `app.user
 <Callout>
   Because the transaction spans the request, keep requests **DB-only** - never
   `await` a slow third-party call (email, SMS) while it is open, or you pin a pooled
-  connection for the duration. That is what the outbox pattern is for.
+  connection for the duration. That is what the
+  [Transactional Outbox](/internal-docs/engineering/outbox) is for.
 </Callout>
+
+### Reacting after the commit
+
+`db-context.ts` also exposes `afterCommit(fn)`, which queues `fn` to run once the
+request transaction commits - or runs it immediately when there is no request
+transaction (a script, or a Better Auth hook, where the caller's write was its own
+autocommitted statement).
+
+Anything that reacts to a write from *outside* the transaction needs this. Waking
+the outbox worker is the live example: run it any earlier and the worker is on a
+different pooled connection that cannot see the uncommitted row. On rollback the
+callbacks are dropped along with the writes they were reacting to.
 
 ## The policies
 
-Defined in [`0002_enable_rls.sql`](https://github.com/ianwelerson/ordre/blob/main/packages/db/src/migrations/0002_enable_rls.sql), applied automatically on `pnpm db:migrate` (as the owner).
+Defined in [`0001_row_level_security.sql`](https://github.com/ianwelerson/ordre/blob/main/packages/db/src/migrations/0001_row_level_security.sql), applied automatically on `pnpm db:migrate` (as the owner).
 
 **Helper functions:**
 
@@ -55,7 +68,7 @@ Defined in [`0002_enable_rls.sql`](https://github.com/ianwelerson/ordre/blob/mai
 - `app_is_member(ws)` - is the caller a member of workspace `ws`? Declared `SECURITY DEFINER` so it runs with the owner's privileges and **bypasses RLS internally**. Without that, a policy on `workspace_member` that calls this function would recurse into itself forever. Hardened with `SET search_path = public, pg_temp` so it can't be tricked into reading an attacker-planted table.
 - `app_workspace_has_members(ws)`, `app_can_access_member(member)`, `app_slug_exists(slug)` - narrower `SECURITY DEFINER` helpers for the bootstrap, the join table, and the public slug check.
 
-**Coverage:** `ENABLE` + `FORCE ROW LEVEL SECURITY` on the five tenant tables (`workspace`, `workspace_member`, `workspace_location`, `workspace_invite`, `workspace_member_location`). The Better Auth tables (`user`, `session`, `account`, `verification`) are **deliberately excluded** - Better Auth reads them before we know who the caller is, so RLS there would block login.
+**Coverage:** `ENABLE` + `FORCE ROW LEVEL SECURITY` on the five tenant tables (`workspace`, `workspace_member`, `workspace_location`, `workspace_invite`, `workspace_member_location`). Two sets of tables are **deliberately excluded**: the Better Auth tables (`user`, `session`, `account`, `verification`), because Better Auth reads them before we know who the caller is and RLS there would block login; and `outbox`, because its worker has no `app.user_id` at all (see [Operational notes](#operational-notes)).
 
 Most policies gate on `app_is_member(workspace_id)`: you may see and change only rows in workspaces you belong to. `USING` controls which rows are visible/targetable; `WITH CHECK` controls which rows you may write.
 
@@ -109,4 +122,4 @@ Tests run against the **same restricted role as production**. The split lives in
 
 - **Effective concurrency = pool size.** Each in-flight request holds one pooled connection for its transaction's lifetime. Longer hold times shrink throughput - another reason to keep requests DB-only.
 - **Policies are evaluated per row.** `app_is_member` is an indexed `EXISTS` on the `(user_id, workspace_id)` unique index - sub-millisecond for single-row reads, but a reason to keep list reads scoped and paginated.
-- **Background workers have no `app.user_id`.** A worker connecting as `ordre_app` would see zero rows under RLS. Workers that must read tenant data need their own connection strategy (see the outbox notes).
+- **Background workers have no `app.user_id`.** A worker connecting as `ordre_app` would see zero rows under RLS, so the queue would look permanently empty. The `outbox` table is therefore deliberately **not** under RLS, and its payloads are denormalized at write time so the worker never has to read a tenant table - see [Transactional Outbox](/internal-docs/engineering/outbox). A future worker that genuinely must read tenant data needs its own connection strategy.

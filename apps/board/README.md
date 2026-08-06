@@ -2,7 +2,7 @@
 
 The **board** app is the client-facing surface of Ordre. It renders the shareable status page that a client opens from the unique link sent by a workspace member - no login, no account creation, just a URL.
 
-It is built with **[React Router v7](https://reactrouter.com/) in framework mode** (SSR). Next.js was not needed here, but SSR is - a client landing on the board should see content on first paint, and OG tags should render for link previews down the road.
+It is built with **[React Router v8](https://reactrouter.com/) in framework mode** (SSR) on Vite. Next.js was not needed here, but SSR is - a client landing on the board should see content on first paint, and OG tags should render for link previews down the road.
 
 ---
 
@@ -19,52 +19,11 @@ Everything that _manages_ boards lives in the [`dashboard`](../dashboard) app - 
 
 ## 🧰 Tech Stack
 
-- **Framework**: [React Router v7](https://reactrouter.com/) (framework mode, SSR)
-- **Bundler**: [Vite](https://vitejs.dev/)
-- **UI**: React 19, Tailwind CSS v4
-- **i18n**: [`i18next`](https://www.i18next.com/) + [`react-i18next`](https://react.i18next.com/) + [`remix-i18next`](https://github.com/sergiodxa/remix-i18next)
-- **Testing**: [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/) (Playwright as browser provider)
+**React Router v8** in framework mode (SSR) on Vite, React 19, and Tailwind CSS v4. Locale is handled by `i18next` + `react-i18next` + `remix-i18next`.
 
----
+Everything else - TypeScript, Turborepo, Vitest, ESLint, Prettier, Syncpack - is monorepo-wide; see [Shared Tech Stack](../docs/content/docs/engineering/architecture.mdx#-shared-tech-stack).
 
-## 📁 Structure
-
-```
-apps/board/
-├── src/
-│   ├── app/                     # React Router v7 app directory (SSR concerns)
-│   │   ├── pages/               # Route modules
-│   │   ├── api/                 # Route-mounted endpoints (e.g. /api/locales/:lng/:ns)
-│   │   ├── locale/              # Locale prefix helpers
-│   │   ├── middleware/          # remix-i18next middleware
-│   │   ├── entry.client.tsx     # Client entry
-│   │   ├── entry.server.tsx     # Server entry
-│   │   ├── root.tsx             # Root layout
-│   │   └── routes.ts            # Route config
-│   │
-│   ├── views/                   # Page UI components (one folder per view)
-│   └── shared/                  # Reusable app-level code (hooks, utils, i18n, etc.)
-│
-├── react-router.config.ts
-├── vite.config.ts
-├── vitest.config.ts
-├── Dockerfile
-└── package.json
-```
-
-### Three-folder convention
-
-| Folder    | Responsibility                                              |
-| --------- | ----------------------------------------------------------- |
-| `app/`    | Route definitions, middleware, entry files, API routes      |
-| `views/`  | Page UI and page-level logic, tests, and stories            |
-| `shared/` | Cross-cutting code reused across views (hooks, utils, i18n) |
-
-### Import alias
-
-| Alias | Resolves to |
-| ----- | ----------- |
-| `@/*` | `src/*`     |
+Full breakdown, alongside this workspace's folder structure: **[Architecture](../docs/content/docs/engineering/architecture.mdx#-board)**.
 
 ---
 
@@ -98,21 +57,6 @@ pnpm --filter board dev
 
 ---
 
-## 🌍 i18n
-
-**Supported locales**: English (`en`, default) and Portuguese (`pt`).
-
-| Path  | Locale |
-| ----- | ------ |
-| `/`   | `en`   |
-| `/br` | `pt`   |
-
-Detection order: custom path prefix → `lng` cookie → `Accept-Language` header.
-
-Shared translations come from [`@ordre/i18n`](../../packages/i18n) and are merged with app-specific messages at runtime.
-
----
-
 ## 🐳 Docker
 
 A `Dockerfile` is provided for containerized deployment:
@@ -126,5 +70,8 @@ docker run -p 3000:3000 ordre-board
 
 ## 📚 Further Reading
 
+The route module layout, the three-folder convention, and the i18n detection order (path prefix → `lng` cookie → header) are documented once in the docs project:
+
+- [Architecture → Board App Structure](../docs/content/docs/engineering/architecture.mdx#-board)
+- [Architecture → i18n Structure](../docs/content/docs/engineering/architecture.mdx#-i18n-structure)
 - [Root README](../../README.md) - monorepo overview
-- [Architecture](../docs/content/docs/engineering/architecture.mdx) - monorepo architecture (docs project)

@@ -16,15 +16,6 @@ Storybook does not contain product code - it is a thin app whose only job is to 
 
 ---
 
-## 🧰 Tech Stack
-
-- **Documentation framework**: [Storybook 10](https://storybook.js.org/) (`@storybook/react-vite`)
-- **Bundler**: [Vite](https://vitejs.dev/)
-- **Styling**: Tailwind CSS v4 via Vite plugin (`@tailwindcss/vite`)
-- **Markdown**: MDX with [`remark-gfm`](https://github.com/remarkjs/remark-gfm) for tables and task lists
-
----
-
 ## 📁 Structure
 
 ```
@@ -53,6 +44,16 @@ Stories are resolved from across the monorepo - any `*.stories.tsx` or `*.mdx` f
 
 ---
 
+## 🧰 Tech Stack
+
+**Storybook 10** on `@storybook/react-vite`, with `@storybook/addon-docs` and `remark-gfm` for MDX tables. Tailwind v4 is wired in through `@tailwindcss/vite`.
+
+Everything else - TypeScript, Turborepo, Vitest, ESLint, Prettier, Syncpack - is monorepo-wide; see [Shared Tech Stack](../docs/content/docs/engineering/architecture.mdx#-shared-tech-stack).
+
+Full breakdown, alongside this workspace's folder structure: **[Architecture](../docs/content/docs/engineering/architecture.mdx#-storybook)**.
+
+---
+
 ## 🚀 Getting Started
 
 Install and run the whole stack from the repo root - see **[Setup → Running the Project](../docs/content/docs/setup/running-the-project.mdx)**. To run only Storybook:
@@ -69,9 +70,9 @@ pnpm storybook
 
 | Command                | Description                                            |
 | ---------------------- | ------------------------------------------------------ |
-| `pnpm storybook`       | Start Storybook in dev mode via portless (HTTPS proxy)  |
-| `pnpm storybook:app`   | Start the raw Storybook dev server (no portless)        |
-| `pnpm storybook:build` | Build the static Storybook site to `storybook-static/`  |
+| `pnpm storybook`       | Start Storybook in dev mode via portless (HTTPS proxy) |
+| `pnpm storybook:app`   | Start the raw Storybook dev server (no portless)       |
+| `pnpm storybook:build` | Build the static Storybook site to `storybook-static/` |
 
 ---
 

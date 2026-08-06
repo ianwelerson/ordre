@@ -7,7 +7,23 @@ Drizzle ORM schema, migrations, and the shared Postgres connection for Ordre.
 - `src/schemas` - table definitions (the source of truth for the DB shape)
 - `src/migrations` - generated SQL migrations, applied via `pnpm db:migrate`
 - `src/connection.ts` - `createPool` / `createDb` helpers consumed by the API
+- `src/seeds`, `src/seed.ts` - seed data (plan catalog), run via `pnpm db:seed`
 - `scripts` - tooling that runs around the generators
+- `drawdb` - the [drawDB](https://drawdb.app) ERD, kept in step with `src/schemas`
+
+Field-level notes on every table - what each column is for, which are derived, and
+which tables are planned rather than built - live in
+**[Data Model](../../apps/docs/content/docs/engineering/data-model.mdx)**.
+
+## 🧰 Tech Stack
+
+**Drizzle ORM** + `drizzle-kit` over node-postgres (`pg`). The `pg` driver rather than Neon's HTTP driver, because the API is a long-lived process.
+
+Everything else - TypeScript, Turborepo, Vitest, ESLint, Prettier, Syncpack - is monorepo-wide; see [Shared Tech Stack](../../apps/docs/content/docs/engineering/architecture.mdx#-shared-tech-stack).
+
+Full breakdown, alongside this workspace's folder structure: **[Architecture](../../apps/docs/content/docs/engineering/architecture.mdx#ordredb)**.
+
+---
 
 ## Scripts
 
@@ -16,6 +32,7 @@ Drizzle ORM schema, migrations, and the shared Postgres connection for Ordre.
 | `pnpm db:generate` | Generate a migration from schema changes                                  |
 | `pnpm db:migrate`  | Apply pending migrations (runs as the **owner** via `DATABASE_OWNER_URL`) |
 | `pnpm db:push`     | Push the schema directly (dev only)                                       |
+| `pnpm db:seed`     | Seed reference data (the plan catalog)                                    |
 | `pnpm db:studio`   | Open Drizzle Studio                                                       |
 | `pnpm auth:patch`  | Apply our conventions to the generated Better Auth schema (see below)     |
 
@@ -47,3 +64,11 @@ database setup that is not automated.
 See **[Database Roles & RLS](../../apps/docs/content/docs/setup/database-roles.mdx)**
 for the exact SQL and the per-environment (local, Neon staging, Neon prod)
 instructions.
+
+---
+
+## 📚 Further Reading
+
+- [Data Model](../../apps/docs/content/docs/engineering/data-model.mdx) - every table, field by field
+- [Row-Level Security](../../apps/docs/content/docs/engineering/authorization/row-level-security.mdx) - how the policies work
+- [Root README](../../README.md) - monorepo overview

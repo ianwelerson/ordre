@@ -17,16 +17,6 @@ The root (`/`) redirects to the marketing site - `ordre.localhost` locally, `ord
 
 ---
 
-## 🧰 Tech Stack
-
-- **Framework**: [Next.js 16](https://nextjs.org/) (App Router)
-- **Docs engine**: [Fumadocs](https://fumadocs.dev) - `fumadocs-core`, `fumadocs-ui`, `fumadocs-mdx`
-- **API reference**: [`fumadocs-openapi`](https://fumadocs.dev/docs/ui/openapi) - generates MDX from the OpenAPI spec
-- **UI**: React 19, Tailwind CSS v4
-- **Local proxy**: [portless](https://www.npmjs.com/package/portless) - serves the app over HTTPS in development
-
----
-
 ## 📁 Structure
 
 ```
@@ -60,6 +50,16 @@ apps/docs/
 
 ---
 
+## 🧰 Tech Stack
+
+**Next.js 16** + **Fumadocs** (`fumadocs-core`, `fumadocs-ui`, `fumadocs-mdx`), with `fumadocs-openapi` generating the API reference from the spec `apps/api` produces.
+
+Everything else - TypeScript, Turborepo, Vitest, ESLint, Prettier, Syncpack - is monorepo-wide; see [Shared Tech Stack](content/docs/engineering/architecture.mdx#-shared-tech-stack).
+
+Full breakdown, alongside this workspace's folder structure: **[Architecture](content/docs/engineering/architecture.mdx#-docs)**.
+
+---
+
 ## 🚀 Getting Started
 
 Install and run the whole stack from the repo root - see **[Setup → Running the Project](content/docs/setup/running-the-project.mdx)**. To run only the docs:
@@ -79,6 +79,7 @@ pnpm --filter docs docs:dev
 | `pnpm docs:dev`     | Start the dev server via portless (HTTPS proxy)         |
 | `pnpm docs:dev:app` | Start the raw dev server (OpenAPI watcher + `next dev`) |
 | `pnpm docs:openapi` | Generate the API MDX from `public/openapi.json`         |
+| `pnpm docs:errors`  | Generate `reference/error-codes.mdx` from `@ordre/core` |
 | `pnpm docs:start`   | Serve the production build (run `pnpm build` first)     |
 | `pnpm build`        | Production build (`docs:openapi` + `next build`)        |
 | `pnpm check-types`  | Generate docs, then `next typegen` + `tsc --noEmit`     |
@@ -90,21 +91,21 @@ pnpm --filter docs docs:dev
 
 ## 📝 Guides
 
-Guide pages live in `content/docs` as MDX, grouped into sections by folder. Navigation order is defined in `content/docs/meta.json` (and a `meta.json` inside each folder). Pages map to URLs under `/internal-docs`:
+Guide pages live in `content/docs` as MDX, grouped into sections by folder. The path
+maps straight to the URL - `content/docs/<path>.mdx` is served at
+`/internal-docs/<path>`, and `index.mdx` at `/internal-docs`.
 
-| Path                             | URL                                          |
-| -------------------------------- | -------------------------------------------- |
-| `index.mdx`                      | `/internal-docs`                             |
-| `setup/*`                        | `/internal-docs/setup/*`                     |
-| `design/brand.mdx`               | `/internal-docs/design/brand`                |
-| `product/specs.mdx`              | `/internal-docs/product/specs`               |
-| `product/pricing.mdx`            | `/internal-docs/product/pricing`             |
-| `product/roadmap/*`              | `/internal-docs/product/roadmap/*`           |
-| `engineering/architecture.mdx`   | `/internal-docs/engineering/architecture`    |
-| `engineering/data-model.mdx`     | `/internal-docs/engineering/data-model`      |
-| `engineering/authorization/*`    | `/internal-docs/engineering/authorization/*` |
-| `engineering/infrastructure.mdx` | `/internal-docs/engineering/infrastructure`  |
-| `reference/*`                    | `/internal-docs/reference/*`                 |
+**Adding a page:** create the MDX file with `title`, `icon`, and `description`
+frontmatter, then add its path to `content/docs/meta.json` - that file (and a
+`meta.json` inside each folder) is what controls sidebar order and grouping. A page
+missing from `meta.json` renders but is not linked.
+
+Two guides are **generated, not written**, and carry a "do not edit by hand" banner:
+
+| Page                        | Generated from             | Command             |
+| --------------------------- | -------------------------- | ------------------- |
+| `reference/error-codes.mdx` | `packages/core/src/errors` | `pnpm docs:errors`  |
+| `content/api-docs/**`       | `public/openapi.json`      | `pnpm docs:openapi` |
 
 ---
 
