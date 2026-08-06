@@ -10,3 +10,4 @@ export type {
 export type * from './health.ts';
 export type * from './workspace.ts';
 export type * from './billing.ts';
+export type * from './outbox.ts';

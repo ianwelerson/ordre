@@ -9,3 +9,6 @@ export * from './workspace.ts';
 
 // Billing
 export * from './billing.ts';
+
+// Outbox
+export * from './outbox.ts';

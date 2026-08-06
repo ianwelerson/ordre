@@ -4,6 +4,7 @@ import type { WorkspaceMemberRole } from '@ordre/core/enums';
 export interface SessionUser {
   id: string;
   email: string;
+  name: string;
 }
 
 /**
@@ -18,6 +19,7 @@ export interface SessionUser {
  */
 export interface WorkspaceContext {
   id: string;
+  name: string;
 }
 
 /**

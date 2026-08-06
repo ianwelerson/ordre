@@ -1,7 +1,9 @@
 import { app, BASE_PATH } from '#/adapters/express/server.ts';
 import { auth } from '#/config/auth.ts';
 import { USER_IDS, userFixtures, WORKSPACE_IDS, workspaceFixtures } from '#/test/fixtures.ts';
+import { ownerDb } from '#/test/owner-db.ts';
 import { parseBody } from '#/utils/testing.ts';
+import { sql } from 'drizzle-orm';
 import request from 'supertest';
 import { z } from 'zod';
 
@@ -142,6 +144,57 @@ describe('Workspace', () => {
       expect(workspace.name).toBe('Test');
       expect(workspace.subscription?.status).toBe('active');
       expect(workspace.subscription?.plan.code).toBe('free:founding');
+    });
+
+    test('POST queues exactly one self-contained outbox row for the new workspace', async () => {
+      mockUserSession();
+
+      const slug = `outbox-${Date.now()}`;
+
+      await request(app)
+        .post(BASE)
+        .send({ name: 'Outbox', slug, type: 'individual', industry: 'other' })
+        .expect(201);
+
+      // Written through the request's own connection as `ordre_app`, so this also
+      // proves the runtime role has INSERT on `outbox`.
+      const rows = (
+        await ownerDb.execute<{
+          channel: string;
+          topic: string;
+          payload: { to: string; variables: Record<string, string> };
+        }>(sql`SELECT channel, topic, payload FROM outbox`)
+      ).rows;
+
+      expect(rows).toHaveLength(1);
+      expect(rows[0]).toMatchObject({ channel: 'email', topic: 'workspace:created' });
+
+      // Self-contained by design: the worker has no user context and cannot read
+      // tenant tables, so everything the template renders lives in the payload.
+      const member = userFixtures.find((user) => user.id === USER_IDS.member);
+
+      expect(rows[0]?.payload.to).toBe(member?.email);
+      expect(rows[0]?.payload.variables).toMatchObject({
+        workspace_name: 'Outbox',
+        owner_email: member?.email,
+      });
+    });
+
+    test('POST writes no outbox row when the request fails', async () => {
+      mockUserSession();
+
+      // A duplicate slug: the handler returns 409 and the transaction rolls back,
+      // taking the outbox row with it. This is the whole point of the pattern -
+      // no email about a workspace that was never created.
+      await request(app)
+        .post(BASE)
+        .send({ name: 'Test', slug: 'test-workspace', type: 'individual', industry: 'other' })
+        .expect(409);
+
+      const [row] = (await ownerDb.execute<{ count: string }>(sql`SELECT count(*) FROM outbox`))
+        .rows;
+
+      expect(Number(row?.count)).toBe(0);
     });
 
     test('POST allows a non-member (create requires only authentication)', async () => {

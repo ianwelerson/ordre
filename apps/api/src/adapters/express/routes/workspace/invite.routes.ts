@@ -21,7 +21,7 @@ inviteRouter.post(
   requireWorkspaceAccess,
   requireWorkspacePermission('workspace:member:manage'),
   requireWorkspaceQuota('seat'),
-  sendMemberResult((req) => workspaceInviteCreate(req.workspace, req.member, req.body))
+  sendMemberResult((req) => workspaceInviteCreate(req.workspace, req.user, req.member, req.body))
 );
 
 inviteRouter.get(

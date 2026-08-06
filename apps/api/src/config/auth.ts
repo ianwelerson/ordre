@@ -1,4 +1,7 @@
+import { getDb } from '#/config/db-context.ts';
 import { db } from '#/config/db.ts';
+import { logger } from '#/config/logger.ts';
+import { pushToOutbox } from '#/utils/outbox.ts';
 import { parseBetterAuthValidationDetails } from '#/utils/validation.ts';
 import { env } from '#env';
 import { betterAuth } from 'better-auth';
@@ -98,6 +101,24 @@ export const auth = betterAuth({
   plugins: [
     openAPI({ disableDefaultReference: true }), // We need Better Auth to generate the openAPI specs but not the paths
   ],
+  databaseHooks: {
+    user: {
+      create: {
+        after: async (user) => {
+          try {
+            await pushToOutbox(getDb(), {
+              channel: 'email',
+              topic: 'account:created',
+              to: user.email,
+              variables: { user_name: user.name, user_email: user.email },
+            });
+          } catch (error) {
+            logger.error({ err: error, userId: user.id }, 'failed to queue account:created email');
+          }
+        },
+      },
+    },
+  },
   hooks: {
     after: createAuthMiddleware(async (ctx) => {
       const remapped = remapAuthError(ctx.context.returned);

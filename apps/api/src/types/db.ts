@@ -14,6 +14,7 @@ export type WorkspaceLocationRow = typeof schema.workspaceLocation.$inferSelect;
 export type WorkspaceInviteRow = typeof schema.workspaceInvite.$inferSelect;
 export type WorkspaceSubscriptionRow = typeof schema.workspaceSubscription.$inferSelect;
 export type PlanRow = typeof schema.plan.$inferSelect;
+export type OutboxRow = typeof schema.outbox.$inferSelect;
 
 /** The schema's relation map, for typing relational (`with`) query results via `BuildQueryResult`. */
 export type Schema = ExtractTablesWithRelations<typeof schema>;

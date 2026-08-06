@@ -25,7 +25,7 @@ const WORKSPACE_ID = '11111111-1111-4111-8111-111111111111';
 const PLAN_ID = '33333333-3333-4333-8333-333333333333';
 
 /** The workspace context `requireWorkspaceAccess` would have populated. */
-const WORKSPACE = { id: WORKSPACE_ID } as const;
+const WORKSPACE = { id: WORKSPACE_ID, name: 'Workspace' } as const;
 
 /** Minimal Express `Request` with the bits `requireWorkspaceQuota` reads. */
 const buildRequest = (overrides: Partial<Request> = {}): Request => ({ ...overrides }) as Request;

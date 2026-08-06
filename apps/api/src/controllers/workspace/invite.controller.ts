@@ -1,7 +1,9 @@
 import { getDb } from '#/config/db-context.ts';
 import { logger } from '#/config/logger.ts';
-import type { MemberContext, WorkspaceContext } from '#/types/context.ts';
+import { urls } from '#/config/urls.ts';
+import type { MemberContext, SessionUser, WorkspaceContext } from '#/types/context.ts';
 import { isUniqueViolation } from '#/utils/db-error.ts';
+import { pushToOutbox } from '#/utils/outbox.ts';
 import { validateField, validateRequestBody } from '#/utils/validation.ts';
 import { and, eq, sql } from 'drizzle-orm';
 import { randomBytes } from 'node:crypto';
@@ -56,6 +58,7 @@ import { locationInWorkspace } from './location.utils.ts';
  */
 export const workspaceInviteCreate = async (
   workspace: WorkspaceContext,
+  user: SessionUser,
   member: MemberContext,
   payload: WorkspaceInviteCreate
 ): Promise<Response<WorkspaceInvite>> => {
@@ -92,20 +95,43 @@ export const workspaceInviteCreate = async (
 
     const now = new Date();
 
-    const [invite] = await getDb()
-      .insert(schema.workspaceInvite)
-      .values({
-        invitedByMemberId: member.id,
-        workspaceId: workspace.id,
-        email: parsedPayload.data.email,
-        name: parsedPayload.data.name,
-        role: parsedPayload.data.role,
-        status: 'pending',
-        locationId: parsedPayload.data.locationId,
-        token: randomBytes(32).toString('base64url'),
-        expiresAt: new Date(now.getTime() + INVITE_TTL_MS),
-      })
-      .returning();
+    const invite = await getDb().transaction(async (tx) => {
+      const [inviteData] = await tx
+        .insert(schema.workspaceInvite)
+        .values({
+          invitedByMemberId: member.id,
+          workspaceId: workspace.id,
+          email: parsedPayload.data.email,
+          name: parsedPayload.data.name,
+          role: parsedPayload.data.role,
+          status: 'pending',
+          locationId: parsedPayload.data.locationId,
+          token: randomBytes(32).toString('base64url'),
+          expiresAt: new Date(now.getTime() + INVITE_TTL_MS),
+        })
+        .returning();
+
+      if (!inviteData) {
+        return null;
+      }
+
+      await pushToOutbox(tx, {
+        channel: 'email',
+        topic: 'invite:created',
+        to: parsedPayload.data.email,
+        variables: {
+          workspace_name: workspace.name,
+          invitee_name: user.name,
+          invitee_email: user.email,
+          invited_name: parsedPayload.data.name,
+          invited_email: parsedPayload.data.email,
+          invited_role: parsedPayload.data.role,
+          invite_url: urls.invite(inviteData.token),
+        },
+      });
+
+      return inviteData;
+    });
 
     if (!invite) {
       return errorResponse(INVITE_ERRORS, 'INVITE_CREATE_FAILED');

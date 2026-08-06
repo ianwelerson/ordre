@@ -55,7 +55,7 @@ const WORKSPACE_ID = '11111111-1111-4111-8111-111111111111';
 const CALLER_ID = '22222222-2222-4222-8222-222222222222';
 const TARGET_ID = '33333333-3333-4333-8333-333333333333';
 
-const workspace: WorkspaceContext = { id: WORKSPACE_ID };
+const workspace: WorkspaceContext = { id: WORKSPACE_ID, name: 'Workspace' };
 const owner: MemberContext = { id: CALLER_ID, role: 'owner' };
 const admin: MemberContext = { id: CALLER_ID, role: 'admin' };
 

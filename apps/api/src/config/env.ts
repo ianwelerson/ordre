@@ -31,6 +31,15 @@ type AppStage = (typeof APP_STAGES)[number];
 /** Stages that run on real infrastructure, and so must run optimized. */
 const DEPLOYED_STAGES: readonly AppStage[] = ['staging', 'production'];
 
+/**
+ * A public origin one of our apps is reachable at.
+ *
+ * The trailing slash is stripped so callers can concatenate a path straight on;
+ * otherwise `https://host/` + `/login` silently produces a double slash, which is
+ * the kind of thing that only shows up in an email that already went out.
+ */
+const originUrl = z.url().transform((value) => value.replace(/\/+$/, ''));
+
 export const envSchema = z
   .object({
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
@@ -38,7 +47,10 @@ export const envSchema = z
     PORT: z.coerce.number().positive().default(3000),
     DATABASE_URL: z.string().startsWith('postgresql://'),
     DATABASE_OWNER_URL: z.string().startsWith('postgresql://'),
+    RESEND_API_KEY: z.string().min(1),
     BETTER_AUTH_SECRET: z.string().min(32),
+    APP_BASE_URL: originUrl,
+    APP_DASHBOARD_URL: originUrl,
   })
   .refine((data) => !DEPLOYED_STAGES.includes(data.APP_STAGE) || data.NODE_ENV === 'production', {
     message: `NODE_ENV must be "production" when APP_STAGE is one of: ${DEPLOYED_STAGES.join(', ')}`,

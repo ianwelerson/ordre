@@ -53,7 +53,7 @@ workspaceRouter.get(
 
 workspaceRouter.post(
   workspaceCollectionPath,
-  sendAuthResult((req) => workspaceCreate(req.user.id, req.body))
+  sendAuthResult((req) => workspaceCreate(req.user, req.body))
 );
 
 workspaceRouter.get(

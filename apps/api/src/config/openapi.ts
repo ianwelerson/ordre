@@ -1,10 +1,10 @@
+import { registry } from '#/config/openapi-registry.ts';
 import { OpenApiGeneratorV31 } from '@asteasolutions/zod-to-openapi';
 import { globSync } from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { auth } from './auth.ts';
-import { registry } from './openapi-registry.ts';
 
 const controllersDir = path.resolve(import.meta.dirname, '../controllers');
 

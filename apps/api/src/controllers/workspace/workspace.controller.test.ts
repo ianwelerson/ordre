@@ -26,7 +26,10 @@ const { mockDb } = vi.hoisted(() => ({
 }));
 
 vi.mock('#/config/db-context.ts', () => ({ getDb: () => mockDb }));
-vi.mock('#/config/logger.ts', () => ({ logger: { error: vi.fn() } }));
+
+vi.mock('#/config/logger.ts', () => ({
+  logger: { error: vi.fn(), child: () => ({ info: vi.fn(), error: vi.fn() }) },
+}));
 
 /** A Postgres unique-violation, as node-postgres surfaces it. */
 const uniqueViolation = () =>
@@ -47,7 +50,7 @@ const mockUpdate = (result: unknown[] | Error) => {
 };
 
 const WORKSPACE_ID = '11111111-1111-4111-8111-111111111111';
-const workspace: WorkspaceContext = { id: WORKSPACE_ID };
+const workspace: WorkspaceContext = { id: WORKSPACE_ID, name: 'Workspace' };
 const member: MemberContext = { id: 'member-1', role: 'owner' };
 
 const validCreatePayload = {
@@ -56,6 +59,8 @@ const validCreatePayload = {
   type: 'individual',
   industry: 'other',
 } as Parameters<typeof workspaceCreate>[1];
+
+const sessionUser = { id: 'user-1', email: 'owner@example.com', name: 'John Doe' };
 
 describe('controllers/workspace', () => {
   beforeEach(() => {
@@ -93,7 +98,7 @@ describe('controllers/workspace', () => {
       mockDb.query.plan.findFirst.mockResolvedValueOnce(planRow());
       mockDb.transaction.mockRejectedValueOnce(uniqueViolation());
 
-      const result = await workspaceCreate('user-1', validCreatePayload);
+      const result = await workspaceCreate(sessionUser, validCreatePayload);
 
       expect(result.status).toBe(409);
     });
@@ -103,7 +108,7 @@ describe('controllers/workspace', () => {
       mockDb.query.workspace.findFirst.mockResolvedValueOnce(undefined);
       mockDb.query.plan.findFirst.mockResolvedValueOnce(undefined);
 
-      const result = await workspaceCreate('user-1', validCreatePayload);
+      const result = await workspaceCreate(sessionUser, validCreatePayload);
 
       expect(result.body).toMatchObject({ code: 'WORKSPACE_CREATE_FAILED' });
       // The transaction is never opened when the plan can't be resolved.
@@ -113,7 +118,7 @@ describe('controllers/workspace', () => {
     it('returns INTERNAL_ERROR on an unexpected error', async () => {
       mockDb.query.workspace.findFirst.mockRejectedValueOnce(new Error('db down'));
 
-      const result = await workspaceCreate('user-1', validCreatePayload);
+      const result = await workspaceCreate(sessionUser, validCreatePayload);
 
       expect(result.status).toBe(500);
     });
@@ -127,7 +132,7 @@ describe('controllers/workspace', () => {
       mockDb.query.plan.findFirst.mockResolvedValueOnce(planRow());
       mockDb.transaction.mockResolvedValueOnce(WORKSPACE_ID);
 
-      const result = await workspaceCreate('user-1', validCreatePayload);
+      const result = await workspaceCreate(sessionUser, validCreatePayload);
 
       expect(result.body).toMatchObject({ code: 'WORKSPACE_CREATE_FAILED' });
     });

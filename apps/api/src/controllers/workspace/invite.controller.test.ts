@@ -1,4 +1,4 @@
-import type { MemberContext, WorkspaceContext } from '#/types/context.ts';
+import type { MemberContext, SessionUser, WorkspaceContext } from '#/types/context.ts';
 
 import {
   workspaceInviteAccept,
@@ -23,11 +23,15 @@ const { mockDb } = vi.hoisted(() => ({
     insert: vi.fn(),
     update: vi.fn(),
     execute: vi.fn(),
+    transaction: vi.fn(async (callback: (tx: unknown) => unknown) => callback(mockDb)),
   },
 }));
 
-vi.mock('#/config/db-context.ts', () => ({ getDb: () => mockDb }));
-vi.mock('#/config/logger.ts', () => ({ logger: { error: vi.fn() } }));
+vi.mock('#/config/db-context.ts', () => ({ getDb: () => mockDb, afterCommit: vi.fn() }));
+
+vi.mock('#/config/logger.ts', () => ({
+  logger: { error: vi.fn(), child: vi.fn(() => ({ error: vi.fn() })) },
+}));
 
 /** `expireStalePendingInvite`: `update(...).set(...).where()` resolving (no returning). */
 const mockExpireStale = () => {
@@ -68,9 +72,11 @@ const WORKSPACE_ID = '11111111-1111-4111-8111-111111111111';
 const MEMBER_ID = '22222222-2222-4222-8222-222222222222';
 const INVITE_ID = '33333333-3333-4333-8333-333333333333';
 const LOCATION_ID = '44444444-4444-4444-8444-444444444444';
+const USER_ID = '55555555-5555-4555-8555-555555555555';
 
-const workspace: WorkspaceContext = { id: WORKSPACE_ID };
+const workspace: WorkspaceContext = { id: WORKSPACE_ID, name: 'Workspace' };
 const member: MemberContext = { id: MEMBER_ID, role: 'owner' };
+const user: SessionUser = { id: USER_ID, email: 'owner@ordre.app', name: 'Owner' };
 
 /** A workspace_invite row, as Drizzle returns it (Date timestamps). */
 const inviteRow = (overrides: Record<string, unknown> = {}) => ({
@@ -96,7 +102,7 @@ const createPayload = (overrides: Record<string, unknown> = {}) =>
     name: 'Invitee',
     role: 'member',
     ...overrides,
-  }) as Parameters<typeof workspaceInviteCreate>[2];
+  }) as Parameters<typeof workspaceInviteCreate>[3];
 
 describe('controllers/workspace/invite', () => {
   beforeEach(() => {
@@ -105,7 +111,7 @@ describe('controllers/workspace/invite', () => {
 
   describe('workspaceInviteCreate', () => {
     it('returns INVALID_INPUT when the payload fails validation', async () => {
-      const result = await workspaceInviteCreate(workspace, member, { name: 'x' } as never);
+      const result = await workspaceInviteCreate(workspace, user, member, { name: 'x' } as never);
 
       expect(result.body).toMatchObject({ code: 'INVALID_INPUT' });
     });
@@ -116,7 +122,7 @@ describe('controllers/workspace/invite', () => {
       mockDb.query.workspaceInvite.findFirst.mockResolvedValueOnce(undefined);
       mockInsert([inviteRow()]);
 
-      const result = await workspaceInviteCreate(workspace, member, createPayload());
+      const result = await workspaceInviteCreate(workspace, user, member, createPayload());
 
       expect(result.status).toBe(201);
       expect(result.body).toMatchObject({ id: INVITE_ID, email: 'invitee@ordre.app' });
@@ -131,6 +137,7 @@ describe('controllers/workspace/invite', () => {
 
       const result = await workspaceInviteCreate(
         workspace,
+        user,
         member,
         createPayload({ locationId: LOCATION_ID })
       );
@@ -142,7 +149,7 @@ describe('controllers/workspace/invite', () => {
       mockExpireStale();
       mockActiveMember([{ id: 'existing-member' }]);
 
-      const result = await workspaceInviteCreate(workspace, member, createPayload());
+      const result = await workspaceInviteCreate(workspace, user, member, createPayload());
 
       expect(result.status).toBe(409);
       expect(result.body).toMatchObject({ code: 'MEMBER_ALREADY_EXISTS' });
@@ -153,7 +160,7 @@ describe('controllers/workspace/invite', () => {
       mockActiveMember([]);
       mockDb.query.workspaceInvite.findFirst.mockResolvedValueOnce({ id: INVITE_ID });
 
-      const result = await workspaceInviteCreate(workspace, member, createPayload());
+      const result = await workspaceInviteCreate(workspace, user, member, createPayload());
 
       expect(result.status).toBe(409);
       expect(result.body).toMatchObject({ code: 'INVITE_ALREADY_PENDING' });
@@ -167,6 +174,7 @@ describe('controllers/workspace/invite', () => {
 
       const result = await workspaceInviteCreate(
         workspace,
+        user,
         member,
         createPayload({ locationId: LOCATION_ID })
       );
@@ -181,7 +189,7 @@ describe('controllers/workspace/invite', () => {
       mockDb.query.workspaceInvite.findFirst.mockResolvedValueOnce(undefined);
       mockInsertReject(uniqueViolation);
 
-      const result = await workspaceInviteCreate(workspace, member, createPayload());
+      const result = await workspaceInviteCreate(workspace, user, member, createPayload());
 
       expect(result.status).toBe(409);
       expect(result.body).toMatchObject({ code: 'INVITE_ALREADY_PENDING' });
@@ -193,7 +201,7 @@ describe('controllers/workspace/invite', () => {
       mockDb.query.workspaceInvite.findFirst.mockResolvedValueOnce(undefined);
       mockInsert([]);
 
-      const result = await workspaceInviteCreate(workspace, member, createPayload());
+      const result = await workspaceInviteCreate(workspace, user, member, createPayload());
 
       expect(result.body).toMatchObject({ code: 'INVITE_CREATE_FAILED' });
     });
@@ -204,7 +212,7 @@ describe('controllers/workspace/invite', () => {
       mockDb.query.workspaceInvite.findFirst.mockResolvedValueOnce(undefined);
       mockInsertReject(new Error('db down'));
 
-      const result = await workspaceInviteCreate(workspace, member, createPayload());
+      const result = await workspaceInviteCreate(workspace, user, member, createPayload());
 
       expect(result.status).toBe(500);
     });

@@ -1,7 +1,8 @@
 import { getDb } from '#/config/db-context.ts';
 import { logger } from '#/config/logger.ts';
-import type { MemberContext, WorkspaceContext } from '#/types/context.ts';
+import type { MemberContext, SessionUser, WorkspaceContext } from '#/types/context.ts';
 import { isUniqueViolation } from '#/utils/db-error.ts';
+import { pushToOutbox } from '#/utils/outbox.ts';
 import { validateField, validateRequestBody } from '#/utils/validation.ts';
 import { eq, sql } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
@@ -74,12 +75,13 @@ export const workspaceSlugExists = async (
  * `slug` is the real guard, so a concurrent collision surfacing as a unique
  * violation is also mapped to `WORKSPACE_SLUG_ALREADY_EXISTS`.
  *
- * @param userId - The id of the creating user; recorded as the workspace owner.
+ * @param user - The creating user; recorded as the workspace owner and emailed the
+ *   `workspace:created` notification.
  * @param payload - The workspace fields to create; validated against `WorkspaceCreateSchema`.
  * @returns The created `Workspace` (201) on success, or an error response.
  */
 export const workspaceCreate = async (
-  userId: string,
+  user: SessionUser,
   payload: WorkspaceCreate
 ): Promise<Response<Workspace>> => {
   try {
@@ -139,7 +141,7 @@ export const workspaceCreate = async (
       const [workspaceMember] = await tx
         .insert(schema.workspaceMember)
         .values({
-          userId,
+          userId: user.id,
           workspaceId: id,
           role: 'owner',
           status: 'active',
@@ -175,6 +177,18 @@ export const workspaceCreate = async (
       await tx.insert(schema.workspaceMemberLocation).values({
         memberId: workspaceMember.id,
         locationId: workspaceLocation.id,
+      });
+
+      await pushToOutbox(tx, {
+        channel: 'email',
+        topic: 'workspace:created',
+        to: user.email,
+        variables: {
+          workspace_name: data.name,
+          workspace_industry: data.industry,
+          workspace_plan: freePlan.title,
+          owner_email: user.email,
+        },
       });
 
       return id;

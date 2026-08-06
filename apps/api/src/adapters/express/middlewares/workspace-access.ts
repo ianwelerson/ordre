@@ -1,5 +1,5 @@
 import { getDb } from '#/config/db-context.ts';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, or } from 'drizzle-orm';
 import type { NextFunction, Request, Response } from 'express';
 import z from 'zod';
 
@@ -53,19 +53,15 @@ export const requireWorkspaceAccess = async (req: Request, res: Response, next: 
       return res.status(status).json(body);
     }
 
-    let workspaceId: string | undefined =
-      typeof idParam.data === 'string' ? idParam.data : undefined;
+    const workspace = await getDb().query.workspace.findFirst({
+      where: or(
+        slugParam.success ? eq(schema.workspace.slug, slugParam.data) : undefined,
+        idParam.success ? eq(schema.workspace.id, idParam.data) : undefined
+      ),
+      columns: { id: true, name: true },
+    });
 
-    if (!idParam.success && slugParam.success) {
-      const workspace = await getDb().query.workspace.findFirst({
-        where: eq(schema.workspace.slug, slugParam.data),
-        columns: { id: true },
-      });
-
-      workspaceId = workspace?.id;
-    }
-
-    if (!workspaceId) {
+    if (!workspace) {
       const { status, body } = errorResponse(WORKSPACE_ERRORS, 'WORKSPACE_NOT_FOUND');
       return res.status(status).json(body);
     }
@@ -73,7 +69,7 @@ export const requireWorkspaceAccess = async (req: Request, res: Response, next: 
     const member = await getDb().query.workspaceMember.findFirst({
       where: and(
         eq(schema.workspaceMember.userId, req.user.id),
-        eq(schema.workspaceMember.workspaceId, workspaceId)
+        eq(schema.workspaceMember.workspaceId, workspace.id)
       ),
     });
 
@@ -89,7 +85,10 @@ export const requireWorkspaceAccess = async (req: Request, res: Response, next: 
       return res.status(status).json(body);
     }
 
-    req.workspace = { id: workspaceId };
+    req.workspace = {
+      id: workspace.id,
+      name: workspace.name,
+    };
 
     req.member = {
       id: member.id,
