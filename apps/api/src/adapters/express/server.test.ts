@@ -20,8 +20,28 @@ vi.mock('#/config/logger.ts', () => ({
 }));
 
 const { app } = await import('./server.ts');
+const { appOrigins, urls } = await import('#/config/urls.ts');
 
 describe('adapters/express/server', () => {
+  describe('cors', () => {
+    it('reflects a trusted origin and allows credentials', async () => {
+      expect(appOrigins).toContain(urls.dashboard);
+
+      const response = await request(app).get('/api/does-not-exist').set('Origin', urls.dashboard);
+
+      expect(response.headers['access-control-allow-origin']).toBe(urls.dashboard);
+      expect(response.headers['access-control-allow-credentials']).toBe('true');
+    });
+
+    it('does not echo an untrusted origin', async () => {
+      const response = await request(app)
+        .get('/api/does-not-exist')
+        .set('Origin', 'https://not-ours.example');
+
+      expect(response.headers['access-control-allow-origin']).toBeUndefined();
+    });
+  });
+
   it('responds 404 with a Not Found body for an unmatched route', async () => {
     const response = await request(app).get('/api/does-not-exist').expect(404);
 

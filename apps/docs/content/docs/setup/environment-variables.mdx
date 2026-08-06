@@ -54,7 +54,18 @@ Both are validated to start with `postgresql://`. The two-role split is what let
 | `NODE_ENV`            | no       | `development`   | Must match `APP_STAGE` (enforced by the schema)                       |
 | `PORT`                | no       | `3000`          | HTTP port for the raw server (`api:dev:app`)                          |
 | `BETTER_AUTH_SECRET`  | yes      | -               | Session signing secret, min 32 chars.       |
-| `BETTER_AUTH_URL`     | yes      | -               | Base URL of the auth server, e.g. `http://ordre.localhost` in dev     |
+| `BETTER_AUTH_URL`     | yes      | -               | **The API's own public origin**, one per stage - `https://api.ordre.localhost` in dev, `https://api.staging.ordre.app`, `https://api.ordre.app`. Never a frontend's. |
+| `APP_BASE_URL`        | yes      | -               | Marketing site origin                                                 |
+| `APP_DASHBOARD_URL`   | yes      | -               | Dashboard origin                                                      |
+| `APP_BOARD_URL`       | yes      | -               | Board origin                                                          |
+| `APP_DOCS_URL`        | yes      | -               | Docs origin                                                           |
+
+<Callout>
+  The four `APP_*_URL` origins are not just for building links. `appOrigins` in
+  `src/config/urls.ts` feeds both the CORS allowlist and Better Auth's
+  `trustedOrigins`, so a frontend missing from here has its browser requests
+  blocked rather than 404'd. Add the origin, don't widen CORS.
+</Callout>
 
 <Callout>
   `NODE_ENV` and `APP_STAGE` must be equal - the schema rejects a mismatch. This

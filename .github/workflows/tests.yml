@@ -92,8 +92,11 @@ jobs:
           RESEND_API_KEY: re_ci_not_a_real_key
           # Public origins. Nothing is dispatched in CI, so these only have to be
           # valid URLs for env.ts to parse.
+          BETTER_AUTH_URL: https://api.ordre.localhost
           APP_BASE_URL: https://ordre.localhost
           APP_DASHBOARD_URL: https://dashboard.ordre.localhost
+          APP_BOARD_URL: https://board.ordre.localhost
+          APP_DOCS_URL: https://docs.ordre.localhost
 
       # - name: Run E2E Tests
       #   run: pnpm run test:e2e:ci

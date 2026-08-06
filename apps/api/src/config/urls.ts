@@ -18,10 +18,16 @@ import { env } from '#env';
 import { DASHBOARD_ROUTES, MARKETING_ROUTES } from '@ordre/core/constants';
 
 export const urls = {
+  /** The API's own public origin. */
+  api: env.BETTER_AUTH_URL,
   /** Public marketing site. */
   base: env.APP_BASE_URL,
   /** Operator dashboard root. */
   dashboard: env.APP_DASHBOARD_URL,
+  /** Customer-facing board. */
+  board: env.APP_BOARD_URL,
+  /** Documentation site. */
+  docs: env.APP_DOCS_URL,
   dashboardLogin: `${env.APP_DASHBOARD_URL}${DASHBOARD_ROUTES.login}`,
   help: `${env.APP_BASE_URL}${MARKETING_ROUTES.help}`,
   privacy: `${env.APP_BASE_URL}${MARKETING_ROUTES.privacy}`,
@@ -32,5 +38,19 @@ export const urls = {
    */
   invite: (token: string) => `${env.APP_DASHBOARD_URL}${DASHBOARD_ROUTES.invite(token)}`,
 } as const;
+
+/**
+ * The browser origins allowed to call this API with credentials.
+ *
+ * One list, two consumers: CORS (which decides whether the browser hands the
+ * response over) and Better Auth's `trustedOrigins` (which decides whether the
+ * request is honoured at all). They have to agree, so they read the same array -
+ * a request allowed by one and refused by the other fails in a way that looks
+ * like neither.
+ *
+ * `urls.api` is deliberately absent: same-origin requests never trigger CORS,
+ * and Better Auth already trusts its own `baseURL`.
+ */
+export const appOrigins: readonly string[] = [urls.base, urls.dashboard, urls.board, urls.docs];
 
 export default urls;

@@ -12,8 +12,11 @@ describe('config/env', () => {
       DATABASE_OWNER_URL: 'postgresql://owner:pass@localhost:5432/db',
       RESEND_API_KEY: 'ABC_123',
       BETTER_AUTH_SECRET: TEST_AUTH_SECRET,
+      BETTER_AUTH_URL: 'https://api.ordre.localhost',
       APP_BASE_URL: 'https://ordre.localhost',
       APP_DASHBOARD_URL: 'https://dashboard.ordre.localhost',
+      APP_BOARD_URL: 'https://board.ordre.localhost',
+      APP_DOCS_URL: 'https://docs.ordre.localhost',
     };
 
     it('should parse a valid environment and coerce PORT to a number', () => {
@@ -37,8 +40,11 @@ describe('config/env', () => {
         DATABASE_OWNER_URL: 'postgresql://localhost/db',
         RESEND_API_KEY: 'ABC_123',
         BETTER_AUTH_SECRET: TEST_AUTH_SECRET,
+        BETTER_AUTH_URL: 'https://api.ordre.localhost',
         APP_BASE_URL: 'https://ordre.localhost',
         APP_DASHBOARD_URL: 'https://dashboard.ordre.localhost',
+        APP_BOARD_URL: 'https://board.ordre.localhost',
+        APP_DOCS_URL: 'https://docs.ordre.localhost',
       });
 
       expect(result.success).toBe(true);
@@ -143,6 +149,20 @@ describe('config/env', () => {
       expect(result.success).toBe(false);
     });
 
+    // Every origin is required: a missing one would otherwise surface as a
+    // browser request blocked by CORS, which is far harder to trace than a
+    // boot-time failure.
+    it.each(['BETTER_AUTH_URL', 'APP_BOARD_URL', 'APP_DOCS_URL'] as const)(
+      'should fail when %s is missing',
+      (key) => {
+        const { [key]: _omitted, ...withoutOrigin } = validEnv;
+        const result = envSchema.safeParse(withoutOrigin);
+
+        expect(result.success).toBe(false);
+        expect(result.error?.issues.some((issue) => issue.path.includes(key))).toBe(true);
+      }
+    );
+
     it('should fail when an origin is not a url', () => {
       const result = envSchema.safeParse({ ...validEnv, APP_BASE_URL: 'ordre.localhost' });
 
@@ -184,6 +204,11 @@ describe('config/env', () => {
       vi.stubEnv('DATABASE_OWNER_URL', 'postgresql://localhost/db');
       vi.stubEnv('RESEND_API_KEY', 'ABC_123');
       vi.stubEnv('BETTER_AUTH_SECRET', TEST_AUTH_SECRET);
+      vi.stubEnv('BETTER_AUTH_URL', 'https://api.ordre.localhost');
+      vi.stubEnv('APP_BASE_URL', 'https://ordre.localhost');
+      vi.stubEnv('APP_DASHBOARD_URL', 'https://dashboard.ordre.localhost');
+      vi.stubEnv('APP_BOARD_URL', 'https://board.ordre.localhost');
+      vi.stubEnv('APP_DOCS_URL', 'https://docs.ordre.localhost');
       // Don't actually touch the filesystem; just prove the dev branch calls it.
       const loadEnvFile = vi.spyOn(process, 'loadEnvFile').mockImplementation(() => {});
 
@@ -201,8 +226,11 @@ describe('config/env', () => {
       vi.stubEnv('DATABASE_OWNER_URL', 'postgresql://localhost/db');
       vi.stubEnv('RESEND_API_KEY', 'ABC_123');
       vi.stubEnv('BETTER_AUTH_SECRET', TEST_AUTH_SECRET);
+      vi.stubEnv('BETTER_AUTH_URL', 'https://api.staging.ordre.app');
       vi.stubEnv('APP_BASE_URL', 'https://staging.ordre.app');
       vi.stubEnv('APP_DASHBOARD_URL', 'https://dashboard.staging.ordre.app');
+      vi.stubEnv('APP_BOARD_URL', 'https://go.staging.ordre.app');
+      vi.stubEnv('APP_DOCS_URL', 'https://docs.staging.ordre.app');
 
       const mod = await import('./env.ts');
 
@@ -220,8 +248,11 @@ describe('config/env', () => {
       vi.stubEnv('DATABASE_OWNER_URL', 'postgresql://localhost/db');
       vi.stubEnv('RESEND_API_KEY', 'ABC_123');
       vi.stubEnv('BETTER_AUTH_SECRET', TEST_AUTH_SECRET);
+      vi.stubEnv('BETTER_AUTH_URL', 'https://api.ordre.app');
       vi.stubEnv('APP_BASE_URL', 'https://ordre.app');
       vi.stubEnv('APP_DASHBOARD_URL', 'https://dashboard.ordre.app');
+      vi.stubEnv('APP_BOARD_URL', 'https://go.ordre.app');
+      vi.stubEnv('APP_DOCS_URL', 'https://docs.ordre.app');
 
       const mod = await import('./env.ts');
 

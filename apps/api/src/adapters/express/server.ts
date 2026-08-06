@@ -1,4 +1,5 @@
 import { logger } from '#/config/logger.ts';
+import { appOrigins } from '#/config/urls.ts';
 import { isTest } from '#env';
 import cors from 'cors';
 import express, { type Express, type NextFunction, type Request, type Response } from 'express';
@@ -14,7 +15,10 @@ const BASE_PATH = '/api';
 app.set('trust proxy', true);
 
 app.use(helmet());
-app.use(cors());
+
+// Credentialed CORS against an explicit origin list.
+app.use(cors({ origin: [...appOrigins], credentials: true }));
+
 app.use(httpLogger('api', !isTest()));
 
 // All API routes live under /api (body parsers are wired inside this router).

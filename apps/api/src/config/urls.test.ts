@@ -1,6 +1,6 @@
 import { DASHBOARD_ROUTES, MARKETING_ROUTES } from '@ordre/core/constants';
 
-import { urls } from './urls.ts';
+import { appOrigins, urls } from './urls.ts';
 
 describe('config/urls', () => {
   it('builds every url from an origin and a declared path, never a literal', () => {
@@ -24,5 +24,21 @@ describe('config/urls', () => {
     // The whole point of the split: production links must not be baked in.
     expect(urls.base).not.toContain('ordre.app');
     expect(urls.dashboard).not.toContain('ordre.app');
+  });
+
+  describe('appOrigins', () => {
+    it('lists every frontend that calls the API', () => {
+      expect(appOrigins).toEqual([urls.base, urls.dashboard, urls.board, urls.docs]);
+    });
+
+    it('omits the API itself, which is same-origin and already trusted', () => {
+      expect(appOrigins).not.toContain(urls.api);
+    });
+
+    it('carries bare origins, since CORS matches an origin and not a URL', () => {
+      for (const origin of appOrigins) {
+        expect(origin).toBe(new URL(origin).origin);
+      }
+    });
   });
 });

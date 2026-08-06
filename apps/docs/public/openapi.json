@@ -16,8 +16,8 @@
       "description": "Production"
     },
     {
-      "url": "https://ordre-api.vercel.app/api",
-      "description": "Development"
+      "url": "https://api.staging.ordre.app/api",
+      "description": "Staging"
     },
     {
       "url": "https://api.ordre.localhost/api",

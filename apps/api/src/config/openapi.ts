@@ -33,7 +33,7 @@ const openApiDocument = generator.generateDocument({
   },
   servers: [
     { url: 'https://api.ordre.app/api', description: 'Production' },
-    { url: 'https://ordre-api.vercel.app/api', description: 'Development' },
+    { url: 'https://api.staging.ordre.app/api', description: 'Staging' },
     { url: 'https://api.ordre.localhost/api', description: 'Local' },
   ],
   // Declared at the document root so the docs generator (which groups pages by

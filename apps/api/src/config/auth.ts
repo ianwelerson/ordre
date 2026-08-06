@@ -1,6 +1,7 @@
 import { getDb } from '#/config/db-context.ts';
 import { db } from '#/config/db.ts';
 import { logger } from '#/config/logger.ts';
+import { appOrigins, urls } from '#/config/urls.ts';
 import { pushToOutbox } from '#/utils/outbox.ts';
 import { parseBetterAuthValidationDetails } from '#/utils/validation.ts';
 import { env } from '#env';
@@ -72,22 +73,8 @@ export const auth = betterAuth({
     schema,
   }),
   secret: env.BETTER_AUTH_SECRET,
-  baseURL: {
-    allowedHosts: [
-      // Prod URLs
-      'ordre.app',
-      '*.ordre.app',
-      // Staging
-      'ordre-docs.vercel.app',
-      'ordre-board.vercel.app',
-      'ordre-marketing.vercel.app',
-      'ordre-dashboard.vercel.app',
-      // Local
-      '*.ordre.localhost',
-    ],
-    protocol: 'https',
-    fallback: 'https://ordre.app',
-  },
+  baseURL: urls.api,
+  trustedOrigins: [...appOrigins],
   advanced: {
     database: {
       generateId: 'uuid', // Set the IDs to be UUID

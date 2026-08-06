@@ -14,7 +14,9 @@
     "BETTER_AUTH_URL",
     "RESEND_API_KEY",
     "APP_BASE_URL",
-    "APP_DASHBOARD_URL"
+    "APP_DASHBOARD_URL",
+    "APP_BOARD_URL",
+    "APP_DOCS_URL"
   ],
   "tasks": {
     "build": {

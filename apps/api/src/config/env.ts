@@ -49,8 +49,11 @@ export const envSchema = z
     DATABASE_OWNER_URL: z.string().startsWith('postgresql://'),
     RESEND_API_KEY: z.string().min(1),
     BETTER_AUTH_SECRET: z.string().min(32),
+    BETTER_AUTH_URL: originUrl,
     APP_BASE_URL: originUrl,
     APP_DASHBOARD_URL: originUrl,
+    APP_BOARD_URL: originUrl,
+    APP_DOCS_URL: originUrl,
   })
   .refine((data) => !DEPLOYED_STAGES.includes(data.APP_STAGE) || data.NODE_ENV === 'production', {
     message: `NODE_ENV must be "production" when APP_STAGE is one of: ${DEPLOYED_STAGES.join(', ')}`,
