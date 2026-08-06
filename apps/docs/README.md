@@ -10,10 +10,10 @@ Built with **[Fumadocs](https://fumadocs.dev)** on Next.js.
 
 - Serve the internal **Guides** (`/internal-docs`) - architecture, specs, infrastructure, pricing, brand, and roadmap
 - Serve the **API Reference** (`/api-docs`), generated from the OpenAPI spec with an interactive request playground
-- Redirect the root (`/`) to the Ordre marketing site (the docs app has no landing page of its own)
+- Redirect the root (`/`) to the Guides (the docs app has no landing page of its own)
 - Expose raw guide markdown for LLM/agent consumption
 
-The root (`/`) redirects to the marketing site - `ordre.localhost` locally, `ordre-marketing.vercel.app` on preview, and `ordre.app` in production (see `marketingUrl()` in `src/lib/shared.ts`).
+The root (`/`) redirects to `/internal-docs` on every environment (see `src/app/page.tsx`).
 
 ---
 
@@ -28,7 +28,7 @@ apps/docs/
 │
 ├── src/
 │   ├── app/
-│   │   ├── page.tsx               # Root redirect to the marketing site
+│   │   ├── page.tsx               # Root redirect to the guides (/internal-docs)
 │   │   ├── internal-docs/         # Guides layout and [[...slug]] pages
 │   │   ├── api-docs/              # API reference layout, landing, and pages
 │   │   └── api/search/route.ts    # Search route handler
@@ -37,7 +37,7 @@ apps/docs/
 │   │   ├── source.ts              # source (guides) and apiSource (API) loaders
 │   │   ├── openapi.ts             # createOpenAPI server instance
 │   │   ├── layout.shared.tsx      # Shared nav/layout options
-│   │   └── shared.ts              # Routes + marketingUrl()
+│   │   └── shared.ts              # Route constants
 │   │
 │   ├── components/api-page.tsx    # APIPage component for the generated MDX
 │   └── proxy.ts                   # Serves raw guide markdown (/page.md, Accept)

@@ -275,7 +275,9 @@ Both run with `NODE_ENV=production` - Railway's builder injects it, and the API'
 
 **Why:** Already registered; Cloudflare provides reliable DNS management with fast propagation. Cloudflare R2 for image storage lives in the same account.
 
-**Preview domains:** All apps are accessible via Vercel's default `.vercel.app` subdomains for preview deployments. Production subdomains on `ordre.app` are configured once ready for public access. `ordre.dev` is planned as an additional domain and will be purchased and configured before launch. For local development, apps run behind HTTPS `*.localhost` hostnames via portless (see [Local Development - portless](#-local-development---portless)).
+**Preview domains:** All apps are accessible via Vercel's default `.vercel.app` subdomains for per-branch preview deployments. Production subdomains on `ordre.app` are configured once ready for public access. `ordre.dev` is planned as an additional domain and will be purchased and configured before launch. For local development, apps run behind HTTPS `*.localhost` hostnames via portless (see [Local Development - portless](#-local-development---portless)).
+
+**Staging is not a preview deploy.** Staging is a long-lived deployment with its own stable subdomains under `staging.ordre.app` and its own database (see [Neon](#-database---neon)), running `APP_STAGE=staging`. Vercel's `.vercel.app` URLs are throwaway per-branch builds; the two are separate and the staging origins are the ones the API trusts for CORS.
 
 **DNS strategy:**
 
@@ -289,6 +291,19 @@ Both run with `NODE_ENV=production` - Railway's builder injects it, and the API'
 | `docs.ordre.app`      | Docs & API reference (Fumadocs)   | Production   |
 | `storybook.ordre.app` | Component docs                    | Production   |
 
+**Staging domains:**
+
+Every deployed origin has a `staging.ordre.app` counterpart. Apart from Storybook, which never calls the API, these are the exact values the API's `APP_*_URL` and `BETTER_AUTH_URL` variables take on staging - they feed `appOrigins` in `src/config/urls.ts`, which is both the CORS allowlist and Better Auth's `trustedOrigins`, so a mismatch here shows up as a blocked browser request rather than a 404. See [Environment Variables](/internal-docs/setup/environment-variables).
+
+| App       | Staging domain                    | API variable        |
+| --------- | --------------------------------- | ------------------- |
+| Marketing | `staging.ordre.app`               | `APP_BASE_URL`      |
+| Board     | `go.staging.ordre.app`            | `APP_BOARD_URL`     |
+| Dashboard | `dashboard.staging.ordre.app`     | `APP_DASHBOARD_URL` |
+| Docs      | `docs.staging.ordre.app`          | `APP_DOCS_URL`      |
+| Storybook | `storybook.staging.ordre.app`     | -                   |
+| API       | `api.staging.ordre.app` (Railway) | `BETTER_AUTH_URL`   |
+
 **Preview URLs (Vercel):**
 
 | App       | Preview URL                  |
@@ -298,7 +313,7 @@ Both run with `NODE_ENV=production` - Railway's builder injects it, and the API'
 | Board     | `ordre-board.vercel.app`     |
 | Storybook | `ordre-storybook.vercel.app` |
 
-**SSL/TLS:** Managed automatically by Vercel via Let's Encrypt for all production and preview deployments. Railway provides automatic TLS for the API subdomain.
+**SSL/TLS:** Managed automatically by Vercel via Let's Encrypt for all production, staging, and preview deployments. Railway provides automatic TLS for the API subdomains (`api.ordre.app` and `api.staging.ordre.app`).
 
 ---
 

@@ -65,10 +65,10 @@ Both are validated to start with `postgresql://`. The two-role split is what let
 | `BETTER_AUTH_SECRET`  | yes      | -               | Session signing secret, min 32 chars.       |
 | `RESEND_API_KEY`      | yes      | -               | Resend API key used by the outbox worker to deliver email. Required at startup on every stage - see [Transactional Outbox](/internal-docs/engineering/outbox) |
 | `BETTER_AUTH_URL`     | yes      | -               | **The API's own public origin**, one per stage - `https://api.ordre.localhost` in dev, `https://api.staging.ordre.app`, `https://api.ordre.app`. Never a frontend's. |
-| `APP_BASE_URL`        | yes      | -               | Marketing site origin                                                 |
-| `APP_DASHBOARD_URL`   | yes      | -               | Dashboard origin                                                      |
-| `APP_BOARD_URL`       | yes      | -               | Board origin                                                          |
-| `APP_DOCS_URL`        | yes      | -               | Docs origin                                                           |
+| `APP_BASE_URL`        | yes      | -               | Marketing site origin - `https://ordre.localhost`, `https://staging.ordre.app`, `https://ordre.app` |
+| `APP_DASHBOARD_URL`   | yes      | -               | Dashboard origin - `https://dashboard.ordre.localhost`, `https://dashboard.staging.ordre.app`, `https://dashboard.ordre.app` |
+| `APP_BOARD_URL`       | yes      | -               | Board origin - `https://board.ordre.localhost`, `https://go.staging.ordre.app`, `https://go.ordre.app` |
+| `APP_DOCS_URL`        | yes      | -               | Docs origin - `https://docs.ordre.localhost`, `https://docs.staging.ordre.app`, `https://docs.ordre.app` |
 
 <Callout>
   The four `APP_*_URL` origins are not just for building links. `appOrigins` in
