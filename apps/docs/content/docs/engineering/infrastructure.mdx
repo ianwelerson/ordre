@@ -46,6 +46,8 @@ description: Hosting, infrastructure, and tooling decisions across the stack.
 
 Both run with `NODE_ENV=production` - Railway's builder injects it, and the API's schema requires it on a deployed stage. `APP_STAGE` is the variable that tells the two apart; see [Environment Variables](/internal-docs/setup/environment-variables#app_stage-vs-node_env).
 
+The service's exact configuration (skipped build, direct `node` start command, V8 heap cap) is documented in [Setup - API Deployment](/internal-docs/setup/deployment) - it exists only in the Railway dashboard, and that page is its record.
+
 **Alternatives considered:** Render (fixed tier pricing - $7 Starter with steep jumps to $25/$85; less cost-efficient at scale), Fly.io (removed free tier), Heroku (expensive for equivalent resources), self-managed VPS (operational overhead).
 
 ---

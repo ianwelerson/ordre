@@ -1,0 +1,90 @@
+---
+title: API Deployment
+icon: Rocket
+description: The Railway service configuration for the API, and the memory tuning behind it.
+---
+
+The frontends deploy to Vercel with zero configuration. The API is different: it runs as a persistent process on Railway, and its service settings live only in the Railway dashboard - nothing in the repo records them. This page is that record, together with the reasoning, so the configuration survives a service rebuild or a plan migration.
+
+These settings took the service from ~350 MB of idle memory to ~83 MB (measured 2026-08-07), on a usage-billed plan where that difference is money.
+
+## The service settings
+
+| Setting        | Value                                                 |
+| -------------- | ----------------------------------------------------- |
+| Root directory | repo root (not `apps/api`)                            |
+| Build command  | `echo "Skipping build"`                               |
+| Start command  | `node apps/api/src/adapters/express/index.ts`         |
+| Variables      | `APP_STAGE`, `NODE_OPTIONS` (see below) + the API's own variables |
+
+`NODE_OPTIONS` is set to:
+
+```
+--max-old-space-size=192 --max-semi-space-size=16
+```
+
+The API's own variables (`DATABASE_URL`, `BETTER_AUTH_SECRET`, the `APP_*_URL` origins...) are documented in [Environment Variables](/internal-docs/setup/environment-variables) - on a deployed stage they all come from the host, nothing is read from disk.
+
+## Why each setting is what it is
+
+### Root directory: repo root
+
+pnpm workspaces only resolve from the repo root - pointing the service root at `apps/api` breaks the install because the workspace packages (`@ordre/db`, `@ordre/core`, ...) and the lockfile live above it. The root stays at the monorepo root; the start command is what narrows the service down to the API.
+
+### Build command: skip it
+
+The API has no build step. It runs TypeScript natively on Node (type stripping), which is why `api:start` is a plain `node` invocation and the `api` package has no `build` script. Left to auto-detection, Railway runs the root `build` script - `turbo run build` - which builds **every frontend app** (dashboard, board, marketing, docs, storybook) and throws the output away. Replacing it with an `echo` skips all of that; Railway's install phase still runs `pnpm install` at the root regardless, which is everything the API needs.
+
+### Start command: direct `node`, no wrappers
+
+`pnpm api:start` spawns a process tree of `pnpm → turbo → node`, and both wrapper processes stay resident for the life of the container, counting toward its memory (~90 MB between them). Invoking the entrypoint directly leaves a single node process.
+
+Running with the repo root as the working directory is safe: the `#env` / `#controllers/*` aliases resolve from the `imports` field of `apps/api/package.json` (file-relative, not cwd-relative), and workspace packages resolve through pnpm's node_modules symlinks. The only cwd-sensitive code is the `.env` file loading in `env.ts`, which only runs on `development`/`test` stages and is skipped entirely on a deployed stage.
+
+### `NODE_OPTIONS`: cap the V8 heap
+
+This is the big one. Profiling the API showed it **retains only ~36 MB of live objects** after GC, yet idles at ~310 MB RSS with default flags. The gap is V8 behaviour, not a leak:
+
+- Importing the module graph (drizzle-orm, Better Auth, the full drizzle schema) allocates heavily at startup - building the schema alone churns through ~85 MB of temporary objects.
+- V8 sizes its heap from the memory the machine *appears* to have. A Railway container reports the host's memory, so V8 grabs pages for the startup spike and never returns them to the OS.
+
+Capping the old space at 192 MB keeps the heap close to the actual retained set. Measured RSS by configuration:
+
+| Configuration                              | Idle RSS |
+| ------------------------------------------ | -------- |
+| `pnpm api:start`, default flags            | ~350 MB  |
+| direct `node`, default flags               | ~260 MB  |
+| direct `node`, capped heap                 | ~83 MB   |
+
+The trade-off is marginally more GC work, irrelevant at current traffic. If the process is ever OOM-killed or shows GC-related latency, raise the cap - the 192 MB value is headroom over a ~36 MB retained heap, not a hard requirement.
+
+<Callout type="warn">
+  `NODE_OPTIONS` applies to **every** node process in the service, including
+  `pnpm` itself during Railway's install phase. A workspace this size installs
+  fine under the 192 MB cap, but a "JavaScript heap out of memory" during
+  install is this setting - the fix is moving the flags out of `NODE_OPTIONS`
+  and into the start command, where they scope to the server process only:
+
+```
+node --max-old-space-size=192 --max-semi-space-size=16 apps/api/src/adapters/express/index.ts
+```
+
+</Callout>
+
+<Callout type="warn">
+  For the same reason, never reintroduce a real build command while
+  `NODE_OPTIONS` carries the heap cap - 192 MB is far too small to build the
+  Next.js apps, and `NODE_ENV=production` additionally prunes the
+  devDependencies the build tooling lives in. If this service ever needs a build
+  step again, scope the flags to the start command first.
+</Callout>
+
+## What "healthy" looks like
+
+Idle around 83 MB, climbing somewhat under sustained traffic as the heap fills toward the cap before GC runs, and settling back down. Anything under ~200 MB is normal; the number to react to is not a higher flat line but an OOM kill or GC latency, both of which mean the cap needs raising.
+
+The memory profile is dominated by module *code*, not data: node itself (~40 MB), then drizzle-orm, the drizzle schema, and Better Auth account for most of the rest, with the retained application heap at ~36 MB. There is no per-request state worth chasing - the pool holds 10 connections, the outbox worker is a single timer, and there are no in-process caches.
+
+## Staging
+
+Staging is the same service shape with `APP_STAGE=staging` and the staging origins - see [Infrastructure](/internal-docs/engineering/infrastructure#-backend-compute---railway) for the environment split and [Environment Variables](/internal-docs/setup/environment-variables#app_stage-vs-node_env) for the `APP_STAGE` / `NODE_ENV` distinction. The settings on this page apply to both environments; on staging the memory cap matters less (scale-to-zero) but keeping the two identical means staging actually rehearses production.
