@@ -23,7 +23,7 @@ export default function OrdreLockup({ theme = 'white', ...props }: OrdreLockupPr
       <rect x="0" y="24" width="10" height="3.5" rx="1.75" fill={colors.soft} />
       <text
         x="38"
-        y="31"
+        y="27.2"
         fontFamily="var(--font-headline)"
         fontWeight="var(--font-weight-bold)"
         fontSize="var(--text-2xl)"
