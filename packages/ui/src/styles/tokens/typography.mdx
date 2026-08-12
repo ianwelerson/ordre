@@ -4,14 +4,14 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # Typography
 
-Typography tokens are defined as Tailwind v4 CSS variables in `./fonts.css`. Each group uses a Tailwind-native prefix, so utilities are generated automatically: families (`font-body`), sizes (`text-lg`), weights (`font-bold`), tracking (`tracking-tight`), and line-height (`leading-base`).
+Typography tokens are defined as Tailwind v4 CSS variables in `./typography.css`. Each group uses a Tailwind-native prefix, so utilities are generated automatically: families (`font-body`), sizes (`text-lg`), weights (`font-bold`), tracking (`tracking-tight`), and line-height (`leading-base`).
 
 The scale is grouped into:
 
 - **Family** - `font-headline`, `font-body`, `font-mono`.
-- **Size** - `text-sm` → `text-4xl`.
+- **Size** - `text-3xs` → `text-4xl`. The top two steps are **fluid** (`clamp`), so they carry the display ranges rather than a single desktop value.
 - **Weight** - `font-light`, `font-normal`, `font-medium`, `font-semibold`, `font-bold`.
-- **Letter spacing** - `tracking-display-lg`, `tracking-display`, `tracking-headline`, `tracking-title`.
+- **Letter spacing** - negative for display type (`tracking-display-lg`, `tracking-display`, `tracking-headline`, `tracking-title`), `tracking-normal` for body copy, and positive for mono uppercase structural labels (`tracking-label`, `tracking-eyebrow`).
 - **Line height** - `leading-display-lg`, `leading-display`, `leading-headline`, `leading-title`, `leading-subtitle`, `leading-body`, `leading-caption`.
 
 ## Usage
@@ -53,6 +53,8 @@ The scale is grouped into:
 
 **Got a pixel value? Scan the left column to find the matching token.**
 
+Reach for the `Typography` component before these utilities - it pairs each size with the weight, tracking, line-height and color that belong to it. Use `text-*` directly only inside another component's own styling.
+
 <div
   style={{
     display: 'grid',
@@ -71,13 +73,16 @@ The scale is grouped into:
   <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Preview</div>
 
 {[
+{ name: '3xs', token: '--text-3xs', value: '10px' },
+{ name: '2xs', token: '--text-2xs', value: '11px' },
+{ name: 'xs', token: '--text-xs', value: '13px' },
 { name: 'sm', token: '--text-sm', value: '14px' },
 { name: 'base', token: '--text-base', value: '16px' },
 { name: 'lg', token: '--text-lg', value: '18px' },
 { name: 'xl', token: '--text-xl', value: '22px' },
 { name: '2xl', token: '--text-2xl', value: '28px' },
-{ name: '3xl', token: '--text-3xl', value: '44px' },
-{ name: '4xl', token: '--text-4xl', value: '72px' },
+{ name: '3xl', token: '--text-3xl', value: '32-48px' },
+{ name: '4xl', token: '--text-4xl', value: '44-88px' },
 ].flatMap(({ name, token, value }) => [
 
 <div key={`${name}-value`} style={{ fontWeight: 700, fontSize: 15 }}>{value}</div>,
@@ -174,6 +179,9 @@ The quick brown fox
 { name: 'display', token: '--tracking-display', value: '-0.02em' },
 { name: 'headline', token: '--tracking-headline', value: '-0.018em' },
 { name: 'title', token: '--tracking-title', value: '-0.015em' },
+{ name: 'normal', token: '--tracking-normal', value: '0' },
+{ name: 'label', token: '--tracking-label', value: '0.12em' },
+{ name: 'eyebrow', token: '--tracking-eyebrow', value: '0.14em' },
 ].flatMap(({ name, token, value }) => [
 
 <div key={`${name}-value`} style={{ fontWeight: 700, fontSize: 15 }}>{value}</div>,
@@ -253,7 +261,7 @@ The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the 
 
 ## Adding a new font token
 
-1. Add the variable to the right group in `./fonts.css` using the matching Tailwind prefix:
+1. Add the variable to the right group in `./typography.css` using the matching Tailwind prefix:
 
    | Group          | Prefix            | Utility      |
    | -------------- | ----------------- | ------------ |

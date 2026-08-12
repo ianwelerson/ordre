@@ -1,0 +1,14 @@
+@theme static {
+  /* === Duration === */
+  /* Tailwind reads named durations from `--transition-duration-*`, not `--duration-*`. */
+  --transition-duration-fast: 120ms;
+  --transition-duration-base: 150ms;
+  --transition-duration-slow: 240ms;
+  --transition-duration-deliberate: 300ms;
+
+  /* === Easing === */
+  /* The standard curve. Same value as Tailwind's built-in `ease-in-out`. */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  /* Leaves fast, settles slowly. Panels that slide in from an edge. */
+  --ease-decelerate: cubic-bezier(0.22, 0.61, 0.36, 1);
+}

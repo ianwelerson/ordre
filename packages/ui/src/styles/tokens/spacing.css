@@ -1,15 +1,24 @@
 @theme static {
   --spacing-*: initial;
+  --spacing-0: 0px;
   --spacing-1: 4px;
   --spacing-2: 8px;
+  --spacing-2\.5: 10px;
   --spacing-3: 12px;
   --spacing-3\.5: 14px;
   --spacing-4: 16px;
   --spacing-4\.5: 18px;
+  --spacing-5: 20px;
   --spacing-6: 24px;
+  --spacing-7: 28px;
   --spacing-8: 32px;
+  --spacing-10: 40px;
+  --spacing-11: 44px;
   --spacing-12: 48px;
   --spacing-13: 52px;
   --spacing-16: 64px;
+  --spacing-17: 68px;
   --spacing-20: 80px;
+  --spacing-24: 96px;
+  --spacing-30: 120px;
 }

@@ -1,0 +1,127 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Design Tokens/Containers" />
+
+# Containers
+
+Container tokens are defined as Tailwind v4 CSS variables in `./container.css`. Every variable is declared as `--container-*`, which Tailwind uses for two things: fixed widths (`max-w-site`, `w-md`) and container queries (`@md:flex`).
+
+Like breakpoints, this namespace is **not** reset with `--container-*: initial`. Tailwind's `3xs`→`7xl` scale stays available and ours is added alongside it.
+
+## Usage
+
+```tsx
+// Centred page gutter
+<div className="max-w-site mx-auto px-5 nav:px-7" />
+
+// Fixed width from the scale
+<aside className="w-xs" />
+
+// Raw CSS variable
+<div style={{ maxWidth: 'var(--container-site)' }} />
+```
+
+---
+
+## Ordre containers
+
+<div
+  style={{
+    display: 'grid',
+    gridTemplateColumns: '90px 90px 1fr 1.4fr',
+    alignItems: 'baseline',
+    rowGap: '1rem',
+    columnGap: '1.5rem',
+    padding: '1rem 0',
+    fontFamily: 'var(--font-mono)',
+    fontSize: 13,
+  }}
+>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Value</div>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Token</div>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tailwind / CSS var</div>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Use</div>
+
+{[
+{ name: 'site', token: '--container-site', value: '1180px', use: 'The page gutter. Marketing header, and any full-width section that needs its content aligned to the same measure.' },
+].flatMap(({ name, token, value, use }) => [
+
+<div key={`${name}-value`} style={{ fontWeight: 700, fontSize: 15 }}>{value}</div>,
+<div key={`${name}-name`} style={{ fontWeight: 600 }}>{name}</div>,
+<div key={`${name}-var`} style={{ opacity: 0.7, fontSize: 12 }}>
+<div>max-w-{name} · w-{name}</div>
+<div style={{ opacity: 0.75 }}>var({token})</div>
+</div>,
+<div key={`${name}-use`} style={{ fontFamily: 'var(--font-body)', fontSize: 13, opacity: 0.85 }}>
+{use}
+</div>,
+])}
+
+</div>
+
+---
+
+## Tailwind defaults
+
+Still available, since this namespace is not reset.
+
+<div
+  style={{
+    display: 'grid',
+    gridTemplateColumns: '90px 90px 1fr',
+    alignItems: 'baseline',
+    rowGap: '0.75rem',
+    columnGap: '1.5rem',
+    padding: '1rem 0',
+    fontFamily: 'var(--font-mono)',
+    fontSize: 13,
+  }}
+>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Value</div>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Token</div>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tailwind / CSS var</div>
+
+{[
+{ name: '3xs', token: '--container-3xs', value: '256px' },
+{ name: '2xs', token: '--container-2xs', value: '288px' },
+{ name: 'xs', token: '--container-xs', value: '320px' },
+{ name: 'sm', token: '--container-sm', value: '384px' },
+{ name: 'md', token: '--container-md', value: '448px' },
+{ name: 'lg', token: '--container-lg', value: '512px' },
+{ name: 'xl', token: '--container-xl', value: '576px' },
+{ name: '2xl', token: '--container-2xl', value: '672px' },
+{ name: '3xl', token: '--container-3xl', value: '768px' },
+{ name: '4xl', token: '--container-4xl', value: '896px' },
+{ name: '5xl', token: '--container-5xl', value: '1024px' },
+{ name: '6xl', token: '--container-6xl', value: '1152px' },
+{ name: 'site', token: '--container-site', value: '1180px' },
+{ name: '7xl', token: '--container-7xl', value: '1280px' },
+].flatMap(({ name, token, value }) => [
+
+<div key={`${name}-value`} style={{ fontWeight: 700, fontSize: 15, opacity: name === 'site' ? 1 : 0.85 }}>{value}</div>,
+<div key={`${name}-name`} style={{ fontWeight: 600 }}>{name}{name === 'site' ? ' ←' : ''}</div>,
+<div key={`${name}-var`} style={{ opacity: 0.7, fontSize: 12 }}>
+<div>max-w-{name}</div>
+<div style={{ opacity: 0.75 }}>var({token})</div>
+</div>,
+])}
+
+</div>
+
+Ordre's own container is marked and shown in sorted position: `site` sits between `6xl` and `7xl`. Tailwind declares its defaults in `rem` (`16rem`, `18rem`, …); the pixel equivalents are shown here at the default 16px root size.
+
+---
+
+## Adding a new container
+
+1. Add the variable under the `@theme static` block in `./container.css`:
+
+   ```css
+   @theme static {
+     --container-board: 540px;
+   }
+   ```
+
+   Tailwind generates `max-w-board`, `w-board` and the `@board:*` container-query variant automatically.
+
+2. Add an entry to both tables above so it shows up in this page.

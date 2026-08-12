@@ -4,4 +4,7 @@
   --shadow-popover: 0 4px 12px rgba(26, 29, 38, 0.08);
   --shadow-modal: 0 12px 40px rgba(26, 29, 38, 0.08);
   --shadow-mockup: 0 24px 60px -20px rgba(26, 29, 38, 0.18), 0 2px 8px rgba(26, 29, 38, 0.04);
+  /* Named for the edge the panel is anchored to - the shadow falls the other way. */
+  --shadow-drawer-left: 24px 0 60px -20px rgba(26, 29, 38, 0.25);
+  --shadow-drawer-right: -24px 0 60px -20px rgba(26, 29, 38, 0.25);
 }

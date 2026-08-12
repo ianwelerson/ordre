@@ -8,8 +8,8 @@ The palette is defined as Tailwind v4 CSS variables in `./colors.css`. Every var
 
 The palette comes in two layers:
 
-- **Tokens** (prefer these) - semantic names that encode intent: `background`, `background-alt`, `background-elevated`, `foreground`, `foreground-muted`, `foreground-subtle`, `button`, `button-hover`, `success`, `invalid`, `border`.
-- **Base colors** - the raw hues tokens resolve to: neutrals (`midnight`, `slate`, `stone`, `ash`, `warm-gray`, `snow`, `white`) and brand (`amber`, `deep-amber`, `sage`, `brick`).
+- **Tokens** (prefer these) - semantic names that encode intent: `background`, `background-alt`, `background-elevated`, `foreground`, `foreground-muted`, `foreground-subtle`, `button`, `button-hover`, `success`, `invalid`, `invalid-hover`, `info`, `border`.
+- **Base colors** - the raw hues tokens resolve to: neutrals (`midnight`, `slate`, `stone`, `ash`, `warm-gray`, `snow`, `white`) and brand (`amber`, `deep-amber`, `sage`, `brick`, `deep-brick`, `ink-blue`).
 
 ## Usage
 
@@ -200,6 +200,23 @@ Prefer these in components. They carry meaning, so the palette can evolve withou
     cssVar="--color-invalid"
   />
   <ColorRow
+    swatch="var(--color-invalid-hover)"
+    name="invalid-hover"
+    value="#a83e34"
+    resolvesTo="deep-brick"
+    utility="bg-invalid-hover"
+    cssVar="--color-invalid-hover"
+  />
+  <ColorRow
+    swatch="var(--color-info)"
+    name="info"
+    subtitle="Read-only informational chips - pending, awaiting client, system review. Never a CTA."
+    value="#2b5288"
+    resolvesTo="ink-blue"
+    utility="bg-info / text-info"
+    cssVar="--color-info"
+  />
+  <ColorRow
     swatch="var(--color-border)"
     name="border"
     subtitle="Default separator and outline color."
@@ -298,6 +315,20 @@ Raw hues the tokens resolve to. Avoid using them directly in components - reach 
     value="#c44b3f"
     utility="bg-brick"
     cssVar="--color-brick"
+  />
+  <ColorRow
+    swatch="var(--color-deep-brick)"
+    name="deep-brick"
+    value="#a83e34"
+    utility="bg-deep-brick"
+    cssVar="--color-deep-brick"
+  />
+  <ColorRow
+    swatch="var(--color-ink-blue)"
+    name="ink-blue"
+    value="#2b5288"
+    utility="bg-ink-blue"
+    cssVar="--color-ink-blue"
   />
 </PaletteGrid>
 

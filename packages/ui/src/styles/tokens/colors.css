@@ -12,6 +12,8 @@
   --color-deep-amber: #c67a2e;
   --color-sage: #5b9a6f;
   --color-brick: #c44b3f;
+  --color-deep-brick: #a83e34;
+  --color-ink-blue: #2b5288;
   --color-transparent: transparent;
 
   /* === Color Tokens === */
@@ -26,4 +28,6 @@
   --color-button-hover: var(--color-deep-amber);
   --color-success: var(--color-sage);
   --color-invalid: var(--color-brick);
+  --color-invalid-hover: var(--color-deep-brick);
+  --color-info: var(--color-ink-blue);
 }

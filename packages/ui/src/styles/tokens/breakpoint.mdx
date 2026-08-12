@@ -1,0 +1,121 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Design Tokens/Breakpoints" />
+
+# Breakpoints
+
+Breakpoint tokens are defined as Tailwind v4 CSS variables in `./breakpoint.css`. Every variable is declared as `--breakpoint-*`, so Tailwind generates a responsive variant for each one (`nav:flex`, `md:hidden`, …) plus the `max-*` counterparts (`max-nav:hidden`).
+
+Unlike the other token groups, this namespace is **not** reset with `--breakpoint-*: initial`. Tailwind's default `sm`/`md`/`lg`/`xl`/`2xl` stay available, and ours are added alongside them. A custom breakpoint sorts into the scale by value, not by declaration order.
+
+## Usage
+
+```tsx
+// Mobile-first: applies at the breakpoint and up
+<nav className="hidden nav:flex" />
+
+// max-* applies below the breakpoint
+<button className="max-nav:hidden" />
+
+// Raw media query
+@media (width >= theme(--breakpoint-nav)) { … }
+```
+
+> **Don't redefine Tailwind's defaults.** Overriding `--breakpoint-md` would move every existing `md:` in the repo. When a component needs to collapse at its own width, give that width its own name instead.
+
+---
+
+## Ordre breakpoints
+
+<div
+  style={{
+    display: 'grid',
+    gridTemplateColumns: '90px 90px 1fr 1.4fr',
+    alignItems: 'baseline',
+    rowGap: '1rem',
+    columnGap: '1.5rem',
+    padding: '1rem 0',
+    fontFamily: 'var(--font-mono)',
+    fontSize: 13,
+  }}
+>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Value</div>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Token</div>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tailwind / CSS var</div>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Use</div>
+
+{[
+{ name: 'nav', token: '--breakpoint-nav', value: '860px', use: 'Marketing header. Below this the links collapse into the sliding menu and only the logo, primary CTA and burger stay in the bar.' },
+].flatMap(({ name, token, value, use }) => [
+
+<div key={`${name}-value`} style={{ fontWeight: 700, fontSize: 15 }}>{value}</div>,
+<div key={`${name}-name`} style={{ fontWeight: 600 }}>{name}</div>,
+<div key={`${name}-var`} style={{ opacity: 0.7, fontSize: 12 }}>
+<div>{name}:* · max-{name}:*</div>
+<div style={{ opacity: 0.75 }}>var({token})</div>
+</div>,
+<div key={`${name}-use`} style={{ fontFamily: 'var(--font-body)', fontSize: 13, opacity: 0.85 }}>
+{use}
+</div>,
+])}
+
+</div>
+
+---
+
+## Tailwind defaults
+
+Still available, since this namespace is not reset. Reach for these first - only add a custom breakpoint when a component genuinely breaks at a width none of them describe.
+
+<div
+  style={{
+    display: 'grid',
+    gridTemplateColumns: '90px 90px 1fr',
+    alignItems: 'baseline',
+    rowGap: '0.75rem',
+    columnGap: '1.5rem',
+    padding: '1rem 0',
+    fontFamily: 'var(--font-mono)',
+    fontSize: 13,
+  }}
+>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Value</div>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Token</div>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tailwind / CSS var</div>
+
+{[
+{ name: 'sm', token: '--breakpoint-sm', value: '640px' },
+{ name: 'md', token: '--breakpoint-md', value: '768px' },
+{ name: 'nav', token: '--breakpoint-nav', value: '860px' },
+{ name: 'lg', token: '--breakpoint-lg', value: '1024px' },
+{ name: 'xl', token: '--breakpoint-xl', value: '1280px' },
+{ name: '2xl', token: '--breakpoint-2xl', value: '1536px' },
+].flatMap(({ name, token, value }) => [
+
+<div key={`${name}-value`} style={{ fontWeight: 700, fontSize: 15, opacity: name === 'nav' ? 1 : 0.85 }}>{value}</div>,
+<div key={`${name}-name`} style={{ fontWeight: 600 }}>{name}{name === 'nav' ? ' ←' : ''}</div>,
+<div key={`${name}-var`} style={{ opacity: 0.7, fontSize: 12 }}>
+<div>{name}:*</div>
+<div style={{ opacity: 0.75 }}>var({token})</div>
+</div>,
+])}
+
+</div>
+
+Ordre's own breakpoint is marked and shown in sorted position so you can see where it lands: `nav` sits between `md` and `lg`. Tailwind declares its defaults in `rem` (`40rem`, `48rem`, …); the pixel equivalents are shown here at the default 16px root size.
+
+---
+
+## Adding a new breakpoint
+
+1. Add the variable under the `@theme static` block in `./breakpoint.css`:
+
+   ```css
+   @theme static {
+     --breakpoint-board: 1100px;
+   }
+   ```
+
+   Tailwind generates `board:*` and `max-board:*` automatically.
+
+2. Add an entry to both tables above so it shows up in this page.

@@ -1,0 +1,123 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Design Tokens/Motion" />
+
+# Motion
+
+Motion tokens are defined as Tailwind v4 CSS variables in `./motion.css`.
+
+Motion here is **restrained**. No bounces, no confetti, no spring physics - transitions exist to keep a change legible, not to draw attention to themselves. If an animation is doing something other than explaining what just changed, remove it.
+
+The scale is grouped into:
+
+- **Duration** - `duration-fast`, `duration-base`, `duration-slow`, `duration-deliberate`.
+- **Easing** - `ease-standard`, `ease-decelerate`.
+
+> **Naming gotcha:** Tailwind reads named durations from the `--transition-duration-*` namespace, **not** `--duration-*`. Declaring `--duration-fast` silently generates no utility. The easing namespace is `--ease-*` as you would expect.
+
+## Usage
+
+```tsx
+// Tailwind utilities
+<button className="transition-colors duration-base ease-standard" />
+<div className="transition-all duration-slow ease-standard" />
+
+// Raw CSS variable
+<div style={{ transition: 'opacity var(--transition-duration-fast) var(--ease-standard)' }} />
+```
+
+Tailwind's own default transition is already `150ms` / `cubic-bezier(0.4, 0, 0.2, 1)`, which matches `duration-base` and `ease-standard`. A bare `transition-colors` is therefore on-token without any extra classes - reach for the utilities when you need `fast` or `slow`.
+
+---
+
+## Duration
+
+<div
+  style={{
+    display: 'grid',
+    gridTemplateColumns: '90px 90px 1fr 1.2fr',
+    alignItems: 'center',
+    rowGap: '1.25rem',
+    columnGap: '1.5rem',
+    padding: '1rem 0',
+    fontFamily: 'var(--font-mono)',
+    fontSize: 13,
+  }}
+>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Value</div>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Token</div>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tailwind / CSS var</div>
+  <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Use</div>
+
+{[
+{ name: 'fast', token: '--transition-duration-fast', value: '120ms', use: 'Hover color shifts, small dropdowns.' },
+{ name: 'base', token: '--transition-duration-base', value: '150ms', use: 'Default button and input transitions.' },
+{ name: 'slow', token: '--transition-duration-slow', value: '240ms', use: 'Wider transitions - overlays, scrims. Rare.' },
+{ name: 'deliberate', token: '--transition-duration-deliberate', value: '300ms', use: 'The longest move we allow: a drawer panel travelling its full width.' },
+].flatMap(({ name, token, value, use }) => [
+
+<div key={`${name}-value`} style={{ fontWeight: 700, fontSize: 15 }}>{value}</div>,
+<div key={`${name}-name`} style={{ fontWeight: 600 }}>{name}</div>,
+<div key={`${name}-var`} style={{ opacity: 0.7, fontSize: 12 }}>
+<div>duration-{name}</div>
+<div style={{ opacity: 0.75 }}>var({token})</div>
+</div>,
+<div key={`${name}-use`} style={{ fontFamily: 'var(--font-body)', fontSize: 13, opacity: 0.85 }}>
+{use}
+</div>,
+])}
+
+</div>
+
+---
+
+## Easing
+
+<div
+  style={{
+    display: 'grid',
+    gridTemplateColumns: '1fr',
+    rowGap: '0.5rem',
+    padding: '1rem 0',
+    fontFamily: 'var(--font-mono)',
+    fontSize: 13,
+  }}
+>
+  <div style={{ fontWeight: 600 }}>ease-standard</div>
+  <div style={{ opacity: 0.75, fontSize: 12 }}>
+    var(--ease-standard) · cubic-bezier(0.4, 0, 0.2, 1)
+  </div>
+  <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, opacity: 0.85, marginTop: 4 }}>
+    The default curve. Identical to Tailwind's built-in <code>ease-in-out</code>, exposed under the
+    design-system name so intent is explicit at the call site. Prefer it over <code>ease-in</code>/
+    <code>ease-out</code>/<code>ease-linear</code>, which remain available but are off-system.
+  </div>
+
+  <div style={{ fontWeight: 600, marginTop: 16 }}>ease-decelerate</div>
+  <div style={{ opacity: 0.75, fontSize: 12 }}>
+    var(--ease-decelerate) · cubic-bezier(0.22, 0.61, 0.36, 1)
+  </div>
+  <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, opacity: 0.85, marginTop: 4 }}>
+    Leaves fast and settles slowly. Reserved for a panel entering from an edge, where the arrival
+    should feel placed rather than stopped. Pair it with <code>duration-deliberate</code>.
+  </div>
+</div>
+
+---
+
+## Adding a new motion token
+
+1. Add the variable under the `@theme static` block in `./motion.css` using the matching Tailwind namespace:
+
+   | Group    | Namespace                 | Utility      |
+   | -------- | ------------------------- | ------------ |
+   | Duration | `--transition-duration-*` | `duration-*` |
+   | Easing   | `--ease-*`                | `ease-*`     |
+
+   ```css
+   @theme static {
+     --transition-duration-deliberate: 400ms;
+   }
+   ```
+
+2. Add an entry to the relevant section above so it shows up in this page.

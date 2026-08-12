@@ -66,6 +66,18 @@ token: '--shadow-mockup',
 value: '0 24px 60px -20px rgba(26, 29, 38, 0.18), 0 2px 8px rgba(26, 29, 38, 0.04)',
 intent: 'Product / device mockups and marketing imagery.',
 },
+{
+name: 'drawer-left',
+token: '--shadow-drawer-left',
+value: '24px 0 60px -20px rgba(26, 29, 38, 0.25)',
+intent: 'Slide-in panel anchored to the left edge - the shadow falls right, over the page.',
+},
+{
+name: 'drawer-right',
+token: '--shadow-drawer-right',
+value: '-24px 0 60px -20px rgba(26, 29, 38, 0.25)',
+intent: 'Slide-in panel anchored to the right edge, e.g. the site header menu.',
+},
 ].flatMap(({ name, token, value, intent }) => [
 
 <div key={`${name}-name`}>

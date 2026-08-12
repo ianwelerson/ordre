@@ -8,6 +8,8 @@ Spacing tokens are defined as Tailwind v4 CSS variables in `./spacing.css`. Ever
 
 The scale follows Tailwind's numeric convention where each step is 4px (step `1` = 4px, step `2` = 8px, and so on). Reach for these tokens instead of hard-coded pixel values so the rhythm of the UI stays consistent.
 
+Be generous. Landing sections breathe at `py-24`–`py-30` (96–120px) vertical. If a screen feels busy, remove something rather than adding another container.
+
 ## Usage
 
 ```tsx
@@ -41,18 +43,27 @@ The scale follows Tailwind's numeric convention where each step is 4px (step `1`
   <div style={{ fontWeight: 700, opacity: 0.5, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Preview</div>
 
 {[
+{ name: '0', token: '--spacing-0', value: '0px' },
 { name: '1', token: '--spacing-1', value: '4px' },
 { name: '2', token: '--spacing-2', value: '8px' },
+{ name: '2.5', token: '--spacing-2\\.5', value: '10px' },
 { name: '3', token: '--spacing-3', value: '12px' },
 { name: '3.5', token: '--spacing-3\\.5', value: '14px' },
 { name: '4', token: '--spacing-4', value: '16px' },
 { name: '4.5', token: '--spacing-4\\.5', value: '18px' },
+{ name: '5', token: '--spacing-5', value: '20px' },
 { name: '6', token: '--spacing-6', value: '24px' },
+{ name: '7', token: '--spacing-7', value: '28px' },
 { name: '8', token: '--spacing-8', value: '32px' },
+{ name: '10', token: '--spacing-10', value: '40px' },
+{ name: '11', token: '--spacing-11', value: '44px' },
 { name: '12', token: '--spacing-12', value: '48px' },
 { name: '13', token: '--spacing-13', value: '52px' },
 { name: '16', token: '--spacing-16', value: '64px' },
+{ name: '17', token: '--spacing-17', value: '68px' },
 { name: '20', token: '--spacing-20', value: '80px' },
+{ name: '24', token: '--spacing-24', value: '96px' },
+{ name: '30', token: '--spacing-30', value: '120px' },
 ].flatMap(({ name, token, value }) => [
 
 <div key={`${name}-value`} style={{ fontWeight: 700, fontSize: 15 }}>{value}</div>,

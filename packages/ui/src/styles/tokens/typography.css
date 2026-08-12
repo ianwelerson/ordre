@@ -31,14 +31,18 @@
   --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, monospace;
 
   /* === Size === */
+  /* The top two steps are fluid: they carry the display ranges the DS specifies. */
   --text-*: initial;
+  --text-3xs: 10px;
+  --text-2xs: 11px;
+  --text-xs: 13px;
   --text-sm: 14px;
   --text-base: 16px;
   --text-lg: 18px;
   --text-xl: 22px;
   --text-2xl: 28px;
-  --text-3xl: 44px;
-  --text-4xl: 72px;
+  --text-3xl: clamp(32px, 4vw, 48px);
+  --text-4xl: clamp(44px, 6vw, 88px);
 
   /* === Line Height === */
   --leading-*: initial;
@@ -64,4 +68,8 @@
   --tracking-display: -0.02em;
   --tracking-headline: -0.018em;
   --tracking-title: -0.015em;
+  --tracking-normal: 0;
+  /* Mono uppercase structural labels. */
+  --tracking-label: 0.12em;
+  --tracking-eyebrow: 0.14em;
 }
