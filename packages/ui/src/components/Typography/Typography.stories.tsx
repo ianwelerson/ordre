@@ -3,13 +3,13 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { Typography } from './Typography';
 
 const VARIANTS = [
-  'caption',
-  'body',
-  'subtitle',
-  'title',
-  'headline',
   'display',
-  'display-lg',
+  'h1',
+  'h2',
+  'h3',
+  'subtitle',
+  'body',
+  'caption',
   'mono-label',
   'mono-token',
   'mono-sample',
@@ -47,50 +47,39 @@ export const Default: Story = {
   },
 };
 
-export const Caption: Story = {
-  args: { children: 'Caption · fine print', variant: 'caption', tag: 'span' },
+/** Marketing hero only. Fluid 44-88px. */
+export const Display: Story = {
+  args: { children: 'A status page for every job', variant: 'display', tag: 'h1' },
 };
 
-export const Body: Story = {
-  args: { children: 'Body copy for paragraphs.', variant: 'body', tag: 'p' },
+/** Page heading. Fluid 32-48px. */
+export const H1: Story = {
+  args: { children: 'Boards on the record', variant: 'h1', tag: 'h1' },
+};
+
+export const H2: Story = {
+  args: { children: 'Every change in one tap', variant: 'h2', tag: 'h2' },
+};
+
+export const H3: Story = {
+  args: { children: 'Workshops, not warehouses', variant: 'h3', tag: 'h3' },
 };
 
 export const Subtitle: Story = {
   args: { children: 'Subtitle for lead-in copy', variant: 'subtitle', tag: 'p' },
 };
 
-export const Title: Story = {
-  args: { children: 'Section title', variant: 'title', tag: 'h3' },
+export const Body: Story = {
+  args: { children: 'Body copy for paragraphs.', variant: 'body', tag: 'p' },
 };
 
-export const Headline: Story = {
-  args: { children: 'Page headline', variant: 'headline', tag: 'h2' },
+export const Caption: Story = {
+  args: { children: 'Caption · fine print', variant: 'caption', tag: 'span' },
 };
 
-export const Display: Story = {
-  args: { children: 'Display heading', variant: 'display', tag: 'h1' },
-};
-
-export const DisplayLarge: Story = {
-  args: { children: 'Marketing hero', variant: 'display-lg', tag: 'h1' },
-};
-
+/** Structural labels are always mono uppercase - the variant bakes that in. */
 export const MonoLabel: Story = {
-  args: {
-    children: '01 · THE CLIENT BOARD',
-    variant: 'mono-label',
-    tag: 'span',
-    uppercase: true,
-  },
-};
-
-export const Uppercase: Story = {
-  args: {
-    children: 'section tag',
-    variant: 'mono-label',
-    tag: 'span',
-    uppercase: true,
-  },
+  args: { children: '01 · The client board', variant: 'mono-label', tag: 'span' },
 };
 
 export const MonoToken: Story = {
@@ -104,7 +93,7 @@ export const MonoSample: Story = {
 export const Italic: Story = {
   args: {
     children: 'Stop fielding "any update?"',
-    variant: 'display',
+    variant: 'h1',
     tag: 'h1',
     italic: true,
   },
@@ -131,17 +120,17 @@ export const Strikethrough: Story = {
 export const Showcase: Story = {
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 640 }}>
-      <Typography tag="h1" variant="display-lg">
-        Display large · 72px
-      </Typography>
       <Typography tag="h1" variant="display">
-        Display · 44px
+        Display · 44-88px
       </Typography>
-      <Typography tag="h2" variant="headline">
-        Headline · 28px
+      <Typography tag="h1" variant="h1">
+        H1 · 32-48px
       </Typography>
-      <Typography tag="h3" variant="title">
-        Title · 22px
+      <Typography tag="h2" variant="h2">
+        H2 · 28px
+      </Typography>
+      <Typography tag="h3" variant="h3">
+        H3 · 22px
       </Typography>
       <Typography tag="p" variant="subtitle">
         Subtitle · 18px - one link, live progress, silent clients.
@@ -151,11 +140,11 @@ export const Showcase: Story = {
         one tap, and every message tagged to a milestone.
       </Typography>
       <Typography tag="span" variant="caption">
-        Caption · 14px - No credit card. Cancel anytime.
+        Caption · 13px - No credit card. Cancel anytime.
       </Typography>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 16 }}>
-        <Typography tag="span" variant="mono-label" uppercase>
-          01 · THE CLIENT BOARD
+        <Typography tag="span" variant="mono-label">
+          01 · The client board
         </Typography>
         <Typography tag="span" variant="mono-token">
           go.ordre.app/K7F-RM2

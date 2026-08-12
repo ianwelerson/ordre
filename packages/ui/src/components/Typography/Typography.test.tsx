@@ -31,7 +31,7 @@ describe('Typography.tsx', () => {
 
   it('should apply classes for the selected variant', () => {
     const { getByTestId } = render(
-      <Typography tag="h1" variant="display-lg">
+      <Typography tag="h1" variant="display">
         Hero
       </Typography>
     );
@@ -46,7 +46,24 @@ describe('Typography.tsx', () => {
     );
   });
 
-  it('should apply classes for the mono-label variant', () => {
+  it('should apply classes for the heading variants', () => {
+    const { getByTestId } = render(
+      <Typography tag="h1" variant="h1">
+        Boards on the record
+      </Typography>
+    );
+
+    const el = getByTestId('typography');
+    expect(el).toHaveClass(
+      'font-headline',
+      'font-semibold',
+      'text-3xl',
+      'leading-display',
+      'tracking-display'
+    );
+  });
+
+  it('should render mono labels uppercase with label tracking', () => {
     const { getByTestId } = render(
       <Typography tag="span" variant="mono-label">
         Label
@@ -54,7 +71,14 @@ describe('Typography.tsx', () => {
     );
 
     const el = getByTestId('typography');
-    expect(el).toHaveClass('font-mono', 'font-medium', 'text-sm', 'text-foreground-subtle');
+    expect(el).toHaveClass(
+      'font-mono',
+      'font-medium',
+      'text-2xs',
+      'tracking-label',
+      'uppercase',
+      'text-foreground-subtle'
+    );
   });
 
   it('should apply the uppercase class when uppercase is true', () => {
@@ -106,6 +130,16 @@ describe('Typography.tsx', () => {
 
     const el = getByTestId('typography');
     expect(el).toHaveClass('font-body', 'font-medium', 'text-lg', 'italic', 'underline');
+  });
+
+  it('should render captions at the small step', () => {
+    const { getByTestId } = render(
+      <Typography tag="span" variant="caption">
+        Helper text
+      </Typography>
+    );
+
+    expect(getByTestId('typography')).toHaveClass('text-xs', 'text-foreground-subtle');
   });
 
   it('should merge the consumer className', () => {
