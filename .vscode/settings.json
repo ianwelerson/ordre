@@ -1,0 +1,9 @@
+{
+  "tailwindCSS.experimental.configFile": {
+    "apps/storybook/.storybook/global.css": ["apps/storybook/**", "packages/ui/**"],
+    "apps/dashboard/src/app/globals.css": "apps/dashboard/**",
+    "apps/marketing/src/app/[locale]/globals.css": "apps/marketing/**",
+    "apps/docs/src/app/global.css": "apps/docs/**",
+    "apps/board/src/app/app.css": "apps/board/**"
+  }
+}
