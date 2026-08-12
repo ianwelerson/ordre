@@ -32,7 +32,8 @@
     "./styles/*": "./src/styles/*.css",
     "./fonts/*": "./src/fonts/*",
     "./icons": "./src/icons/Icons.tsx",
-    "./helpers/*": "./src/helpers/*.ts"
+    "./helpers/*": "./src/helpers/*.ts",
+    "./hooks/*": "./src/hooks/*.ts"
   },
   "peerDependencies": {
     "@storybook/react": "^10.5.6",
