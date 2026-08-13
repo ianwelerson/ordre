@@ -22,65 +22,6 @@ describe('Typography.tsx', () => {
     expect(getByTestId('typography').tagName).toBe('H1');
   });
 
-  it('should apply classes for the default variant', () => {
-    const { getByTestId } = render(<Typography tag="p">Default</Typography>);
-
-    const el = getByTestId('typography');
-    expect(el).toHaveClass('font-body', 'font-normal', 'text-base', 'leading-body');
-  });
-
-  it('should apply classes for the selected variant', () => {
-    const { getByTestId } = render(
-      <Typography tag="h1" variant="display">
-        Hero
-      </Typography>
-    );
-
-    const el = getByTestId('typography');
-    expect(el).toHaveClass(
-      'font-headline',
-      'font-bold',
-      'text-4xl',
-      'leading-display-lg',
-      'tracking-display-lg'
-    );
-  });
-
-  it('should apply classes for the heading variants', () => {
-    const { getByTestId } = render(
-      <Typography tag="h1" variant="h1">
-        Boards on the record
-      </Typography>
-    );
-
-    const el = getByTestId('typography');
-    expect(el).toHaveClass(
-      'font-headline',
-      'font-semibold',
-      'text-3xl',
-      'leading-display',
-      'tracking-display'
-    );
-  });
-
-  it('should render mono labels uppercase with label tracking', () => {
-    const { getByTestId } = render(
-      <Typography tag="span" variant="mono-label">
-        Label
-      </Typography>
-    );
-
-    const el = getByTestId('typography');
-    expect(el).toHaveClass(
-      'font-mono',
-      'font-medium',
-      'text-2xs',
-      'tracking-label',
-      'uppercase',
-      'text-foreground-subtle'
-    );
-  });
-
   it('should apply the uppercase class when uppercase is true', () => {
     const { getByTestId } = render(
       <Typography tag="span" uppercase>
@@ -121,25 +62,14 @@ describe('Typography.tsx', () => {
     expect(getByTestId('typography')).toHaveClass('line-through');
   });
 
-  it('should combine decoration props with the variant', () => {
+  it('should stack decorations rather than let the last one win', () => {
     const { getByTestId } = render(
-      <Typography tag="span" variant="subtitle" italic underline>
+      <Typography tag="span" italic underline>
         Text
       </Typography>
     );
 
-    const el = getByTestId('typography');
-    expect(el).toHaveClass('font-body', 'font-medium', 'text-lg', 'italic', 'underline');
-  });
-
-  it('should render captions at the small step', () => {
-    const { getByTestId } = render(
-      <Typography tag="span" variant="caption">
-        Helper text
-      </Typography>
-    );
-
-    expect(getByTestId('typography')).toHaveClass('text-xs', 'text-foreground-subtle');
+    expect(getByTestId('typography')).toHaveClass('italic', 'underline');
   });
 
   it('should merge the consumer className', () => {

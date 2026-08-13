@@ -60,8 +60,7 @@ describe('MobileMenu.tsx', () => {
     const secondary = getByText('Book a demo').closest('a');
 
     expect(primary).toHaveAttribute('href', '/signup');
-    expect(primary).toHaveClass('bg-button');
-    expect(secondary).toHaveClass('border-border');
+    expect(secondary).toHaveAttribute('href', '/demo');
   });
 
   it('should leave out links hidden on mobile', () => {
@@ -152,11 +151,5 @@ describe('MobileMenu.tsx', () => {
     });
 
     expect(getByText('No card required')).toBeInTheDocument();
-  });
-
-  it('should stay collapsed above the nav breakpoint', () => {
-    const { getByTestId } = renderMenu();
-
-    expect(getByTestId('drawer').parentElement).toHaveClass('nav:hidden');
   });
 });

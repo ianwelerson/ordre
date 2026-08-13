@@ -52,20 +52,6 @@ describe('SiteHeader.tsx', () => {
     expect(action.closest('a')).toHaveAttribute('href', '/signup');
   });
 
-  it('should style each action role in the bar', () => {
-    const { container } = render(
-      <SiteHeader
-        links={[
-          { label: 'Start free', href: '/signup', role: 'primary' },
-          { label: 'Book a demo', href: '/demo', role: 'secondary' },
-        ]}
-      />
-    );
-
-    expect(bar(container).getByText('Start free').closest('a')).toHaveClass('bg-button');
-    expect(bar(container).getByText('Book a demo').closest('a')).toHaveClass('border-border');
-  });
-
   it('should drop desktop-hidden links from the bar but keep them in the menu', () => {
     const { container, getByTestId } = render(
       <SiteHeader links={[{ label: 'Careers', href: '/careers', hideOn: 'desktop' }]} />

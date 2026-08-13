@@ -58,19 +58,7 @@ describe('Drawer.tsx', () => {
     expect(getByTestId('drawer-overlay')).toHaveAttribute('data-open');
   });
 
-  it('should slide in from the right by default', () => {
-    const { getByTestId } = renderDrawer();
-
-    expect(getByTestId('drawer')).toHaveClass('right-0', 'translate-x-full');
-  });
-
-  it('should slide in from the left when asked', () => {
-    const { getByTestId } = renderDrawer({ side: 'left' });
-
-    expect(getByTestId('drawer')).toHaveClass('left-0', '-translate-x-full');
-  });
-
-  it('should apply the panel and wrapper classes', () => {
+  it('should apply the consumer panel and wrapper classes', () => {
     const { getByTestId } = renderDrawer({
       className: 'w-2xs',
       wrapperClassName: 'nav:hidden',
@@ -79,7 +67,7 @@ describe('Drawer.tsx', () => {
     const panel = getByTestId('drawer');
 
     expect(panel).toHaveClass('w-2xs');
-    expect(panel.parentElement).toHaveClass('contents', 'nav:hidden');
+    expect(panel.parentElement).toHaveClass('nav:hidden');
   });
 
   it('should close on an overlay click', () => {

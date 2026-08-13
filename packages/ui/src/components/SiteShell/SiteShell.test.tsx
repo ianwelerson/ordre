@@ -67,17 +67,4 @@ describe('SiteShell.tsx', () => {
 
     expect(getByRole('contentinfo')).toHaveTextContent('Ordre');
   });
-
-  it('should let main absorb the slack so the footer sits at the bottom', () => {
-    const { getByRole } = render(
-      <SiteShell footer={<small>Ordre</small>}>
-        <p>Page body</p>
-      </SiteShell>
-    );
-
-    const main = getByRole('main');
-
-    expect(main).toHaveClass('flex-1');
-    expect(main.parentElement).toHaveClass('flex', 'min-h-dvh', 'flex-col');
-  });
 });

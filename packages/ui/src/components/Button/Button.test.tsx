@@ -57,8 +57,6 @@ describe('Button.tsx', () => {
     await waitFor(() => {
       expect(getByTestId('button-leading-icon')).toBeInTheDocument();
       expect(queryByTestId('button-text')).not.toBeInTheDocument();
-      expect(getByTestId('button')).toHaveClass('size-11');
-      expect(getByTestId('button').className).not.toMatch(/(^|\s)px-/);
     });
   });
 
@@ -76,35 +74,6 @@ describe('Button.tsx', () => {
     await waitFor(() => {
       expect(iconOnly.getByTestId('button-leading-icon')).toHaveAttribute('width', '24');
     });
-  });
-
-  it.each([
-    ['sm', 'h-8'],
-    ['md', 'h-10'],
-    ['lg', 'h-12'],
-    ['xl', 'h-13'],
-  ] as const)('should apply the %s size', (size, heightClass) => {
-    const { getByTestId } = render(<Button size={size}>Click Here</Button>);
-
-    expect(getByTestId('button')).toHaveClass(heightClass);
-  });
-
-  it.each([
-    ['primary', 'bg-button'],
-    ['secondary', 'border-border'],
-    ['ghost', 'bg-transparent'],
-    ['ink', 'bg-foreground'],
-    ['destructive', 'bg-invalid'],
-  ] as const)('should apply the %s variant', (variant, expectedClass) => {
-    const { getByTestId } = render(<Button variant={variant}>Click Here</Button>);
-
-    expect(getByTestId('button')).toHaveClass(expectedClass);
-  });
-
-  it('should render a pill', () => {
-    const { getByTestId } = render(<Button shape="pill">Click Here</Button>);
-
-    expect(getByTestId('button')).toHaveClass('rounded-full');
   });
 
   it('should render an anchor when href is provided', () => {

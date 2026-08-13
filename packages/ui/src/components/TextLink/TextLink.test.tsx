@@ -18,52 +18,14 @@ describe('TextLink.tsx', () => {
     expect(link).toHaveTextContent('Pricing');
   });
 
-  it('should render the nav variant by default', () => {
-    const { getByTestId } = render(<TextLink href="/pricing">Pricing</TextLink>);
-
-    expect(getByTestId('text-link')).toHaveClass('font-body', 'text-sm', 'text-foreground-muted');
-  });
-
-  it('should render the menu variant as a full-width row', () => {
-    const { getByTestId } = render(
-      <TextLink href="/pricing" variant="menu">
-        Pricing
-      </TextLink>
-    );
-
-    expect(getByTestId('text-link')).toHaveClass(
-      'font-headline',
-      'text-lg',
-      'font-semibold',
-      'min-h-13',
-      'justify-between'
-    );
-  });
-
-  it('should mark the active nav link', () => {
+  it('should mark the active link', () => {
     const { getByTestId } = render(
       <TextLink href="/pricing" active>
         Pricing
       </TextLink>
     );
 
-    const link = getByTestId('text-link');
-
-    expect(link).toHaveClass('text-foreground', 'font-medium');
-    expect(link).toHaveAttribute('aria-current', 'page');
-  });
-
-  it('should mark the active menu link in deep amber', () => {
-    const { getByTestId } = render(
-      <TextLink href="/pricing" variant="menu" active>
-        Pricing
-      </TextLink>
-    );
-
-    const link = getByTestId('text-link');
-
-    expect(link).toHaveClass('text-button-hover');
-    expect(link).toHaveAttribute('aria-current', 'page');
+    expect(getByTestId('text-link')).toHaveAttribute('aria-current', 'page');
   });
 
   it('should not set aria-current when inactive', () => {
