@@ -11,6 +11,14 @@ export { Button, type ButtonAsButton, type ButtonAsLink, type ButtonProps } from
 export { TextLink, type TextLinkProps } from './TextLink/TextLink';
 export { Typography, type TypographyProps } from './Typography/Typography';
 
+export {
+  Divider,
+  type DividerAsHorizontal,
+  type DividerAsVertical,
+  type DividerProps,
+} from './Divider/Divider';
+export { Eyebrow, type EyebrowProps } from './Eyebrow/Eyebrow';
+
 // Surfaces
 export { Card, type CardProps } from './Card/Card';
 export { Drawer, type DrawerProps } from './Drawer/Drawer';
