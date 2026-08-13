@@ -12,6 +12,7 @@ export { TextLink, type TextLinkProps } from './TextLink/TextLink';
 export { Typography, type TypographyProps } from './Typography/Typography';
 
 // Surfaces
+export { Card, type CardProps } from './Card/Card';
 export { Drawer, type DrawerProps } from './Drawer/Drawer';
 
 // Shell
