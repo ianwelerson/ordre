@@ -6,7 +6,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 Spacing tokens are defined as Tailwind v4 CSS variables in `./spacing.css`. Every variable is declared as `--spacing-*`, so Tailwind automatically generates utilities across the full spacing-aware property set: `p-*`, `m-*`, `gap-*`, `space-x-*`, `w-*`, `h-*`, `inset-*`, …
 
-The scale follows Tailwind's numeric convention where each step is 4px (step `1` = 4px, step `2` = 8px, and so on). Reach for these tokens instead of hard-coded pixel values so the rhythm of the UI stays consistent.
+The scale follows Tailwind's numeric convention where each step is 4px (step `1` = 4px, step `2` = 8px, and so on). Half steps land on the 2px midpoints (`0.5` = 2px, `2.5` = 10px), and exist only where a component genuinely needs them - reach for a whole step first. Reach for these tokens instead of hard-coded pixel values so the rhythm of the UI stays consistent.
 
 Be generous. Landing sections breathe at `py-24`–`py-30` (96–120px) vertical. If a screen feels busy, remove something rather than adding another container.
 
@@ -44,7 +44,9 @@ Be generous. Landing sections breathe at `py-24`–`py-30` (96–120px) vertical
 
 {[
 { name: '0', token: '--spacing-0', value: '0px' },
+{ name: '0.5', token: '--spacing-0\\.5', value: '2px' },
 { name: '1', token: '--spacing-1', value: '4px' },
+{ name: '1.5', token: '--spacing-1\\.5', value: '6px' },
 { name: '2', token: '--spacing-2', value: '8px' },
 { name: '2.5', token: '--spacing-2\\.5', value: '10px' },
 { name: '3', token: '--spacing-3', value: '12px' },

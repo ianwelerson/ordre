@@ -4,7 +4,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # Shadows
 
-Shadow tokens are defined as Tailwind v4 CSS variables in `./shadows.css`. Every variable is declared as `--shadow-*`, so Tailwind automatically generates utilities (`shadow-raised`, `shadow-popover`, `shadow-modal`, `shadow-mockup`).
+Shadow tokens are defined as Tailwind v4 CSS variables in `./shadows.css`. Every variable is declared as `--shadow-*`, so Tailwind automatically generates a matching utility for each one (`shadow-raised`, `shadow-popover`, and so on).
 
 Each token maps to an **intent**, not an elevation number - reach for the one that matches what you're building, so the shadow values can evolve without touching consumers.
 
@@ -65,6 +65,18 @@ name: 'mockup',
 token: '--shadow-mockup',
 value: '0 24px 60px -20px rgba(26, 29, 38, 0.18), 0 2px 8px rgba(26, 29, 38, 0.04)',
 intent: 'Product / device mockups and marketing imagery.',
+},
+{
+name: 'amber',
+token: '--shadow-amber',
+value: '0 0 0 3px rgba(224, 145, 62, 0.14)',
+intent: 'Focus ring on a control that is being typed into. Spread only, so it rings the border instead of lifting the element.',
+},
+{
+name: 'invalid',
+token: '--shadow-invalid',
+value: '0 0 0 3px rgba(196, 75, 63, 0.14)',
+intent: 'The same focus ring on a control that failed validation.',
 },
 {
 name: 'drawer-left',
