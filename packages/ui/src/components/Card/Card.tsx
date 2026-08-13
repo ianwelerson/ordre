@@ -36,7 +36,7 @@ const variants = cva(['border border-solid rounded-lg'], {
 
 export interface CardProps extends VariantProps<typeof variants> {
   children: ReactNode;
-  tag: 'div' | 'section';
+  tag?: 'div' | 'section';
   className?: string;
 }
 
@@ -49,7 +49,7 @@ export interface CardProps extends VariantProps<typeof variants> {
  * directly there, the way the Ink story does.
  */
 export const Card = ({
-  tag: Tag,
+  tag: Tag = 'div',
   variant,
   interactive,
   padding,

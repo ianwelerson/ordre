@@ -9,21 +9,29 @@ import Icon from '../../icons/Icons';
 
 const variants = cva(
   /**
-   * No font-family here on purpose: the variants set it, and two family
-   * utilities on one element resolve by stylesheet order, not class order.
+   * No font-family or text-decoration here on purpose: the variants set both, and
+   * two utilities of the same family on one element resolve by stylesheet order,
+   * not class order.
    */
-  ['no-underline transition-colors duration-fast ease-standard hover:cursor-pointer'],
+  ['transition-colors duration-fast ease-standard hover:cursor-pointer'],
   {
     variants: {
       variant: {
-        /** Inline text link. The desktop header nav and any prose link. */
-        nav: 'font-body inline-flex items-center gap-2 text-sm',
+        /** Undecorated nav link. The desktop header nav. */
+        nav: 'font-body no-underline inline-flex items-center gap-2 text-sm',
         /** Full-width headline row. The sliding menu on small screens. */
         menu: [
           'font-headline border-warm-gray flex min-h-13 items-center justify-between gap-4',
           'border-b border-solid px-6 text-lg font-semibold tracking-title',
-          'active:bg-background-alt',
+          'no-underline active:bg-background-alt',
         ],
+        /**
+         * Underlined prose link, worded as part of a sentence. Deliberately sets no
+         * size, so it inherits whatever text it is dropped into and reads as normal
+         * text rather than as a control.
+         */
+        inline:
+          'font-body inline-flex items-center gap-1.5 font-medium underline underline-offset-3',
       },
       active: {
         true: '',
@@ -35,6 +43,8 @@ const variants = cva(
       { variant: 'nav', active: true, class: 'text-foreground font-medium' },
       { variant: 'menu', active: false, class: 'text-foreground' },
       { variant: 'menu', active: true, class: 'text-button-hover' },
+      { variant: 'inline', active: false, class: 'text-foreground hover:text-button-hover' },
+      { variant: 'inline', active: true, class: 'text-button-hover' },
     ],
     defaultVariants: {
       variant: 'nav',
@@ -54,6 +64,7 @@ export type TextLinkProps = VariantProps<typeof variants> &
 const ICON_SIZE: Record<NonNullable<VariantProps<typeof variants>['variant']>, number> = {
   nav: 14,
   menu: 16,
+  inline: 13,
 };
 
 /**

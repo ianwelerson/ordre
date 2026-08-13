@@ -1,12 +1,14 @@
 import { ReactNode } from 'react';
 
+import { cx } from '../../helpers/cva';
 import { SiteHeader, type SiteHeaderProps } from './SiteHeader';
 
 export interface SiteShellProps {
+  children: ReactNode;
+  contentClass?: string;
   showHeader?: boolean;
   /** Forwarded to `SiteHeader`. Ignored while `showHeader` is false. */
   headerContent?: SiteHeaderProps;
-  children: ReactNode;
   /** Rendered inside the `footer` landmark. Omit it and no footer element exists. */
   footer?: ReactNode;
 }
@@ -25,11 +27,12 @@ export const SiteShell = ({
   children,
   // Footer
   footer,
+  contentClass,
 }: SiteShellProps) => {
   return (
     <div className="flex min-h-dvh flex-col">
       {showHeader && <SiteHeader {...headerContent} />}
-      <main className="flex-1">{children}</main>
+      <main className={cx('flex-1', contentClass)}>{children}</main>
       {footer && <footer>{footer}</footer>}
     </div>
   );

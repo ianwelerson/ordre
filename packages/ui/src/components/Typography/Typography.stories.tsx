@@ -15,6 +15,8 @@ const VARIANTS = [
   'mono-sample',
 ] as const;
 
+const TONES = ['default', 'muted', 'subtle', 'invalid', 'success', 'info'] as const;
+
 const TAGS = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span'] as const;
 
 const meta: Meta<typeof Typography> = {
@@ -27,6 +29,7 @@ const meta: Meta<typeof Typography> = {
   argTypes: {
     children: { control: 'text' },
     variant: { control: 'select', options: VARIANTS },
+    tone: { control: 'select', options: TONES },
     tag: { control: 'select', options: TAGS },
     italic: { control: 'boolean' },
     underline: { control: 'boolean' },
@@ -115,6 +118,20 @@ export const Strikethrough: Story = {
     tag: 'span',
     strikethrough: true,
   },
+};
+
+/** Colour is a separate axis: every variant carries a sensible default tone, and any
+ * variant can be recoloured without touching its scale. */
+export const Tones: Story = {
+  render: () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {TONES.map((tone) => (
+        <Typography key={tone} tag="p" variant="body" tone={tone}>
+          {tone} · The quick brown fox
+        </Typography>
+      ))}
+    </div>
+  ),
 };
 
 export const Showcase: Story = {

@@ -11,7 +11,7 @@ const meta: Meta<typeof TextLink> = {
   tags: ['autodocs'],
   argTypes: {
     children: { control: 'text' },
-    variant: { control: 'inline-radio', options: ['nav', 'menu'] },
+    variant: { control: 'inline-radio', options: ['nav', 'menu', 'inline'] },
     active: { control: 'boolean' },
     trailingIcon: { control: 'text' },
     href: { control: 'text' },
@@ -34,6 +34,25 @@ export const Nav: Story = {};
 /** The current page. Midnight at medium weight, plus `aria-current="page"`. */
 export const NavActive: Story = {
   args: { active: true },
+};
+
+/**
+ * Underlined link worded into a sentence. It sets no size of its own, so it takes
+ * the size of the surrounding text: the same link reads at 13px here and at 16px
+ * in body copy.
+ */
+export const Inline: Story = {
+  args: { variant: 'inline', children: 'Create one' },
+  render: (args) => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', textAlign: 'center' }}>
+      <p style={{ fontSize: '13px' }}>
+        Don&apos;t have an account? <TextLink {...args} />
+      </p>
+      <p style={{ fontSize: '16px' }}>
+        Don&apos;t have an account? <TextLink {...args} />
+      </p>
+    </div>
+  ),
 };
 
 /** Full-width headline row for the sliding menu on small screens. */

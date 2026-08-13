@@ -5,18 +5,24 @@ import type { ReactNode } from 'react';
 const variants = cva([], {
   variants: {
     variant: {
-      display:
-        'font-headline font-bold text-4xl leading-display-lg tracking-display-lg text-foreground',
-      h1: 'font-headline font-semibold text-3xl leading-display tracking-display text-foreground',
-      h2: 'font-headline font-semibold text-2xl leading-headline tracking-headline text-foreground',
-      h3: 'font-headline font-semibold text-xl leading-title tracking-title text-foreground',
-      subtitle: 'font-body font-medium text-lg leading-subtitle text-foreground-muted',
-      body: 'font-body font-normal text-base leading-body text-foreground-muted',
-      caption: 'font-body font-normal text-xs leading-caption text-foreground-subtle',
-      'mono-label':
-        'font-mono font-medium text-2xs tracking-label uppercase text-foreground-subtle',
-      'mono-token': 'font-mono font-normal text-xs leading-caption text-foreground',
-      'mono-sample': 'font-mono font-normal text-xs leading-caption text-foreground-muted',
+      display: 'font-headline font-bold text-4xl leading-display-lg tracking-display-lg',
+      h1: 'font-headline font-semibold text-3xl leading-display tracking-display',
+      h2: 'font-headline font-semibold text-2xl leading-headline tracking-headline',
+      h3: 'font-headline font-semibold text-xl leading-title tracking-title',
+      subtitle: 'font-body font-medium text-lg leading-subtitle',
+      body: 'font-body font-normal text-base leading-body',
+      caption: 'font-body font-normal text-xs leading-caption',
+      'mono-label': 'font-mono font-medium text-2xs tracking-label uppercase',
+      'mono-token': 'font-mono font-normal text-xs leading-caption',
+      'mono-sample': 'font-mono font-normal text-xs leading-caption',
+    },
+    tone: {
+      default: 'text-foreground',
+      muted: 'text-foreground-muted',
+      subtle: 'text-foreground-subtle',
+      invalid: 'text-invalid',
+      success: 'text-success',
+      info: 'text-info',
     },
     italic: {
       true: 'italic',
@@ -44,9 +50,32 @@ const variants = cva([], {
   },
 });
 
+export type TypographyVariant = NonNullable<VariantProps<typeof variants>['variant']>;
+export type TypographyTone = NonNullable<VariantProps<typeof variants>['tone']>;
+
+/**
+ * The tone each variant reads as when the caller does not ask for one. Colour lives
+ * only in `tone`, so exactly one `text-*` class is ever emitted and an override wins
+ * without needing importance or a class merger.
+ */
+const defaultTone: Record<TypographyVariant, TypographyTone> = {
+  display: 'default',
+  h1: 'default',
+  h2: 'default',
+  h3: 'default',
+  subtitle: 'muted',
+  body: 'muted',
+  caption: 'subtle',
+  'mono-label': 'subtle',
+  'mono-token': 'default',
+  'mono-sample': 'muted',
+};
+
 export interface TypographyProps extends VariantProps<typeof variants> {
   children?: ReactNode;
   tag: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'p' | 'span';
+  /** Needed when something else has to point at this text, e.g. `aria-describedby`. */
+  id?: string;
   className?: string;
 }
 
@@ -57,8 +86,10 @@ export interface TypographyProps extends VariantProps<typeof variants> {
 export const Typography = ({
   children,
   className,
+  id,
   tag: Tag,
   variant,
+  tone,
   italic,
   underline,
   strikethrough,
@@ -67,7 +98,16 @@ export const Typography = ({
   return (
     <Tag
       data-testid="typography"
-      className={variants({ variant, italic, underline, strikethrough, uppercase, className })}
+      id={id}
+      className={variants({
+        variant,
+        tone: tone ?? defaultTone[variant ?? 'body'],
+        italic,
+        underline,
+        strikethrough,
+        uppercase,
+        className,
+      })}
     >
       {children}
     </Tag>

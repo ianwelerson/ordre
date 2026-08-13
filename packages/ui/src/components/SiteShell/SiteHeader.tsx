@@ -22,6 +22,8 @@ export interface SiteHeaderProps {
   trailing?: ReactNode;
   /** Small print under the menu actions. Only renders when there is a menu to open. */
   menuFooter?: ReactNode;
+  /** Keep scrolled state enabled */
+  alwaysScrolled?: boolean;
 }
 
 const MENU_ID = 'site-header-menu';
@@ -56,12 +58,13 @@ export const SiteHeader = ({
   logoHref = '/',
   trailing,
   menuFooter,
+  alwaysScrolled,
 }: SiteHeaderProps) => {
   const hasScrolled = useScrolled();
 
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const lockup = logo ?? <Icon name="ordre-lockup" width="100%" height={27} />;
+  const lockup = logo ?? <Icon name="ordre-lockup" width="100%" height={24} />;
 
   const desktopLinks = (links ?? []).filter(({ hideOn }) => hideOn !== 'desktop');
   const startLinks = desktopLinks.filter((link) => desktopAlign(link) === 'start');
@@ -79,7 +82,7 @@ export const SiteHeader = ({
     <>
       <header
         data-testid="site-header"
-        data-scrolled={hasScrolled || undefined}
+        data-scrolled={alwaysScrolled || hasScrolled || undefined}
         className="data-scrolled:bg-background/88 data-scrolled:border-ash duration-slow ease-standard sticky top-0 z-50 border-b border-solid border-transparent bg-transparent transition-all data-scrolled:backdrop-blur-md"
       >
         <div className="max-w-site nav:px-7 mx-auto flex h-17 items-center gap-8 px-5">
