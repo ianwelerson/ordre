@@ -1,6 +1,7 @@
 import { registry } from '#/config/openapi-registry.ts';
 import { z } from 'zod';
 
+import { API_ROUTES, toOpenApiPath } from '@ordre/core/constants';
 import { ResponseErrorSchema } from '@ordre/core/schemas';
 import {
   WorkspaceCreateSchema,
@@ -33,7 +34,7 @@ const authenticated = [{ cookieAuth: [] }];
  */
 registry.registerPath({
   method: 'get',
-  path: '/workspace/slug/{slug}/exists',
+  path: toOpenApiPath(API_ROUTES.workspace.slugExists),
   operationId: 'workspaceSlugExists',
   tags: ['Workspace'],
   summary: 'Check whether a workspace slug is taken',
@@ -52,7 +53,7 @@ registry.registerPath({
  */
 registry.registerPath({
   method: 'get',
-  path: '/workspace',
+  path: toOpenApiPath(API_ROUTES.workspace.collection),
   operationId: 'listUserWorkspaces',
   tags: ['Workspace'],
   summary: "List the current user's workspaces (minimal)",
@@ -71,7 +72,7 @@ registry.registerPath({
  */
 registry.registerPath({
   method: 'post',
-  path: '/workspace',
+  path: toOpenApiPath(API_ROUTES.workspace.collection),
   operationId: 'createWorkspace',
   tags: ['Workspace'],
   summary: 'Create a workspace',
@@ -94,7 +95,7 @@ registry.registerPath({
  */
 registry.registerPath({
   method: 'get',
-  path: '/workspace/{id}',
+  path: toOpenApiPath(API_ROUTES.workspace.byId),
   operationId: 'getWorkspaceById',
   tags: ['Workspace'],
   summary: 'Get a workspace By ID',
@@ -115,7 +116,7 @@ registry.registerPath({
  */
 registry.registerPath({
   method: 'get',
-  path: '/workspace/slug/{slug}',
+  path: toOpenApiPath(API_ROUTES.workspace.bySlug),
   operationId: 'getWorkspaceBySlug',
   tags: ['Workspace'],
   summary: 'Get a workspace By Slug',
@@ -136,7 +137,7 @@ registry.registerPath({
  */
 registry.registerPath({
   method: 'delete',
-  path: '/workspace/{id}',
+  path: toOpenApiPath(API_ROUTES.workspace.byId),
   operationId: 'deleteWorkspace',
   tags: ['Workspace'],
   summary: 'Delete a workspace By ID',
@@ -154,7 +155,7 @@ registry.registerPath({
  */
 registry.registerPath({
   method: 'patch',
-  path: '/workspace/{id}',
+  path: toOpenApiPath(API_ROUTES.workspace.byId),
   operationId: 'updateWorkspace',
   tags: ['Workspace'],
   summary: 'Update a workspace By ID',

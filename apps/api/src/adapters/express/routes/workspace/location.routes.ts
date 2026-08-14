@@ -14,26 +14,19 @@ import {
 } from '#controllers/workspace';
 import { Router } from 'express';
 
-import {
-  locationCollectionPath,
-  locationDefaultPath,
-  locationItemPath,
-  locationMemberPath,
-} from './workspace.paths.ts';
+import { API_ROUTES } from '@ordre/core/constants';
 
-// `mergeParams` so the `:id` from the parent mount (`/workspace/:id/location`) is
-// visible here - `requireWorkspaceAccess` resolves the workspace from `req.params.id`.
-const locationRouter: Router = Router({ mergeParams: true });
+const locationRouter: Router = Router();
 
 locationRouter.get(
-  locationCollectionPath,
+  API_ROUTES.workspace.location.collection,
   requireWorkspaceAccess,
   requireWorkspacePermission('workspace:location:read'),
   sendMemberResult((req) => workspaceLocationGetAll(req.workspace))
 );
 
 locationRouter.post(
-  locationCollectionPath,
+  API_ROUTES.workspace.location.collection,
   requireWorkspaceAccess,
   requireWorkspacePermission('workspace:location:manage'),
   requireWorkspaceQuota('location'),
@@ -41,21 +34,21 @@ locationRouter.post(
 );
 
 locationRouter.put(
-  locationDefaultPath,
+  API_ROUTES.workspace.location.default,
   requireWorkspaceAccess,
   requireWorkspacePermission('workspace:location:manage'),
   sendMemberResult((req) => workspaceLocationSetDefault(req.workspace, req.params?.locationId))
 );
 
 locationRouter.get(
-  locationItemPath,
+  API_ROUTES.workspace.location.byId,
   requireWorkspaceAccess,
   requireWorkspacePermission('workspace:location:read'),
   sendMemberResult((req) => workspaceLocationGetById(req.workspace, req.params?.locationId))
 );
 
 locationRouter.patch(
-  locationItemPath,
+  API_ROUTES.workspace.location.byId,
   requireWorkspaceAccess,
   requireWorkspacePermission('workspace:location:manage'),
   sendMemberResult((req) =>
@@ -64,7 +57,7 @@ locationRouter.patch(
 );
 
 locationRouter.delete(
-  locationItemPath,
+  API_ROUTES.workspace.location.byId,
   requireWorkspaceAccess,
   requireWorkspacePermission('workspace:location:manage'),
   sendMemberResult((req) => workspaceLocationDelete(req.workspace, req.params?.locationId))
@@ -72,7 +65,7 @@ locationRouter.delete(
 
 /** --- Add and remove location member */
 locationRouter.put(
-  locationMemberPath,
+  API_ROUTES.workspace.location.member,
   requireWorkspaceAccess,
   requireWorkspacePermission('workspace:location:manage'),
   sendMemberResult((req) =>
@@ -81,7 +74,7 @@ locationRouter.put(
 );
 
 locationRouter.delete(
-  locationMemberPath,
+  API_ROUTES.workspace.location.member,
   requireWorkspaceAccess,
   requireWorkspacePermission('workspace:location:manage'),
   sendMemberResult((req) =>

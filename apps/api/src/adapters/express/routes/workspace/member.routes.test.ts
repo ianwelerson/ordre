@@ -1,38 +1,28 @@
-import { app, BASE_PATH } from '#/adapters/express/server.ts';
+import { app } from '#/adapters/express/server.ts';
 import { auth } from '#/config/auth.ts';
 import { MEMBER_IDS, USER_IDS, userFixtures, WORKSPACE_IDS } from '#/test/fixtures.ts';
 import { parseBody } from '#/utils/testing.ts';
 import request from 'supertest';
 
+import { API_BASE_PATH, API_ROUTES, buildPath } from '@ordre/core/constants';
 import { BASE_ERRORS } from '@ordre/core/errors';
 import { ResponseErrorSchema, WorkspaceMemberSchema } from '@ordre/core/schemas';
 
-import {
-  memberItemPath,
-  memberLeavePath,
-  memberRolePath,
-  memberSelfPath,
-  workspaceBasePath,
-  workspaceMemberBasePath,
-} from './workspace.paths.ts';
+const memberUrl = (path: string, params: Record<string, string>) =>
+  `${API_BASE_PATH}${buildPath(path, params)}`;
 
-const BASE = `${BASE_PATH}${workspaceBasePath}`;
-
-/** `/api/workspace/:id/member` for a given workspace. */
+/** `/v1/workspace/:id/member` for a given workspace. */
 const listUrl = (workspaceId: string) =>
-  `${BASE}${workspaceMemberBasePath.replace(':id', workspaceId)}`;
-
-const buildUrl = (workspaceId: string, subPath: string, memberId?: string) =>
-  `${BASE}${workspaceMemberBasePath}${subPath}`
-    .replace(':id', workspaceId)
-    .replace(':memberId', memberId ?? '');
+  memberUrl(API_ROUTES.workspace.member.collection, { id: workspaceId });
 
 const itemUrl = (workspaceId: string, memberId: string) =>
-  buildUrl(workspaceId, memberItemPath, memberId);
+  memberUrl(API_ROUTES.workspace.member.byId, { id: workspaceId, memberId });
 const roleUrl = (workspaceId: string, memberId: string) =>
-  buildUrl(workspaceId, memberRolePath, memberId);
-const selfUrl = (workspaceId: string) => buildUrl(workspaceId, memberSelfPath);
-const leaveUrl = (workspaceId: string) => buildUrl(workspaceId, memberLeavePath);
+  memberUrl(API_ROUTES.workspace.member.role, { id: workspaceId, memberId });
+const selfUrl = (workspaceId: string) =>
+  memberUrl(API_ROUTES.workspace.member.self, { id: workspaceId });
+const leaveUrl = (workspaceId: string) =>
+  memberUrl(API_ROUTES.workspace.member.leave, { id: workspaceId });
 
 vi.mock('#/config/auth.ts', () => ({ auth: { api: { getSession: vi.fn() } } }));
 
@@ -70,7 +60,7 @@ describe('Workspace Member', () => {
     vi.resetAllMocks();
   });
 
-  describe(`GET ${workspaceBasePath}${workspaceMemberBasePath}`, () => {
+  describe(`GET ${API_ROUTES.workspace.member.collection}`, () => {
     test('GET allows the owner to list members (has member:manage)', async () => {
       mockUserSession({ id: USER_IDS.owner });
 
@@ -136,7 +126,7 @@ describe('Workspace Member', () => {
     });
   });
 
-  describe(`GET/PATCH ${workspaceBasePath}${workspaceMemberBasePath}${memberSelfPath}`, () => {
+  describe(`GET/PATCH ${API_ROUTES.workspace.member.self}`, () => {
     test('GET /me returns the caller their own membership', async () => {
       mockUserSession({ id: USER_IDS.member });
 
@@ -181,7 +171,7 @@ describe('Workspace Member', () => {
     });
   });
 
-  describe(`POST ${workspaceBasePath}${workspaceMemberBasePath}${memberLeavePath}`, () => {
+  describe(`POST ${API_ROUTES.workspace.member.leave}`, () => {
     test('POST /leave lets a plain member leave (204)', async () => {
       mockUserSession({ id: USER_IDS.member });
 
@@ -199,7 +189,7 @@ describe('Workspace Member', () => {
     });
   });
 
-  describe(`${workspaceBasePath}${workspaceMemberBasePath}${memberItemPath}`, () => {
+  describe(`${API_ROUTES.workspace.member.byId}`, () => {
     test('GET /:memberId allows the owner to read a member', async () => {
       mockUserSession({ id: USER_IDS.owner });
 
@@ -268,7 +258,7 @@ describe('Workspace Member', () => {
     });
   });
 
-  describe(`POST ${workspaceBasePath}${workspaceMemberBasePath}${memberRolePath}`, () => {
+  describe(`POST ${API_ROUTES.workspace.member.role}`, () => {
     test('POST /:memberId/role lets the owner promote a member to admin', async () => {
       mockUserSession({ id: USER_IDS.owner });
 

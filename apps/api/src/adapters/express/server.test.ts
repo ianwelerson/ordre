@@ -21,22 +21,23 @@ vi.mock('#/config/logger.ts', () => ({
 
 const { app } = await import('./server.ts');
 const { appOrigins, urls } = await import('#/config/urls.ts');
+const { API_BASE_PATH } = await import('@ordre/core/constants');
+
+const unknownUrl = `${API_BASE_PATH}/does-not-exist`;
 
 describe('adapters/express/server', () => {
   describe('cors', () => {
     it('reflects a trusted origin and allows credentials', async () => {
       expect(appOrigins).toContain(urls.dashboard);
 
-      const response = await request(app).get('/api/does-not-exist').set('Origin', urls.dashboard);
+      const response = await request(app).get(unknownUrl).set('Origin', urls.dashboard);
 
       expect(response.headers['access-control-allow-origin']).toBe(urls.dashboard);
       expect(response.headers['access-control-allow-credentials']).toBe('true');
     });
 
     it('does not echo an untrusted origin', async () => {
-      const response = await request(app)
-        .get('/api/does-not-exist')
-        .set('Origin', 'https://not-ours.example');
+      const response = await request(app).get(unknownUrl).set('Origin', 'https://not-ours.example');
 
       expect(response.headers['access-control-allow-origin']).toBeUndefined();
     });
@@ -50,7 +51,7 @@ describe('adapters/express/server', () => {
       expect(response.text).toBe('User-agent: *\nDisallow: /\n');
     });
 
-    it.each(['/', '/.env', '/.well-known/mcp', '/apifoo'])(
+    it.each(['/', '/.env', '/.well-known/mcp', '/v1foo'])(
       'rejects %s with an empty 404',
       async (path) => {
         const response = await request(app).get(path).expect(404);
@@ -61,13 +62,13 @@ describe('adapters/express/server', () => {
   });
 
   it('responds 404 with a Not Found body for an unmatched route', async () => {
-    const response = await request(app).get('/api/does-not-exist').expect(404);
+    const response = await request(app).get(unknownUrl).expect(404);
 
     expect(response.body).toEqual({ error: 'Not Found' });
   });
 
   it('responds 500 with a generic body when a handler throws', async () => {
-    const response = await request(app).get('/api/boom').expect(500);
+    const response = await request(app).get(`${API_BASE_PATH}/boom`).expect(500);
 
     expect(response.body).toEqual({ error: 'Internal Server Error' });
   });

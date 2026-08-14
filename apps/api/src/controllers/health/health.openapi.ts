@@ -1,10 +1,10 @@
 import { registry } from '#/config/openapi-registry.ts';
 
-import { healthPath } from './index.ts';
+import { API_ROUTES } from '@ordre/core/constants';
 
 registry.registerPath({
   method: 'get',
-  path: healthPath,
+  path: API_ROUTES.health,
   operationId: 'healthCheck',
   tags: ['Health'],
   summary: 'Check health status',

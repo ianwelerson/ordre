@@ -1,26 +1,24 @@
-import { app, BASE_PATH } from '#/adapters/express/server.ts';
+import { app } from '#/adapters/express/server.ts';
 import { auth } from '#/config/auth.ts';
 import { setFreePlanLimits } from '#/test/db.ts';
 import { INVITE_IDS, USER_IDS, userFixtures, WORKSPACE_IDS } from '#/test/fixtures.ts';
 import { parseBody } from '#/utils/testing.ts';
 import request from 'supertest';
 
+import { API_BASE_PATH, API_ROUTES, buildPath } from '@ordre/core/constants';
 import { BASE_ERRORS } from '@ordre/core/errors';
 import { ResponseErrorSchema, WorkspaceInviteSchema } from '@ordre/core/schemas';
 
-import { inviteItemPath, workspaceBasePath, workspaceInviteBasePath } from './workspace.paths.ts';
+const inviteUrl = (path: string, params: Record<string, string>) =>
+  `${API_BASE_PATH}${buildPath(path, params)}`;
 
-const BASE = `${BASE_PATH}${workspaceBasePath}`;
-
-/** `/api/workspace/:id/invite` for a given workspace. */
+/** `/v1/workspace/:id/invite` for a given workspace. */
 const collectionUrl = (workspaceId: string) =>
-  `${BASE}${workspaceInviteBasePath.replace(':id', workspaceId)}`;
+  inviteUrl(API_ROUTES.workspace.invite.collection, { id: workspaceId });
 
-/** `/api/workspace/:id/invite/:inviteId` for a given workspace + invite. */
+/** `/v1/workspace/:id/invite/:inviteId` for a given workspace + invite. */
 const itemUrl = (workspaceId: string, inviteId: string) =>
-  `${BASE}${workspaceInviteBasePath}${inviteItemPath}`
-    .replace(':id', workspaceId)
-    .replace(':inviteId', inviteId);
+  inviteUrl(API_ROUTES.workspace.invite.byId, { id: workspaceId, inviteId });
 
 vi.mock('#/config/auth.ts', () => ({ auth: { api: { getSession: vi.fn() } } }));
 
@@ -44,7 +42,7 @@ describe('Workspace Invite (admin)', () => {
     vi.resetAllMocks();
   });
 
-  describe(`POST ${workspaceBasePath}${workspaceInviteBasePath}`, () => {
+  describe(`POST ${API_ROUTES.workspace.invite.collection}`, () => {
     const invite = (overrides: Record<string, unknown> = {}) => ({
       email: 'new-invitee@ordre.app',
       name: 'New Invitee',
@@ -172,7 +170,7 @@ describe('Workspace Invite (admin)', () => {
     });
   });
 
-  describe(`GET ${workspaceBasePath}${workspaceInviteBasePath}`, () => {
+  describe(`GET ${API_ROUTES.workspace.invite.collection}`, () => {
     test('GET lists every invite (any status) for the owner', async () => {
       mockUserSession({ id: USER_IDS.owner });
 
@@ -193,7 +191,7 @@ describe('Workspace Invite (admin)', () => {
     });
   });
 
-  describe(`GET ${workspaceBasePath}${workspaceInviteBasePath}${inviteItemPath}`, () => {
+  describe(`GET ${API_ROUTES.workspace.invite.byId}`, () => {
     test('GET /:inviteId returns the invite for the owner', async () => {
       mockUserSession({ id: USER_IDS.owner });
 
@@ -219,7 +217,7 @@ describe('Workspace Invite (admin)', () => {
     });
   });
 
-  describe(`DELETE ${workspaceBasePath}${workspaceInviteBasePath}${inviteItemPath}`, () => {
+  describe(`DELETE ${API_ROUTES.workspace.invite.byId}`, () => {
     test('DELETE revokes a pending invite for the owner (204)', async () => {
       mockUserSession({ id: USER_IDS.owner });
 

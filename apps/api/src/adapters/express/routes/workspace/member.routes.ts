@@ -1,4 +1,3 @@
-// `mergeParams` so the `:id` from the parent mount (`/workspace/:id/location`) is
 import { requireWorkspaceAccess } from '#/adapters/express/middlewares/workspace-access.ts';
 import { requireWorkspacePermission } from '#/adapters/express/middlewares/workspace-permission.ts';
 import { sendMemberResult } from '#/adapters/express/utils/send-result.ts';
@@ -14,19 +13,12 @@ import {
 } from '#controllers/workspace';
 import { Router } from 'express';
 
-import {
-  memberCollectionPath,
-  memberItemPath,
-  memberLeavePath,
-  memberRolePath,
-  memberSelfPath,
-} from './workspace.paths.ts';
+import { API_ROUTES } from '@ordre/core/constants';
 
-// visible here - `requireWorkspaceAccess` resolves the workspace from `req.params.id`.
-const memberRouter: Router = Router({ mergeParams: true });
+const memberRouter: Router = Router();
 
 memberRouter.get(
-  memberCollectionPath,
+  API_ROUTES.workspace.member.collection,
   requireWorkspaceAccess,
   requireWorkspacePermission('workspace:member:manage'),
   sendMemberResult((req) => workspaceMemberGetAll(req.workspace))
@@ -39,39 +31,39 @@ memberRouter.get(
  * captured as a member id.
  */
 memberRouter.get(
-  memberSelfPath,
+  API_ROUTES.workspace.member.self,
   requireWorkspaceAccess,
   sendMemberResult((req) => workspaceMemberGetSelf(req.workspace, req.member))
 );
 
 memberRouter.patch(
-  memberSelfPath,
+  API_ROUTES.workspace.member.self,
   requireWorkspaceAccess,
   sendMemberResult((req) => workspaceMemberUpdate(req.workspace, req.member, req.body))
 );
 
 memberRouter.post(
-  memberLeavePath,
+  API_ROUTES.workspace.member.leave,
   requireWorkspaceAccess,
   sendMemberResult((req) => workspaceMemberLeave(req.workspace, req.member))
 );
 
 memberRouter.get(
-  memberItemPath,
+  API_ROUTES.workspace.member.byId,
   requireWorkspaceAccess,
   requireWorkspacePermission('workspace:member:manage'),
   sendMemberResult((req) => workspaceMemberGetById(req.workspace, req.params.memberId))
 );
 
 memberRouter.patch(
-  memberItemPath,
+  API_ROUTES.workspace.member.byId,
   requireWorkspaceAccess,
   requireWorkspacePermission('workspace:member:manage'),
   sendMemberResult((req) => workspaceMemberUpdateById(req.workspace, req.params.memberId, req.body))
 );
 
 memberRouter.delete(
-  memberItemPath,
+  API_ROUTES.workspace.member.byId,
   requireWorkspaceAccess,
   requireWorkspacePermission('workspace:member:manage'),
   sendMemberResult((req) =>
@@ -80,7 +72,7 @@ memberRouter.delete(
 );
 
 memberRouter.post(
-  memberRolePath,
+  API_ROUTES.workspace.member.role,
   requireWorkspaceAccess,
   requireWorkspacePermission('workspace:member:manage'),
   sendMemberResult((req) =>

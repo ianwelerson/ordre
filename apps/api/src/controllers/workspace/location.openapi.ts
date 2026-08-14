@@ -1,6 +1,7 @@
 import { registry } from '#/config/openapi-registry.ts';
 import { z } from 'zod';
 
+import { API_ROUTES, toOpenApiPath } from '@ordre/core/constants';
 import {
   ResponseErrorSchema,
   WorkspaceLocationCreateSchema,
@@ -32,7 +33,7 @@ const authenticated = [{ cookieAuth: [] }];
  */
 registry.registerPath({
   method: 'get',
-  path: '/workspace/{id}/location',
+  path: toOpenApiPath(API_ROUTES.workspace.location.collection),
   operationId: 'listWorkspaceLocations',
   tags: ['Workspace Location'],
   summary: "List a workspace's locations",
@@ -52,7 +53,7 @@ registry.registerPath({
  */
 registry.registerPath({
   method: 'post',
-  path: '/workspace/{id}/location',
+  path: toOpenApiPath(API_ROUTES.workspace.location.collection),
   operationId: 'createWorkspaceLocation',
   tags: ['Workspace Location'],
   summary: 'Create a workspace location',
@@ -78,7 +79,7 @@ registry.registerPath({
  */
 registry.registerPath({
   method: 'get',
-  path: '/workspace/{id}/location/{locationId}',
+  path: toOpenApiPath(API_ROUTES.workspace.location.byId),
   operationId: 'getWorkspaceLocationById',
   tags: ['Workspace Location'],
   summary: 'Get a workspace location by id',
@@ -99,7 +100,7 @@ registry.registerPath({
  */
 registry.registerPath({
   method: 'patch',
-  path: '/workspace/{id}/location/{locationId}',
+  path: toOpenApiPath(API_ROUTES.workspace.location.byId),
   operationId: 'updateWorkspaceLocation',
   tags: ['Workspace Location'],
   summary: 'Update a workspace location',
@@ -123,7 +124,7 @@ registry.registerPath({
  */
 registry.registerPath({
   method: 'put',
-  path: '/workspace/{id}/location/{locationId}/default',
+  path: toOpenApiPath(API_ROUTES.workspace.location.default),
   operationId: 'setWorkspaceLocationDefault',
   tags: ['Workspace Location'],
   summary: "Set a location as the workspace's default",
@@ -145,7 +146,7 @@ registry.registerPath({
  */
 registry.registerPath({
   method: 'delete',
-  path: '/workspace/{id}/location/{locationId}',
+  path: toOpenApiPath(API_ROUTES.workspace.location.byId),
   operationId: 'deleteWorkspaceLocation',
   tags: ['Workspace Location'],
   summary: 'Delete a workspace location',
@@ -165,7 +166,7 @@ registry.registerPath({
  */
 registry.registerPath({
   method: 'put',
-  path: '/workspace/{id}/location/{locationId}/member/{memberId}',
+  path: toOpenApiPath(API_ROUTES.workspace.location.member),
   operationId: 'assignWorkspaceLocationMember',
   tags: ['Workspace Location'],
   summary: 'Assign a member to a location',
@@ -184,7 +185,7 @@ registry.registerPath({
  */
 registry.registerPath({
   method: 'delete',
-  path: '/workspace/{id}/location/{locationId}/member/{memberId}',
+  path: toOpenApiPath(API_ROUTES.workspace.location.member),
   operationId: 'unassignWorkspaceLocationMember',
   tags: ['Workspace Location'],
   summary: 'Unassign a member from a location',

@@ -10,14 +10,12 @@ import {
 } from '#controllers/workspace';
 import { Router } from 'express';
 
-import { inviteCollectionPath, inviteItemPath } from './workspace.paths.ts';
+import { API_ROUTES } from '@ordre/core/constants';
 
-// `mergeParams` so the `:id` from the parent mount (`/workspace/:id/invite`) is
-// visible here - `requireWorkspaceAccess` resolves the workspace from `req.params.id`.
-const inviteRouter: Router = Router({ mergeParams: true });
+const inviteRouter: Router = Router();
 
 inviteRouter.post(
-  inviteCollectionPath,
+  API_ROUTES.workspace.invite.collection,
   requireWorkspaceAccess,
   requireWorkspacePermission('workspace:member:manage'),
   requireWorkspaceQuota('seat'),
@@ -25,21 +23,21 @@ inviteRouter.post(
 );
 
 inviteRouter.get(
-  inviteItemPath,
+  API_ROUTES.workspace.invite.byId,
   requireWorkspaceAccess,
   requireWorkspacePermission('workspace:member:manage'),
   sendMemberResult((req) => workspaceInviteGetById(req.workspace, req.params.inviteId))
 );
 
 inviteRouter.get(
-  inviteCollectionPath,
+  API_ROUTES.workspace.invite.collection,
   requireWorkspaceAccess,
   requireWorkspacePermission('workspace:member:manage'),
   sendMemberResult((req) => workspaceInviteGetAll(req.workspace))
 );
 
 inviteRouter.delete(
-  inviteItemPath,
+  API_ROUTES.workspace.invite.byId,
   requireWorkspaceAccess,
   requireWorkspacePermission('workspace:member:manage'),
   sendMemberResult((req) => workspaceInviteDelete(req.workspace, req.params.inviteId))

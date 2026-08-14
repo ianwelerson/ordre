@@ -149,6 +149,7 @@ Two rules fall out of that shape and are worth stating explicitly:
 - Zod validation schemas (request bodies, response shapes)
 - TypeScript types inferred from those schemas via `z.infer<>`, plus shared type primitives (`ErrorDefinition`, `ErrorMap`, `StatusCodes`)
 - A shared error catalog mapping stable error keys to a message and HTTP status
+- Every path the API serves (`API_ROUTES`), plus the client-side page routes each frontend serves
 
 **Export paths:**
 
@@ -158,7 +159,7 @@ Two rules fall out of that shape and are worth stating explicitly:
 | `@ordre/core/types`       | TypeScript types inferred from schemas                                |
 | `@ordre/core/errors`      | Error catalog (`{ key: { message, status } }`)                        |
 | `@ordre/core/enums`       | Canonical value lists, several of which back Postgres enums           |
-| `@ordre/core/constants`   | Values identical in every environment - client route paths, TTLs      |
+| `@ordre/core/constants`   | Values identical in every environment - API and client route paths, TTLs |
 | `@ordre/core/permissions` | The role/permission matrix and `can()` - see [Authorization](/internal-docs/engineering/authorization) |
 
 **Error catalog:** Errors are grouped by domain and keyed by a stable identifier, each resolving to an `ErrorDefinition` (`message` + optional `status`). The API maps these onto its responses - for example, `VALIDATION_ERRORS.INVALID_INPUT` drives the `400` returned when Better Auth rejects a request body.
@@ -168,6 +169,16 @@ import { VALIDATION_ERRORS } from "@ordre/core/errors";
 
 VALIDATION_ERRORS.INVALID_INPUT; // { status: 400, message: "Validation error" }
 ```
+
+**Route table:** `API_ROUTES` holds every path the API serves, absolute and version-free, in `:param` form. It lives here rather than in `apps/api` because three consumers need three spellings of the same path, and no layer inside the API may import from another - the OpenAPI registrations sit in `controllers/` and the routers in `adapters/express/`, so neither can own the shared table.
+
+| Consumer                                   | Spelling         | How                                     |
+| ------------------------------------------ | ---------------- | --------------------------------------- |
+| Express router (`adapters/express/routes/`) | `/workspace/:id` | `API_ROUTES.workspace.byId` as-is       |
+| OpenAPI document (`controllers/*.openapi.ts`) | `/workspace/{id}` | `toOpenApiPath(...)`                    |
+| HTTP client (`@ordre/services`)            | `/workspace/8f0e…` | `buildPath(..., { id })`               |
+
+`API_BASE_PATH` (`/v1`) is joined on at the two edges that own it - the Express mount in `server.ts` and the `servers` list in the OpenAPI document - so the table itself never carries a version.
 
 **Key constraint:** No Drizzle dependency. No React dependency. Importable by any app - API, dashboard, board, or marketing.
 
@@ -199,7 +210,7 @@ export const services = {
 };
 ```
 
-**Key constraint:** never imported by `apps/api` - the API is the thing it calls. Requests and responses will be typed with `@ordre/core/schemas`, so the contract is shared rather than restated.
+**Key constraint:** never imported by `apps/api` - the API is the thing it calls. Requests and responses will be typed with `@ordre/core/schemas` and addressed with `API_ROUTES` from `@ordre/core/constants`, so both halves of the contract are shared rather than restated.
 
 ---
 
@@ -439,6 +450,8 @@ and the [i18n structure](#-i18n-structure) described further down.
 **Tech stack:** Express 5 on Node.js, Better Auth for sessions, Drizzle ORM via `@ordre/db`, Zod 4 via `@ordre/core/schemas`, Resend for email, `helmet` + `cors` for HTTP hardening, `@asteasolutions/zod-to-openapi` for the spec, and `supertest` for route tests.
 
 The API app is an Express (Node.js) server - deployed as a standard long-running process in both development and production. Routes are thin HTTP adapters that call controllers; controllers contain the business logic, the OpenAPI contract, and their tests, and import from `@ordre/core/schemas` for validation and `@ordre/db` for database queries. See [Infrastructure](/internal-docs/engineering/infrastructure) for compute migration options.
+
+**URL shape:** everything is served under `API_BASE_PATH` (`/v1`) on the API's own subdomain - `https://api.ordre.app/v1/workspace`. The prefix buys versioning rather than namespacing (the subdomain already does that), and it doubles as the scanner gate in `server.ts`, which answers anything outside it with an empty 404 before helmet, CORS, and the access log run. The paths below it come from `API_ROUTES` in [`@ordre/core/constants`](#ordrecore), never from string literals in a router.
 
 **Database connection ownership:** `@ordre/db/connection` exposes the `createPool` / `createDb` factories, but the API app owns the live connection. `config/db.ts` creates exactly one `pg` pool (and its Drizzle `db`) per process and exports both; controllers and `config/auth.ts` import that shared `db`. Because the server is long-lived, the entrypoint (`adapters/express/index.ts`) drains the pool on `SIGTERM`/`SIGINT` so deploys and `node --watch` reloads finish in-flight queries before exiting.
 

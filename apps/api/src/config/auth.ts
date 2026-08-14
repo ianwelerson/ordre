@@ -10,6 +10,7 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { APIError, createAuthMiddleware, isAPIError } from 'better-auth/api';
 import { openAPI } from 'better-auth/plugins';
 
+import { API_BASE_PATH, API_ROUTES } from '@ordre/core/constants';
 import { AUTH_ERRORS, BASE_ERRORS, VALIDATION_ERRORS } from '@ordre/core/errors';
 import type { ErrorMap } from '@ordre/core/types';
 import * as schema from '@ordre/db/schemas';
@@ -74,6 +75,7 @@ export const auth = betterAuth({
   }),
   secret: env.BETTER_AUTH_SECRET,
   baseURL: urls.api,
+  basePath: `${API_BASE_PATH}${API_ROUTES.auth.base}`,
   trustedOrigins: [...appOrigins],
   advanced: {
     database: {

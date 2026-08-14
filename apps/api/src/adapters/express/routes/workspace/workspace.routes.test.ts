@@ -1,4 +1,4 @@
-import { app, BASE_PATH } from '#/adapters/express/server.ts';
+import { app } from '#/adapters/express/server.ts';
 import { auth } from '#/config/auth.ts';
 import { USER_IDS, userFixtures, WORKSPACE_IDS, workspaceFixtures } from '#/test/fixtures.ts';
 import { ownerDb } from '#/test/owner-db.ts';
@@ -7,6 +7,7 @@ import { sql } from 'drizzle-orm';
 import request from 'supertest';
 import { z } from 'zod';
 
+import { API_BASE_PATH, API_ROUTES, buildPath } from '@ordre/core/constants';
 import { BASE_ERRORS, VALIDATION_ERRORS, WORKSPACE_ERRORS } from '@ordre/core/errors';
 import {
   ResponseErrorSchema,
@@ -15,14 +16,13 @@ import {
   WorkspaceSummarySchema,
 } from '@ordre/core/schemas';
 
-import {
-  workspaceBasePath,
-  workspaceItemByIdPath,
-  workspaceItemBySlugPath,
-  workspaceSlugExistsPath,
-} from './workspace.paths.ts';
+const BASE = `${API_BASE_PATH}${API_ROUTES.workspace.collection}`;
 
-const BASE = `${BASE_PATH}${workspaceBasePath}`;
+const itemUrl = (id: string) => `${API_BASE_PATH}${buildPath(API_ROUTES.workspace.byId, { id })}`;
+const slugUrl = (slug: string) =>
+  `${API_BASE_PATH}${buildPath(API_ROUTES.workspace.bySlug, { slug })}`;
+const slugExistsUrl = (slug: string) =>
+  `${API_BASE_PATH}${buildPath(API_ROUTES.workspace.slugExists, { slug })}`;
 
 vi.mock('#/config/auth.ts', () => {
   return {
@@ -68,7 +68,7 @@ describe('Workspace', () => {
     vi.resetAllMocks();
   });
 
-  describe(workspaceBasePath, () => {
+  describe(API_ROUTES.workspace.collection, () => {
     // --- GET /workspace (list the user's workspaces) ---
 
     // RBAC: gated on authentication only; the listing is scoped to the caller's
@@ -794,7 +794,7 @@ describe('Workspace', () => {
     });
   });
 
-  describe(`${workspaceBasePath}${workspaceItemByIdPath}`, () => {
+  describe(`${API_ROUTES.workspace.byId}`, () => {
     // RBAC: gated on `workspace:read`, held by every role (owner, admin, member).
 
     test('GET allows the owner (has workspace:read)', async () => {
@@ -802,10 +802,7 @@ describe('Workspace', () => {
         id: USER_IDS.owner,
       });
 
-      const response = await request(app)
-        .get(`${BASE}${workspaceItemByIdPath.replace(':id', WORKSPACE_IDS.primary)}`)
-        .send()
-        .expect(200);
+      const response = await request(app).get(itemUrl(WORKSPACE_IDS.primary)).send().expect(200);
 
       parseBody(WorkspaceSchema, response.body);
     });
@@ -815,10 +812,7 @@ describe('Workspace', () => {
         id: USER_IDS.admin,
       });
 
-      const response = await request(app)
-        .get(`${BASE}${workspaceItemByIdPath.replace(':id', WORKSPACE_IDS.primary)}`)
-        .send()
-        .expect(200);
+      const response = await request(app).get(itemUrl(WORKSPACE_IDS.primary)).send().expect(200);
 
       parseBody(WorkspaceSchema, response.body);
     });
@@ -828,10 +822,7 @@ describe('Workspace', () => {
         id: USER_IDS.member,
       });
 
-      const response = await request(app)
-        .get(`${BASE}${workspaceItemByIdPath.replace(':id', WORKSPACE_IDS.primary)}`)
-        .send()
-        .expect(200);
+      const response = await request(app).get(itemUrl(WORKSPACE_IDS.primary)).send().expect(200);
 
       parseBody(WorkspaceSchema, response.body);
     });
@@ -843,10 +834,7 @@ describe('Workspace', () => {
         id: USER_IDS.suspended,
       });
 
-      const response = await request(app)
-        .get(`${BASE}${workspaceItemByIdPath.replace(':id', WORKSPACE_IDS.primary)}`)
-        .send()
-        .expect(403);
+      const response = await request(app).get(itemUrl(WORKSPACE_IDS.primary)).send().expect(403);
 
       expect(parseBody(ResponseErrorSchema, response.body).code).toBe('MEMBER_SELF_SUSPENDED');
     });
@@ -856,10 +844,7 @@ describe('Workspace', () => {
         id: USER_IDS.outsider,
       });
 
-      const response = await request(app)
-        .get(`${BASE}${workspaceItemByIdPath.replace(':id', WORKSPACE_IDS.primary)}`)
-        .send()
-        .expect(404);
+      const response = await request(app).get(itemUrl(WORKSPACE_IDS.primary)).send().expect(404);
 
       const error = parseBody(ResponseErrorSchema, response.body);
 
@@ -868,10 +853,7 @@ describe('Workspace', () => {
     });
 
     test('GET rejects an unauthenticated request with UNAUTHORIZED', async () => {
-      const response = await request(app)
-        .get(`${BASE}${workspaceItemByIdPath.replace(':id', WORKSPACE_IDS.primary)}`)
-        .send()
-        .expect(401);
+      const response = await request(app).get(itemUrl(WORKSPACE_IDS.primary)).send().expect(401);
 
       const error = parseBody(ResponseErrorSchema, response.body);
 
@@ -885,10 +867,7 @@ describe('Workspace', () => {
         id: USER_IDS.owner,
       });
 
-      const response = await request(app)
-        .get(`${BASE}${workspaceItemByIdPath.replace(':id', WORKSPACE_IDS.minimal)}`)
-        .send()
-        .expect(200);
+      const response = await request(app).get(itemUrl(WORKSPACE_IDS.minimal)).send().expect(200);
 
       const workspace = parseBody(WorkspaceSchema, response.body);
 
@@ -902,10 +881,7 @@ describe('Workspace', () => {
         id: USER_IDS.owner,
       });
 
-      const response = await request(app)
-        .get(`${BASE}${workspaceItemByIdPath.replace(':id', WORKSPACE_IDS.primary)}`)
-        .send()
-        .expect(200);
+      const response = await request(app).get(itemUrl(WORKSPACE_IDS.primary)).send().expect(200);
 
       const workspace = parseBody(WorkspaceSchema, response.body);
 
@@ -918,10 +894,7 @@ describe('Workspace', () => {
         id: USER_IDS.owner,
       });
 
-      const response = await request(app)
-        .get(`${BASE}${workspaceItemByIdPath.replace(':id', WORKSPACE_IDS.minimal)}`)
-        .send()
-        .expect(200);
+      const response = await request(app).get(itemUrl(WORKSPACE_IDS.minimal)).send().expect(200);
 
       const workspace = parseBody(WorkspaceSchema, response.body);
 
@@ -933,10 +906,7 @@ describe('Workspace', () => {
         id: USER_IDS.owner,
       });
 
-      const response = await request(app)
-        .get(`${BASE}${workspaceItemByIdPath.replace(':id', WORKSPACE_IDS.missing)}`)
-        .send()
-        .expect(404);
+      const response = await request(app).get(itemUrl(WORKSPACE_IDS.missing)).send().expect(404);
 
       const error = parseBody(ResponseErrorSchema, response.body);
 
@@ -949,10 +919,7 @@ describe('Workspace', () => {
         id: USER_IDS.owner,
       });
 
-      const response = await request(app)
-        .get(`${BASE}${workspaceItemByIdPath.replace(':id', 'c410d83e')}`)
-        .send()
-        .expect(400);
+      const response = await request(app).get(itemUrl('c410d83e')).send().expect(400);
 
       const error = parseBody(ResponseErrorSchema, response.body);
 
@@ -962,7 +929,7 @@ describe('Workspace', () => {
     });
   });
 
-  describe(`${workspaceBasePath}${workspaceItemBySlugPath}`, () => {
+  describe(`${API_ROUTES.workspace.bySlug}`, () => {
     // RBAC: same guard chain as GET by id - gated on `workspace:read`.
 
     test('GET allows the owner (has workspace:read)', async () => {
@@ -971,7 +938,7 @@ describe('Workspace', () => {
       });
 
       const response = await request(app)
-        .get(`${BASE}${workspaceItemBySlugPath.replace(':slug', workspaceFixtures[0]!.slug)}`)
+        .get(slugUrl(workspaceFixtures[0]!.slug))
         .send()
         .expect(200);
 
@@ -984,7 +951,7 @@ describe('Workspace', () => {
       });
 
       const response = await request(app)
-        .get(`${BASE}${workspaceItemBySlugPath.replace(':slug', workspaceFixtures[0]!.slug)}`)
+        .get(slugUrl(workspaceFixtures[0]!.slug))
         .send()
         .expect(200);
 
@@ -997,7 +964,7 @@ describe('Workspace', () => {
       });
 
       const response = await request(app)
-        .get(`${BASE}${workspaceItemBySlugPath.replace(':slug', workspaceFixtures[0]!.slug)}`)
+        .get(slugUrl(workspaceFixtures[0]!.slug))
         .send()
         .expect(200);
 
@@ -1010,7 +977,7 @@ describe('Workspace', () => {
       });
 
       const response = await request(app)
-        .get(`${BASE}${workspaceItemBySlugPath.replace(':slug', workspaceFixtures[0]!.slug)}`)
+        .get(slugUrl(workspaceFixtures[0]!.slug))
         .send()
         .expect(404);
 
@@ -1022,7 +989,7 @@ describe('Workspace', () => {
 
     test('GET rejects an unauthenticated request with UNAUTHORIZED', async () => {
       const response = await request(app)
-        .get(`${BASE}${workspaceItemBySlugPath.replace(':slug', workspaceFixtures[0]!.slug)}`)
+        .get(slugUrl(workspaceFixtures[0]!.slug))
         .send()
         .expect(401);
 
@@ -1039,7 +1006,7 @@ describe('Workspace', () => {
       });
 
       const response = await request(app)
-        .get(`${BASE}${workspaceItemBySlugPath.replace(':slug', workspaceFixtures[1]!.slug)}`)
+        .get(slugUrl(workspaceFixtures[1]!.slug))
         .send()
         .expect(200);
 
@@ -1055,10 +1022,7 @@ describe('Workspace', () => {
         id: USER_IDS.owner,
       });
 
-      const response = await request(app)
-        .get(`${BASE}${workspaceItemBySlugPath.replace(':slug', 'not-found')}`)
-        .send()
-        .expect(404);
+      const response = await request(app).get(slugUrl('not-found')).send().expect(404);
 
       const error = parseBody(ResponseErrorSchema, response.body);
 
@@ -1067,12 +1031,12 @@ describe('Workspace', () => {
     });
   });
 
-  describe(`${workspaceBasePath}${workspaceSlugExistsPath}`, () => {
+  describe(`${API_ROUTES.workspace.slugExists}`, () => {
     // RBAC: public route - mounted before `authenticate`, so no session required.
 
     test('GET is public and works without authentication', async () => {
       const response = await request(app)
-        .get(`${BASE}${workspaceSlugExistsPath.replace(':slug', workspaceFixtures[0]!.slug)}`)
+        .get(slugExistsUrl(workspaceFixtures[0]!.slug))
         .send()
         .expect(200);
 
@@ -1086,7 +1050,7 @@ describe('Workspace', () => {
       mockUserSession();
 
       const response = await request(app)
-        .get(`${BASE}${workspaceSlugExistsPath.replace(':slug', workspaceFixtures[0]!.slug)}`)
+        .get(slugExistsUrl(workspaceFixtures[0]!.slug))
         .send()
         .expect(200);
 
@@ -1098,10 +1062,7 @@ describe('Workspace', () => {
     test('GET reports an available slug as not existing', async () => {
       mockUserSession();
 
-      const response = await request(app)
-        .get(`${BASE}${workspaceSlugExistsPath.replace(':slug', 'non-existing')}`)
-        .send()
-        .expect(200);
+      const response = await request(app).get(slugExistsUrl('non-existing')).send().expect(200);
 
       const body = parseBody(WorkspaceSlugExistsSchema, response.body);
 

@@ -1,6 +1,7 @@
 import { registry } from '#/config/openapi-registry.ts';
 import { z } from 'zod';
 
+import { API_ROUTES, toOpenApiPath } from '@ordre/core/constants';
 import {
   ResponseErrorSchema,
   WorkspaceMemberRemoveSchema,
@@ -31,7 +32,7 @@ const authenticated = [{ cookieAuth: [] }];
  */
 registry.registerPath({
   method: 'get',
-  path: '/workspace/{id}/member',
+  path: toOpenApiPath(API_ROUTES.workspace.member.collection),
   operationId: 'listWorkspaceMembers',
   tags: ['Workspace Member'],
   summary: "List a workspace's members",
@@ -55,7 +56,7 @@ registry.registerPath({
  */
 registry.registerPath({
   method: 'get',
-  path: '/workspace/{id}/member/me',
+  path: toOpenApiPath(API_ROUTES.workspace.member.self),
   operationId: 'getOwnWorkspaceMember',
   tags: ['Workspace Member'],
   summary: "Get the caller's own membership",
@@ -79,7 +80,7 @@ registry.registerPath({
  */
 registry.registerPath({
   method: 'patch',
-  path: '/workspace/{id}/member/me',
+  path: toOpenApiPath(API_ROUTES.workspace.member.self),
   operationId: 'updateOwnWorkspaceMember',
   tags: ['Workspace Member'],
   summary: "Update the caller's own membership profile",
@@ -107,7 +108,7 @@ registry.registerPath({
  */
 registry.registerPath({
   method: 'post',
-  path: '/workspace/{id}/member/leave',
+  path: toOpenApiPath(API_ROUTES.workspace.member.leave),
   operationId: 'leaveWorkspace',
   tags: ['Workspace Member'],
   summary: 'Leave the workspace',
@@ -126,7 +127,7 @@ registry.registerPath({
  */
 registry.registerPath({
   method: 'get',
-  path: '/workspace/{id}/member/{memberId}',
+  path: toOpenApiPath(API_ROUTES.workspace.member.byId),
   operationId: 'getWorkspaceMemberById',
   tags: ['Workspace Member'],
   summary: 'Get a workspace member by id',
@@ -148,7 +149,7 @@ registry.registerPath({
  */
 registry.registerPath({
   method: 'patch',
-  path: '/workspace/{id}/member/{memberId}',
+  path: toOpenApiPath(API_ROUTES.workspace.member.byId),
   operationId: 'updateWorkspaceMemberById',
   tags: ['Workspace Member'],
   summary: "Update a member's profile",
@@ -178,7 +179,7 @@ registry.registerPath({
  */
 registry.registerPath({
   method: 'delete',
-  path: '/workspace/{id}/member/{memberId}',
+  path: toOpenApiPath(API_ROUTES.workspace.member.byId),
   operationId: 'removeWorkspaceMember',
   tags: ['Workspace Member'],
   summary: 'Remove a member from the workspace',
@@ -206,7 +207,7 @@ registry.registerPath({
  */
 registry.registerPath({
   method: 'post',
-  path: '/workspace/{id}/member/{memberId}/role',
+  path: toOpenApiPath(API_ROUTES.workspace.member.role),
   operationId: 'changeWorkspaceMemberRole',
   tags: ['Workspace Member'],
   summary: "Change a member's role",

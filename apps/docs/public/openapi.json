@@ -12,15 +12,15 @@
   },
   "servers": [
     {
-      "url": "https://api.ordre.app/api",
+      "url": "https://api.ordre.app/v1",
       "description": "Production"
     },
     {
-      "url": "https://api.staging.ordre.app/api",
+      "url": "https://api.staging.ordre.app/v1",
       "description": "Staging"
     },
     {
-      "url": "https://api.ordre.localhost/api",
+      "url": "https://api.ordre.localhost/v1",
       "description": "Local"
     }
   ],

@@ -1,16 +1,17 @@
-import { app, BASE_PATH } from '#/adapters/express/server.ts';
+import { app } from '#/adapters/express/server.ts';
 import { auth } from '#/config/auth.ts';
 import { INVITE_TOKENS, USER_IDS, userFixtures } from '#/test/fixtures.ts';
 import { parseBody } from '#/utils/testing.ts';
 import request from 'supertest';
 
+import { API_BASE_PATH, API_ROUTES, buildPath } from '@ordre/core/constants';
 import { ResponseErrorSchema, WorkspaceInvitePreviewSchema } from '@ordre/core/schemas';
 
-import { inviteAcceptPath, inviteDeclinePath, invitePreviewPath } from './workspace.paths.ts';
+const tokenUrl = (path: string, token: string) => `${API_BASE_PATH}${buildPath(path, { token })}`;
 
-const previewUrl = (token: string) => `${BASE_PATH}${invitePreviewPath.replace(':token', token)}`;
-const declineUrl = (token: string) => `${BASE_PATH}${inviteDeclinePath.replace(':token', token)}`;
-const acceptUrl = (token: string) => `${BASE_PATH}${inviteAcceptPath.replace(':token', token)}`;
+const previewUrl = (token: string) => tokenUrl(API_ROUTES.invite.preview, token);
+const declineUrl = (token: string) => tokenUrl(API_ROUTES.invite.decline, token);
+const acceptUrl = (token: string) => tokenUrl(API_ROUTES.invite.accept, token);
 
 vi.mock('#/config/auth.ts', () => ({ auth: { api: { getSession: vi.fn() } } }));
 
@@ -33,7 +34,7 @@ describe('Workspace Invite (public)', () => {
     vi.resetAllMocks();
   });
 
-  describe(`GET ${invitePreviewPath}`, () => {
+  describe(`GET ${API_ROUTES.invite.preview}`, () => {
     test('returns the public preview for a live pending invite', async () => {
       const response = await request(app).get(previewUrl(INVITE_TOKENS.pending)).send().expect(200);
 
@@ -55,7 +56,7 @@ describe('Workspace Invite (public)', () => {
     });
   });
 
-  describe(`POST ${inviteDeclinePath}`, () => {
+  describe(`POST ${API_ROUTES.invite.decline}`, () => {
     test('declines a pending invite (204), no session required', async () => {
       const response = await request(app)
         .post(declineUrl(INVITE_TOKENS.pending))
@@ -79,7 +80,7 @@ describe('Workspace Invite (public)', () => {
     });
   });
 
-  describe(`POST ${inviteAcceptPath}`, () => {
+  describe(`POST ${API_ROUTES.invite.accept}`, () => {
     test('rejects an unauthenticated request with UNAUTHORIZED', async () => {
       const response = await request(app)
         .post(acceptUrl(INVITE_TOKENS.pendingForOutsider))

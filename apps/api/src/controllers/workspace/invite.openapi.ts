@@ -1,6 +1,7 @@
 import { registry } from '#/config/openapi-registry.ts';
 import { z } from 'zod';
 
+import { API_ROUTES, toOpenApiPath } from '@ordre/core/constants';
 import {
   ResponseErrorSchema,
   WorkspaceInviteCreateSchema,
@@ -36,7 +37,7 @@ const authenticated = [{ cookieAuth: [] }];
  */
 registry.registerPath({
   method: 'get',
-  path: '/workspace/{id}/invite',
+  path: toOpenApiPath(API_ROUTES.workspace.invite.collection),
   operationId: 'listWorkspaceInvites',
   tags: ['Workspace Invite'],
   summary: "List a workspace's invites",
@@ -56,7 +57,7 @@ registry.registerPath({
  */
 registry.registerPath({
   method: 'post',
-  path: '/workspace/{id}/invite',
+  path: toOpenApiPath(API_ROUTES.workspace.invite.collection),
   operationId: 'createWorkspaceInvite',
   tags: ['Workspace Invite'],
   summary: 'Create a workspace invite',
@@ -83,7 +84,7 @@ registry.registerPath({
  */
 registry.registerPath({
   method: 'get',
-  path: '/workspace/{id}/invite/{inviteId}',
+  path: toOpenApiPath(API_ROUTES.workspace.invite.byId),
   operationId: 'getWorkspaceInviteById',
   tags: ['Workspace Invite'],
   summary: 'Get a workspace invite by id',
@@ -107,7 +108,7 @@ registry.registerPath({
  */
 registry.registerPath({
   method: 'delete',
-  path: '/workspace/{id}/invite/{inviteId}',
+  path: toOpenApiPath(API_ROUTES.workspace.invite.byId),
   operationId: 'deleteWorkspaceInvite',
   tags: ['Workspace Invite'],
   summary: 'Delete a workspace invite',
@@ -129,7 +130,7 @@ registry.registerPath({
  */
 registry.registerPath({
   method: 'get',
-  path: '/invite/{token}',
+  path: toOpenApiPath(API_ROUTES.invite.preview),
   operationId: 'previewInvite',
   tags: ['Workspace Invite'],
   summary: 'Preview an invite by token',
@@ -152,7 +153,7 @@ registry.registerPath({
  */
 registry.registerPath({
   method: 'post',
-  path: '/invite/{token}/accept',
+  path: toOpenApiPath(API_ROUTES.invite.accept),
   operationId: 'acceptInvite',
   tags: ['Workspace Invite'],
   summary: 'Accept an invite',
@@ -176,7 +177,7 @@ registry.registerPath({
  */
 registry.registerPath({
   method: 'post',
-  path: '/invite/{token}/decline',
+  path: toOpenApiPath(API_ROUTES.invite.decline),
   operationId: 'declineInvite',
   tags: ['Workspace Invite'],
   summary: 'Decline an invite',

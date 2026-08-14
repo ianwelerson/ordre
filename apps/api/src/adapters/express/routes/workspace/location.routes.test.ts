@@ -1,10 +1,11 @@
-import { app, BASE_PATH } from '#/adapters/express/server.ts';
+import { app } from '#/adapters/express/server.ts';
 import { auth } from '#/config/auth.ts';
 import { setFreePlanLimits } from '#/test/db.ts';
 import { LOCATION_IDS, USER_IDS, userFixtures, WORKSPACE_IDS } from '#/test/fixtures.ts';
 import { parseBody } from '#/utils/testing.ts';
 import request from 'supertest';
 
+import { API_BASE_PATH, API_ROUTES, buildPath } from '@ordre/core/constants';
 import {
   BASE_ERRORS,
   LOCATION_ERRORS,
@@ -13,41 +14,27 @@ import {
 } from '@ordre/core/errors';
 import { ResponseErrorSchema, WorkspaceLocationSchema } from '@ordre/core/schemas';
 
-import {
-  locationDefaultPath,
-  locationItemPath,
-  locationMemberPath,
-  workspaceBasePath,
-  workspaceLocationBasePath,
-} from './workspace.paths.ts';
-
 /** A syntactically valid member id that is never seeded, for behavior cases. */
 const UNKNOWN_MEMBER_ID = 'a9b8c7d6-e5f4-4312-8110-fedcba987654';
 
-const BASE = `${BASE_PATH}${workspaceBasePath}`;
+const locationUrl = (path: string, params: Record<string, string>) =>
+  `${API_BASE_PATH}${buildPath(path, params)}`;
 
-/** `/api/workspace/:id/location` for a given workspace. */
+/** `/v1/workspace/:id/location` for a given workspace. */
 const collectionUrl = (workspaceId: string) =>
-  `${BASE}${workspaceLocationBasePath.replace(':id', workspaceId)}`;
+  locationUrl(API_ROUTES.workspace.location.collection, { id: workspaceId });
 
-/** `/api/workspace/:id/location/:locationId` for a given workspace + location. */
+/** `/v1/workspace/:id/location/:locationId` for a given workspace + location. */
 const itemUrl = (workspaceId: string, locationId: string) =>
-  `${BASE}${workspaceLocationBasePath}${locationItemPath}`
-    .replace(':id', workspaceId)
-    .replace(':locationId', locationId);
+  locationUrl(API_ROUTES.workspace.location.byId, { id: workspaceId, locationId });
 
-/** `/api/workspace/:id/location/:locationId/default` for a given workspace + location. */
+/** `/v1/workspace/:id/location/:locationId/default` for a given workspace + location. */
 const defaultUrl = (workspaceId: string, locationId: string) =>
-  `${BASE}${workspaceLocationBasePath}${locationDefaultPath}`
-    .replace(':id', workspaceId)
-    .replace(':locationId', locationId);
+  locationUrl(API_ROUTES.workspace.location.default, { id: workspaceId, locationId });
 
-/** `/api/workspace/:id/location/:locationId/member/:memberId` for a workspace + location + member. */
+/** `/v1/workspace/:id/location/:locationId/member/:memberId` for a workspace + location + member. */
 const memberUrl = (workspaceId: string, locationId: string, memberId: string) =>
-  `${BASE}${workspaceLocationBasePath}${locationMemberPath}`
-    .replace(':id', workspaceId)
-    .replace(':locationId', locationId)
-    .replace(':memberId', memberId);
+  locationUrl(API_ROUTES.workspace.location.member, { id: workspaceId, locationId, memberId });
 
 vi.mock('#/config/auth.ts', () => {
   return {
@@ -95,7 +82,7 @@ describe('Workspace Location', () => {
     vi.resetAllMocks();
   });
 
-  describe(`${workspaceBasePath}${workspaceLocationBasePath}`, () => {
+  describe(`${API_ROUTES.workspace.location.collection}`, () => {
     // --- GET /workspace/:id/location (list) ---
 
     // RBAC: gated on `workspace:location:read`, held by every role.
@@ -280,7 +267,7 @@ describe('Workspace Location', () => {
     });
   });
 
-  describe(`${workspaceBasePath}${workspaceLocationBasePath}${locationItemPath}`, () => {
+  describe(`${API_ROUTES.workspace.location.byId}`, () => {
     // --- GET /workspace/:id/location/:locationId ---
 
     // RBAC: gated on `workspace:location:read`, held by every role.
@@ -438,7 +425,7 @@ describe('Workspace Location', () => {
     });
   });
 
-  describe(`${workspaceBasePath}${workspaceLocationBasePath}${locationDefaultPath}`, () => {
+  describe(`${API_ROUTES.workspace.location.default}`, () => {
     // --- PUT /workspace/:id/location/:locationId/default ---
 
     // RBAC: gated on `workspace:location:manage`, held by owner and admin.
@@ -508,7 +495,7 @@ describe('Workspace Location', () => {
     });
   });
 
-  describe(`DELETE ${workspaceBasePath}${workspaceLocationBasePath}${locationItemPath}`, () => {
+  describe(`DELETE ${API_ROUTES.workspace.location.byId}`, () => {
     // --- DELETE /workspace/:id/location/:locationId ---
 
     // RBAC: gated on `workspace:location:manage`, held by owner and admin.
@@ -587,7 +574,7 @@ describe('Workspace Location', () => {
     });
   });
 
-  describe(`PUT ${workspaceBasePath}${workspaceLocationBasePath}${locationMemberPath}`, () => {
+  describe(`PUT ${API_ROUTES.workspace.location.member}`, () => {
     // --- PUT /workspace/:id/location/:locationId/member/:memberId (assign) ---
 
     // RBAC: gated on `workspace:location:manage`, held by owner and admin.
@@ -643,7 +630,7 @@ describe('Workspace Location', () => {
     });
   });
 
-  describe(`DELETE ${workspaceBasePath}${workspaceLocationBasePath}${locationMemberPath}`, () => {
+  describe(`DELETE ${API_ROUTES.workspace.location.member}`, () => {
     // --- DELETE /workspace/:id/location/:locationId/member/:memberId (unassign) ---
 
     // RBAC: gated on `workspace:location:manage`, held by owner and admin.

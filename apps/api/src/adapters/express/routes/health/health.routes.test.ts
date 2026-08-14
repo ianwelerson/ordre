@@ -1,11 +1,14 @@
-import { app, BASE_PATH } from '#/adapters/express/server.ts';
-import { healthPath } from '#controllers/health';
+import { app } from '#/adapters/express/server.ts';
 import request from 'supertest';
 import z from 'zod';
 
+import { API_BASE_PATH, API_ROUTES } from '@ordre/core/constants';
+
+const healthUrl = `${API_BASE_PATH}${API_ROUTES.health}`;
+
 describe('Health', () => {
-  test(`GET ${BASE_PATH}${healthPath}`, async () => {
-    const response = await request(app).get(`${BASE_PATH}${healthPath}`).send().expect(200);
+  test(`GET ${healthUrl}`, async () => {
+    const response = await request(app).get(healthUrl).send().expect(200);
 
     expect(response.body).toEqual({
       ok: true,

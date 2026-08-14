@@ -1,11 +1,13 @@
 import { sendResult } from '#/adapters/express/utils/send-result.ts';
-import { healthController, healthPath } from '#controllers/health';
+import { healthController } from '#controllers/health';
 import { Router } from 'express';
+
+import { API_ROUTES } from '@ordre/core/constants';
 
 const router: Router = Router();
 
 router.get(
-  healthPath,
+  API_ROUTES.health,
   sendResult(() => healthController())
 );
 

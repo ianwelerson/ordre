@@ -4,6 +4,8 @@ import { globSync } from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
+import { API_BASE_PATH, API_ROUTES } from '@ordre/core/constants';
+
 import { auth } from './auth.ts';
 
 const controllersDir = path.resolve(import.meta.dirname, '../controllers');
@@ -31,10 +33,12 @@ const openApiDocument = generator.generateDocument({
       email: 'devops@ordre.app',
     },
   },
+  // The registered paths are version-free (see `@ordre/core/constants`), so the
+  // prefix is joined on here - the one place in this document that knows it.
   servers: [
-    { url: 'https://api.ordre.app/api', description: 'Production' },
-    { url: 'https://api.staging.ordre.app/api', description: 'Staging' },
-    { url: 'https://api.ordre.localhost/api', description: 'Local' },
+    { url: `https://api.ordre.app${API_BASE_PATH}`, description: 'Production' },
+    { url: `https://api.staging.ordre.app${API_BASE_PATH}`, description: 'Staging' },
+    { url: `https://api.ordre.localhost${API_BASE_PATH}`, description: 'Local' },
   ],
   // Declared at the document root so the docs generator (which groups pages by
   // tag) can resolve each operation's tag; an operation tagged with a name not
@@ -59,8 +63,9 @@ const openApiDocument = generator.generateDocument({
 });
 
 // Fold better-auth's endpoints into the same document. Its schema paths are
-// relative to the auth base (e.g. /sign-in/email), so prefix them with /auth to
-// match where the handler is mounted (/api/auth, under the /api server URL).
+// relative to the auth base (e.g. /sign-in/email), so prefix them with the auth
+// base to match where the handler is mounted (the version prefix is already on
+// the server URL, so it is not repeated here).
 // better-auth emits OpenAPI 3.1 (matching this document), so its schema merges
 // in as-is; cast at the boundary since it ships its own nominal OpenAPI types.
 type Components = NonNullable<typeof openApiDocument.components>;
@@ -111,7 +116,7 @@ const authPaths = Object.fromEntries(
         ].join('-');
       }
     }
-    return [`/auth${route}`, item];
+    return [`${API_ROUTES.auth.base}${route}`, item];
   })
 ) as Paths;
 
