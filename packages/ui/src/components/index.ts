@@ -11,6 +11,7 @@
  */
 
 // Primitives
+export { Alert, type AlertProps } from './Alert/Alert';
 export { Button, type ButtonAsButton, type ButtonAsLink, type ButtonProps } from './Button/Button';
 export {
   Divider,
