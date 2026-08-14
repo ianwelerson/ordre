@@ -66,7 +66,7 @@ const Demo = (args: Partial<DrawerProps>) => {
 };
 
 const meta: Meta<typeof Drawer> = {
-  title: 'Components/Drawer',
+  title: 'Components/Surfaces/Drawer',
   component: Drawer,
   parameters: {
     layout: 'centered',

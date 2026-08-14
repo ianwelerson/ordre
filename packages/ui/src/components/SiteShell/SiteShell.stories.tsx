@@ -23,7 +23,7 @@ const Footer = () => (
 );
 
 const meta: Meta<typeof SiteShell> = {
-  title: 'Components/SiteShell',
+  title: 'Components/Shell/SiteShell',
   component: SiteShell,
   parameters: {
     layout: 'fullscreen',

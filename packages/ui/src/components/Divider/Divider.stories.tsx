@@ -5,7 +5,7 @@ import { Typography } from '../Typography/Typography';
 import { Divider, type DividerAsHorizontal, type DividerAsVertical } from './Divider';
 
 const meta: Meta<DividerAsHorizontal> = {
-  title: 'Components/Divider',
+  title: 'Components/Primitives/Divider',
   component: Divider,
   parameters: {
     layout: 'centered',

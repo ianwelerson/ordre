@@ -20,7 +20,7 @@ const TONES = ['default', 'muted', 'subtle', 'invalid', 'success', 'info'] as co
 const TAGS = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span'] as const;
 
 const meta: Meta<typeof Typography> = {
-  title: 'Components/Typography',
+  title: 'Components/Primitives/Typography',
   component: Typography,
   parameters: {
     layout: 'centered',

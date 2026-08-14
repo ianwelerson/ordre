@@ -4,7 +4,7 @@ import { Typography } from '../Typography/Typography';
 import { Eyebrow } from './Eyebrow';
 
 const meta: Meta<typeof Eyebrow> = {
-  title: 'Components/Eyebrow',
+  title: 'Components/Primitives/Eyebrow',
   component: Eyebrow,
   parameters: {
     layout: 'centered',

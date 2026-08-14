@@ -14,7 +14,7 @@ const LINKS: NavLink[] = [
 ];
 
 const meta: Meta<typeof SiteHeader> = {
-  title: 'Components/SiteHeader',
+  title: 'Components/Shell/SiteHeader',
   component: SiteHeader,
   parameters: {
     layout: 'fullscreen',

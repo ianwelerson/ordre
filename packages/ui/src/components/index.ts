@@ -4,13 +4,14 @@
  * One explicit line per export, values and types together. `export *` is banned
  * here (see eslint.config.ts) so that widening the surface is always a
  * deliberate edit to this file rather than a side effect somewhere downstream.
+ *
+ * The groups below are also the Storybook sidebar, which takes its folders from these
+ * headings. Adding a component in one place and filing it in the other is the same
+ * edit.
  */
 
 // Primitives
 export { Button, type ButtonAsButton, type ButtonAsLink, type ButtonProps } from './Button/Button';
-export { TextLink, type TextLinkProps } from './TextLink/TextLink';
-export { Typography, type TypographyProps } from './Typography/Typography';
-
 export {
   Divider,
   type DividerAsHorizontal,
@@ -18,6 +19,8 @@ export {
   type DividerProps,
 } from './Divider/Divider';
 export { Eyebrow, type EyebrowProps } from './Eyebrow/Eyebrow';
+export { TextLink, type TextLinkProps } from './TextLink/TextLink';
+export { Typography, type TypographyProps } from './Typography/Typography';
 
 /**
  * Form

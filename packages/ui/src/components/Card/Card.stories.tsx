@@ -27,7 +27,7 @@ const Surface = ({ tone, children }: { tone: 'snow' | 'white'; children: ReactNo
 );
 
 const meta: Meta<typeof Card> = {
-  title: 'Components/Card',
+  title: 'Components/Surfaces/Card',
   component: Card,
   parameters: {
     layout: 'centered',

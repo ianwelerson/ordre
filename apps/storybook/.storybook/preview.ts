@@ -7,12 +7,16 @@ const preview: Preview = {
     options: {
       storySort: {
         method: "alphabetical",
+        // Groups run in the order named here and everything inside them alphabetically.
+        // The component groups mirror `@ordre/ui`'s barrel, so a component's place in
+        // the sidebar is decided in the same edit that adds it to the public API. They
+        // are listed rather than sorted because alphabetical would open on Form.
         order: [
           "Introduction",
           "Design Tokens",
           ["Introduction"],
           "Components",
-          ["Introduction"],
+          ["Primitives", "Form", "Surfaces", "Shell"],
         ],
       },
     },
