@@ -1,5 +1,7 @@
 import { cva, type VariantProps } from 'class-variance-authority';
 
+import type { ReactNode } from 'react';
+
 import type { TypographyProps } from '../Typography/Typography';
 
 /**
@@ -107,6 +109,14 @@ export interface FieldOwnProps {
   variant?: FieldVariant;
   size?: FieldSize;
   label?: string;
+  /**
+   * Sits at the far end of the label row, for something the field itself cannot say -
+   * a "Forgot?" link beside a password, a unit toggle beside an amount.
+   *
+   * It renders beside the `label` element rather than inside it. Nesting a control in
+   * a label makes the two fight over the same click.
+   */
+  labelAction?: ReactNode;
   /** Tags the label to say the field can be left empty. */
   optional?: boolean;
   /** The quiet line under the field. Replaced by `invalidMessage` while invalid. */

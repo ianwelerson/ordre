@@ -46,6 +46,7 @@ export const Field = ({
   variant,
   size,
   label,
+  labelAction,
   optional,
   invalid,
   message,
@@ -57,20 +58,25 @@ export const Field = ({
 
   return (
     <div data-testid="field" className={fieldVariants({ className })}>
-      {label && (
-        <label htmlFor={controlId} className="flex w-fit items-center gap-2.5">
-          <Typography tag="span" variant={labelStyle.variant} tone={labelStyle.tone}>
-            {label}
-          </Typography>
-          {optional && (
-            <span
-              data-testid="field-optional"
-              className="text-3xs tracking-label text-foreground-subtle bg-background-alt border-border rounded-sm border border-solid px-1.5 py-0.5 font-mono uppercase"
-            >
-              Optional
-            </span>
+      {(label || labelAction) && (
+        <div className="flex w-full items-center justify-between gap-2.5">
+          {label && (
+            <label htmlFor={controlId} className="flex w-fit items-center gap-2.5">
+              <Typography tag="span" variant={labelStyle.variant} tone={labelStyle.tone}>
+                {label}
+              </Typography>
+              {optional && (
+                <span
+                  data-testid="field-optional"
+                  className="text-3xs tracking-label text-foreground-subtle bg-background-alt border-border rounded-sm border border-solid px-1.5 py-0.5 font-mono uppercase"
+                >
+                  Optional
+                </span>
+              )}
+            </label>
           )}
-        </label>
+          {labelAction}
+        </div>
       )}
       <div
         data-testid="field-shell"

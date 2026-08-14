@@ -187,3 +187,24 @@ export const Showcase: Story = {
     ),
   ],
 };
+
+/**
+ * An action at the far end of the label row. It renders beside the label element, not
+ * inside it, so clicking it does not also focus the field.
+ */
+export const WithLabelAction: Story = {
+  args: {
+    name: 'password',
+    label: 'Password',
+    type: 'password',
+    placeholder: 'Your password',
+    labelAction: (
+      <a
+        href="#reset"
+        className="font-body text-foreground hover:text-button-hover text-xs font-medium underline underline-offset-3"
+      >
+        Forgot?
+      </a>
+    ),
+  },
+};

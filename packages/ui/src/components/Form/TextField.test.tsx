@@ -90,6 +90,27 @@ describe('TextField.tsx', () => {
     expect(queryByTestId('field-optional')).toBeInTheDocument();
   });
 
+  it('should render a label action beside the label, outside the label element', () => {
+    const { getByTestId, getByText } = render(
+      <TextField name="password" label="Password" labelAction={<a href="/reset">Forgot?</a>} />
+    );
+
+    const action = getByText('Forgot?');
+
+    expect(action).toBeInTheDocument();
+    // Nesting it in the label would make the two fight over the same click.
+    expect(action.closest('label')).toBeNull();
+    expect(getByTestId('text-field-control')).not.toHaveFocus();
+  });
+
+  it('should not leak the label action onto the native input', () => {
+    const { getByTestId } = render(
+      <TextField name="password" label="Password" labelAction={<span>Forgot?</span>} />
+    );
+
+    expect(getByTestId('text-field-control')).not.toHaveAttribute('labelAction');
+  });
+
   it('should render a prefix and a suffix inside the field box', () => {
     const { getByTestId } = render(
       <TextField name="amount" prefix={<span>CHF</span>} suffix={<span>.app</span>} />
