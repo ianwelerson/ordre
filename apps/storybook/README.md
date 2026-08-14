@@ -26,8 +26,12 @@ apps/storybook/
 │   ├── global.css            # Global styles loaded into every story
 │   └── shims/                # Local module shims for Storybook/Vite
 │
+├── Introduction/
+│   └── Introduction.mdx      # The landing page, first in the sidebar
+│
 ├── DesignTokens/
-│   └── Introduction.md       # MDX intro page rendered in the sidebar
+│   └── Introduction.mdx      # Intro to the token system; the token pages
+│                             # themselves live beside their CSS in @ordre/ui
 │
 ├── postcss.config.ts
 ├── turbo.json

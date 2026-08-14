@@ -295,7 +295,7 @@ const log = logger.child({ controller: "auth" }); // stamps controller: "auth" o
 
 **Contains:**
 
-- Atomic components (`Button`, `Input`, `Card`, etc.)
+- Atomic components (`Button`, `TextField`, `Card`, etc.)
 - Design tokens as CSS custom properties
 - Shared global styles
 
@@ -309,10 +309,17 @@ packages/ui/
 │   │   │   ├── Button.tsx
 │   │   │   ├── Button.test.tsx
 │   │   │   └── Button.stories.tsx
-│   │   └── index.ts          # Re-exports all components
+│   │   ├── Form/             # The one directory that is not one component
+│   │   │   ├── TextField.tsx     # …plus TextArea, Checkbox, RadioGroup, Toggle, …
+│   │   │   ├── Field.tsx         # The label/box/message anatomy they compose
+│   │   │   ├── fieldVariants.ts  # The cva they share
+│   │   │   └── useFieldControl.ts
+│   │   └── index.ts          # Re-exports all components, grouped
 │   ├── config/
 │   │   └── postcss.ts        # Shared PostCSS config for consuming apps
 │   ├── fonts/                # Self-hosted font files (Geist, Geist Mono, Plus Jakarta Sans)
+│   ├── helpers/              # Small styling helpers
+│   ├── hooks/                # Shared React hooks
 │   ├── icons/
 │   │   ├── Icons.tsx         # Re-exports Lucide icon set + custom icons
 │   │   ├── Iconography.mdx   # Storybook docs for the icon system
@@ -320,11 +327,22 @@ packages/ui/
 │   │       └── Logo.tsx
 │   └── styles/
 │       ├── main.css          # Entry point (imports fonts.css + tailwind.css + @source)
-│       ├── tailwind.css      # Tailwind base + tokens (design tokens as CSS custom properties)
+│       ├── tailwind.css      # Imports every token file
 │       ├── fonts.css         # @font-face declarations
-│       └── colors.mdx        # Storybook docs for the color palette
+│       └── tokens/           # One .css per group, each with a sibling .mdx for Storybook
+│           ├── colors.css    # …plus typography, spacing, radius, shadows,
+│           └── colors.mdx    #    motion, breakpoint, container
 └── package.json
 ```
+
+**Component layout:** one directory per component, holding its `.tsx`, `.test.tsx`, and
+`.stories.tsx`. `Form/` is the deliberate exception: its controls sit flat beside the
+field anatomy, cva, and hooks they all compose, because nesting each in its own
+directory would leave every one of them importing its siblings from a parent.
+
+**Component groups:** the headings in `components/index.ts` - Primitives, Form,
+Surfaces, Shell - are also the Storybook sidebar folders. Adding a component to the
+barrel and filing it in Storybook is one decision, not two.
 
 **Usage in apps:**
 
@@ -333,7 +351,7 @@ import { Button } from "@ordre/ui/components";
 import "@ordre/ui/styles/main"; // imported once in root layout
 ```
 
-**Package exports:** `./components`, `./config/postcss`, `./styles/*`, `./fonts/*`, `./icons`, `./helpers/*`.
+**Package exports:** `./components`, `./config/postcss`, `./styles/*`, `./fonts/*`, `./icons`, `./helpers/*`, `./hooks/*`.
 
 **Storybook requirement:** Every component in `@ordre/ui` must ship with a co-located `.stories.tsx`. Stories are published as part of the deployed Storybook at `storybook.ordre.app` - adding a component without a story is a review blocker.
 

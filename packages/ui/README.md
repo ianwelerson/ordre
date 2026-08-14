@@ -15,6 +15,7 @@ Built with React 19 and Tailwind CSS v4 (tokens as CSS custom properties - there
 | `@ordre/ui/styles/*`       | CSS entry points - `main` pulls in fonts, Tailwind, tokens |
 | `@ordre/ui/fonts/*`        | Self-hosted font files                                     |
 | `@ordre/ui/helpers/*`      | Small styling helpers                                      |
+| `@ordre/ui/hooks/*`        | Shared React hooks                                         |
 | `@ordre/ui/config/postcss` | Shared PostCSS config for consuming apps                   |
 
 ```ts
@@ -31,6 +32,7 @@ import { Button } from '@ordre/ui/components';
 - **Atomic components only.** Feature-level compositions belong in the app that needs them.
 - **No business logic.** Components here know about props and styles, nothing about Ordre's domain.
 - **Every component ships with a `.stories.tsx`.** Stories are published to `storybook.ordre.app`; adding a component without one is a review blocker.
+- **Every component is exported from `src/components/index.ts`, under a group heading.** Those headings - Primitives, Form, Surfaces, Shell - are the Storybook sidebar folders, so the story's `title` has to match the group the export sits in.
 
 ---
 

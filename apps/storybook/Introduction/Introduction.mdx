@@ -10,15 +10,15 @@ Ordre is a client communication platform for service providers: every job gets a
 
 ## What you'll find here
 
-- **[Design Tokens](?path=/docs/design-tokens-introduction--docs)** - the shared vocabulary (colors, icons, typography) consumed by every app through Tailwind v4 CSS variables and `@ordre/ui` exports.
-- **Components** - atomic React components from `@ordre/ui` with their stories and interactive controls.
+- **[Design Tokens](?path=/docs/design-tokens-introduction--docs)** - the shared vocabulary consumed by every app through Tailwind v4 CSS variables and `@ordre/ui` exports: colors, type scale, spacing, radius, shadows, motion, breakpoints, containers, and iconography.
+- **Components** - atomic React components from `@ordre/ui` with their stories and interactive controls, grouped as **Primitives**, **Form**, **Surfaces**, and **Shell**. Those groups mirror the headings in `@ordre/ui`'s component barrel, so a component sits in the same place here as it does in the source.
 - **App stories** - in-context views and flows contributed directly by each app in the monorepo.
 
 Every `*.stories.tsx` or `*.mdx` file in `apps/*` or `packages/*` is picked up automatically - adding a story anywhere in the repo makes it show up here.
 
 ## The apps
 
-Ordre is split into three product apps plus this documentation surface. Each one has a distinct audience and framework, but they all consume the same UI Kit.
+Ordre is split into three product apps, an API, and two documentation surfaces. The three product apps have distinct audiences and frameworks, but they all consume the same UI Kit.
 
 ### 🗂️ board
 
@@ -32,13 +32,25 @@ The **authenticated workspace app** used by service providers to create boards, 
 
 The **public marketing site** - home, pricing, about, and legal pages. Built with **Next.js 16**, tuned for SEO and fast static delivery. Stories here cover the landing sections and reusable marketing blocks.
 
+### 🔌 api
+
+The **backend**. Serves every product app and owns the database; it is the only workspace that touches Drizzle. Nothing here renders, so it contributes no stories - it is listed for the shape of the repo.
+
+### 📚 docs
+
+The **engineering and product handbook** - architecture, data model, authorization, testing, deployment, and the generated API reference. Where this Storybook documents the pieces, `docs` documents the decisions.
+
 ### 📖 storybook
 
 The app you're reading right now. A thin aggregator that loads stories from across the monorepo and publishes them as a static site so the team (and non-technical reviewers) can browse work without a dev environment.
 
 ## The shared packages
 
-- **[@ordre/ui](?path=/docs/design-tokens-introduction--docs)** - React components and design tokens. The heart of the UI Kit.
+- **[@ordre/ui](?path=/docs/design-tokens-introduction--docs)** - React components and design tokens. The heart of the UI Kit, and the only package this Storybook renders from.
+- **@ordre/core** - schemas, types, errors, enums, constants, and permissions. The floor: no Drizzle, no React.
+- **@ordre/db** - Drizzle tables and migrations, imported by `apps/api` and nothing else.
+- **@ordre/services** - domain services shared across the backend.
+- **@ordre/monitoring** - structured logging.
 - **@ordre/i18n** - shared translations merged with app-specific strings at runtime.
 - **@ordre/config** - shared ESLint, TypeScript, and Prettier presets.
 
