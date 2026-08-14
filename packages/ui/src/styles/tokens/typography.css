@@ -69,6 +69,9 @@
   --tracking-headline: -0.018em;
   --tracking-title: -0.015em;
   --tracking-normal: 0;
+  /* Mono tracking ladder — captions/values (tight) through wide eyebrows. */
+  --tracking-caption: 0.04em;
+  --tracking-meta: 0.08em;
   /* Mono uppercase structural labels. */
   --tracking-label: 0.12em;
   --tracking-eyebrow: 0.14em;

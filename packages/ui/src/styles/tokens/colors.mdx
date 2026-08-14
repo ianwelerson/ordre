@@ -8,8 +8,8 @@ The palette is defined as Tailwind v4 CSS variables in `./colors.css`. Every var
 
 The palette comes in two layers:
 
-- **Tokens** (prefer these) - semantic names that encode intent: `background`, `background-alt`, `background-elevated`, `foreground`, `foreground-muted`, `foreground-subtle`, `button`, `button-hover`, `success`, `invalid`, `invalid-hover`, `info`, `border`.
-- **Base colors** - the raw hues tokens resolve to: neutrals (`midnight`, `slate`, `stone`, `ash`, `warm-gray`, `snow`, `white`) and brand (`amber`, `deep-amber`, `sage`, `brick`, `deep-brick`, `ink-blue`).
+- **Tokens** (prefer these) - semantic names that encode intent: `background`, `background-alt`, `background-elevated`, `background-accent`, `background-info`, `foreground`, `foreground-muted`, `foreground-subtle`, `button`, `button-hover`, `success`, `invalid`, `invalid-hover`, `info`, `border`.
+- **Base colors** - the raw hues tokens resolve to: neutrals (`midnight`, `slate`, `stone`, `ash`, `warm-gray`, `snow`, `white`), brand (`amber`, `deep-amber`, `sage`, `brick`, `deep-brick`, `ink-blue`) and the accent washes (`amber-wash`, `info-wash`).
 
 ## Usage
 
@@ -138,6 +138,24 @@ Prefer these in components. They carry meaning, so the palette can evolve withou
     resolvesTo="white"
     utility="bg-background-elevated"
     cssVar="--color-background-elevated"
+  />
+  <ColorRow
+    swatch="var(--color-background-accent)"
+    name="background-accent"
+    subtitle="Amber wash behind an internal note or a highlighted row."
+    value="#fef9ef"
+    resolvesTo="amber-wash"
+    utility="bg-background-accent"
+    cssVar="--color-background-accent"
+  />
+  <ColorRow
+    swatch="var(--color-background-info)"
+    name="background-info"
+    subtitle="Ink-blue wash behind an info chip or callout."
+    value="#e7eff8"
+    resolvesTo="info-wash"
+    utility="bg-background-info"
+    cssVar="--color-background-info"
   />
   <ColorRow
     swatch="var(--color-foreground)"
@@ -329,6 +347,29 @@ Raw hues the tokens resolve to. Avoid using them directly in components - reach 
     value="#2b5288"
     utility="bg-ink-blue"
     cssVar="--color-ink-blue"
+  />
+</PaletteGrid>
+
+### Accent washes
+
+Tinted surfaces rather than hues: each one is its brand color already flattened against a
+near-white ground, so it can sit behind text without a `color-mix` at the call site. They
+are the only base colors whose job is to be a background.
+
+<PaletteGrid>
+  <ColorRow
+    swatch="var(--color-amber-wash)"
+    name="amber-wash"
+    value="#fef9ef"
+    utility="bg-amber-wash"
+    cssVar="--color-amber-wash"
+  />
+  <ColorRow
+    swatch="var(--color-info-wash)"
+    name="info-wash"
+    value="#e7eff8"
+    utility="bg-info-wash"
+    cssVar="--color-info-wash"
   />
 </PaletteGrid>
 

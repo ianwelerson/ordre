@@ -11,7 +11,7 @@ The scale is grouped into:
 - **Family** - `font-headline`, `font-body`, `font-mono`.
 - **Size** - `text-3xs` → `text-4xl`. The top two steps are **fluid** (`clamp`), so they carry the display ranges rather than a single desktop value.
 - **Weight** - `font-light`, `font-normal`, `font-medium`, `font-semibold`, `font-bold`.
-- **Letter spacing** - negative for display type (`tracking-display-lg`, `tracking-display`, `tracking-headline`, `tracking-title`), `tracking-normal` for body copy, and positive for mono uppercase structural labels (`tracking-label`, `tracking-eyebrow`).
+- **Letter spacing** - negative for display type (`tracking-display-lg`, `tracking-display`, `tracking-headline`, `tracking-title`), `tracking-normal` for body copy, and a positive ladder for mono, widening as the type gets smaller and more structural: `tracking-caption` → `tracking-meta` → `tracking-label` → `tracking-eyebrow`.
 - **Line height** - `leading-display-lg`, `leading-display`, `leading-headline`, `leading-title`, `leading-subtitle`, `leading-body`, `leading-caption`.
 
 ## Usage
@@ -157,6 +157,12 @@ The quick brown fox
 
 ## Letter spacing
 
+Display type tightens as it grows; mono opens up as it shrinks. The four positive steps
+are a ladder for that second half, and the rule of thumb is how structural the text is
+rather than how big it is: `caption` for mono running alongside prose (ids, timestamps),
+`meta` for a small standalone value, `label` for uppercase labels inside a component, and
+`eyebrow` for the widest, quietest labels that head a section.
+
 <div
   style={{
     display: 'grid',
@@ -180,6 +186,8 @@ The quick brown fox
 { name: 'headline', token: '--tracking-headline', value: '-0.018em' },
 { name: 'title', token: '--tracking-title', value: '-0.015em' },
 { name: 'normal', token: '--tracking-normal', value: '0' },
+{ name: 'caption', token: '--tracking-caption', value: '0.04em' },
+{ name: 'meta', token: '--tracking-meta', value: '0.08em' },
 { name: 'label', token: '--tracking-label', value: '0.12em' },
 { name: 'eyebrow', token: '--tracking-eyebrow', value: '0.14em' },
 ].flatMap(({ name, token, value }) => [

@@ -14,12 +14,17 @@
   --color-brick: #c44b3f;
   --color-deep-brick: #a83e34;
   --color-ink-blue: #2b5288;
+  /* Accent washes — soft tinted surfaces (highlight rows, info callouts). */
+  --color-amber-wash: #fef9ef;
+  --color-info-wash: #e7eff8;
   --color-transparent: transparent;
 
   /* === Color Tokens === */
   --color-background: var(--color-snow);
   --color-background-alt: var(--color-warm-gray);
   --color-background-elevated: var(--color-white);
+  --color-background-accent: var(--color-amber-wash);
+  --color-background-info: var(--color-info-wash);
   --color-foreground: var(--color-midnight);
   --color-foreground-muted: var(--color-slate);
   --color-foreground-subtle: var(--color-stone);
