@@ -19,6 +19,18 @@ export {
 } from './Divider/Divider';
 export { Eyebrow, type EyebrowProps } from './Eyebrow/Eyebrow';
 
+/**
+ * Form
+ *
+ * The one group whose directory is not one component. Every other component owns a
+ * directory; these six sit flat in `Form/` beside the field anatomy, the shared cva and
+ * the hooks they all compose, because nesting them would leave each importing its own
+ * siblings from a parent.
+ */
+export { PasswordField, type PasswordFieldProps } from './Form/PasswordField';
+export { TextArea, type TextAreaProps } from './Form/TextArea';
+export { TextField, type TextFieldProps } from './Form/TextField';
+
 // Surfaces
 export { Card, type CardProps } from './Card/Card';
 export { Drawer, type DrawerProps } from './Drawer/Drawer';
