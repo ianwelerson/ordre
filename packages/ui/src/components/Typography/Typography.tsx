@@ -12,7 +12,11 @@ const variants = cva([], {
       subtitle: 'font-body font-medium text-lg leading-subtitle',
       body: 'font-body font-normal text-base leading-body',
       caption: 'font-body font-normal text-xs leading-caption',
-      'mono-label': 'font-mono font-medium text-2xs tracking-label uppercase',
+      // The eyebrow step, not `tracking-label`, despite the name: variant names and
+      // tracking tokens are separate ladders here (`h2` takes `tracking-headline`).
+      // The eyebrow and the field label both specify 0.14em and only the divider
+      // label specifies 0.12em, so the wider step is what the shared variant carries.
+      'mono-label': 'font-mono font-medium text-2xs tracking-eyebrow uppercase',
       'mono-token': 'font-mono font-normal text-xs leading-caption',
       'mono-sample': 'font-mono font-normal text-xs leading-caption',
     },
