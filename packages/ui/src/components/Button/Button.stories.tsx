@@ -190,3 +190,23 @@ export const AsLink: LinkStory = {
 export const CustomClassName: Story = {
   args: { className: 'uppercase tracking-widest' },
 };
+
+/** Work in flight: the spinner takes the icon slot that was already filled. */
+export const Loading: Story = {
+  args: { children: 'Sign in', trailingIcon: 'arrow-right', loading: true },
+};
+
+/** Naming the wait is kinder than leaving the old label under a spinner. */
+export const LoadingWithLabel: Story = {
+  args: {
+    children: 'Sign in',
+    trailingIcon: 'arrow-right',
+    loading: true,
+    loadingLabel: 'Signing in...',
+  },
+};
+
+/** With no icon of its own, the button grows a leading one so nothing shifts. */
+export const LoadingWithoutIcon: Story = {
+  args: { children: 'Save changes', loading: true },
+};

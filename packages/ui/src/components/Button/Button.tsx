@@ -105,6 +105,15 @@ type ButtonBaseProps = Omit<VariantProps<typeof variants>, 'iconOnly'> & {
   leadingIcon?: LucideIconName;
   /** Icon placed after the label. Renders on its own when there is no label. */
   trailingIcon?: LucideIconName;
+  /**
+   * Work is in flight. Takes the button out of action and spins its icon in place.
+   *
+   * A button with no icon at all grows a leading one, so the spinner never has to
+   * change the label's position to appear.
+   */
+  loading?: boolean;
+  /** Replaces the label while `loading`, for a button whose wait is worth naming. */
+  loadingLabel?: ReactNode;
   className?: string;
 };
 
@@ -133,35 +142,46 @@ export const Button = ({
   fullWidth,
   leadingIcon,
   trailingIcon,
+  loading = false,
+  loadingLabel,
   href,
   className,
   ...rest
 }: ButtonProps) => {
   const currentSize = size ?? 'md';
-  const hasLabel = Boolean(children);
+  const label = loading && loadingLabel !== undefined ? loadingLabel : children;
+  const hasLabel = Boolean(label);
   const iconOnly = !hasLabel && Boolean(leadingIcon ?? trailingIcon);
   const iconSize = iconOnly ? ICON_ONLY_SIZE[currentSize] : ICON_SIZE[currentSize];
+
+  // The spinner takes over whichever icon slot is already filled, so the label does
+  // not shift when work starts. With neither slot taken it leads, which is also where
+  // an icon-only button's single icon lives.
+  const spinnerSlot = loading ? (trailingIcon && !leadingIcon ? 'trailing' : 'leading') : undefined;
+
+  const renderIcon = (slot: 'leading' | 'trailing', name: LucideIconName | undefined) => {
+    const spinning = spinnerSlot === slot;
+
+    if (!spinning && !name) {
+      return null;
+    }
+
+    return (
+      <Icon
+        name={spinning ? 'loader-circle' : (name as LucideIconName)}
+        data-testid={`button-${slot}-icon`}
+        size={iconSize}
+        className={spinning ? 'shrink-0 animate-spin' : 'shrink-0'}
+      />
+    );
+  };
 
   const classes = variants({ variant, size, shape, align, fullWidth, iconOnly, className });
   const content = (
     <>
-      {leadingIcon && (
-        <Icon
-          name={leadingIcon}
-          data-testid="button-leading-icon"
-          size={iconSize}
-          className="shrink-0"
-        />
-      )}
-      {hasLabel && <span data-testid="button-text">{children}</span>}
-      {trailingIcon && (
-        <Icon
-          name={trailingIcon}
-          data-testid="button-trailing-icon"
-          size={iconSize}
-          className="shrink-0"
-        />
-      )}
+      {renderIcon('leading', leadingIcon)}
+      {hasLabel && <span data-testid="button-text">{label}</span>}
+      {renderIcon('trailing', trailingIcon)}
     </>
   );
 
@@ -171,6 +191,10 @@ export const Button = ({
         data-testid="button"
         {...(rest as ComponentPropsWithRef<'a'>)}
         href={href}
+        // An anchor cannot be `disabled`, so the base classes key off `aria-disabled`
+        // to take it out of action while it is busy.
+        aria-disabled={loading || undefined}
+        aria-busy={loading || undefined}
         className={classes}
       >
         {content}
@@ -183,6 +207,8 @@ export const Button = ({
       data-testid="button"
       type="button"
       {...(rest as ComponentPropsWithRef<'button'>)}
+      disabled={loading || (rest as ComponentPropsWithRef<'button'>).disabled}
+      aria-busy={loading || undefined}
       className={classes}
     >
       {content}

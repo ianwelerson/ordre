@@ -1,5 +1,5 @@
-import { cleanup, render, waitFor } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { cleanup, fireEvent, render, waitFor } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { Button } from './Button';
 
@@ -92,5 +92,101 @@ describe('Button.tsx', () => {
 
     expect(button.tagName).toBe('BUTTON');
     expect(button).toHaveAttribute('type', 'button');
+  });
+
+  describe('loading', () => {
+    it('should spin the trailing icon in place rather than move the label', async () => {
+      const { getByTestId, queryByTestId } = render(
+        <Button trailingIcon="arrow-right" loading>
+          Sign in
+        </Button>
+      );
+
+      await waitFor(() => {
+        expect(getByTestId('button-trailing-icon')).toBeInTheDocument();
+      });
+      expect(queryByTestId('button-leading-icon')).not.toBeInTheDocument();
+    });
+
+    it('should take over the leading slot when the button leads with an icon', async () => {
+      const { getByTestId, queryByTestId } = render(
+        <Button leadingIcon="mail" loading>
+          Send
+        </Button>
+      );
+
+      await waitFor(() => {
+        expect(getByTestId('button-leading-icon')).toBeInTheDocument();
+      });
+      expect(queryByTestId('button-trailing-icon')).not.toBeInTheDocument();
+    });
+
+    it('should grow a leading icon when the button had none', async () => {
+      const { getByTestId } = render(<Button loading>Save</Button>);
+
+      await waitFor(() => {
+        expect(getByTestId('button-leading-icon')).toBeInTheDocument();
+      });
+    });
+
+    it('should disable the button and mark it busy', () => {
+      const { getByTestId } = render(<Button loading>Sign in</Button>);
+
+      expect(getByTestId('button')).toBeDisabled();
+      expect(getByTestId('button')).toHaveAttribute('aria-busy', 'true');
+    });
+
+    it('should stay enabled and unbusy when not loading', () => {
+      const { getByTestId } = render(<Button>Sign in</Button>);
+
+      expect(getByTestId('button')).toBeEnabled();
+      expect(getByTestId('button')).not.toHaveAttribute('aria-busy');
+    });
+
+    it('should keep an explicit disabled while not loading', () => {
+      const { getByTestId } = render(<Button disabled>Sign in</Button>);
+
+      expect(getByTestId('button')).toBeDisabled();
+    });
+
+    it('should swap the label when given a loading label', () => {
+      const { getByTestId } = render(
+        <Button loading loadingLabel="Signing in...">
+          Sign in
+        </Button>
+      );
+
+      expect(getByTestId('button-text')).toHaveTextContent('Signing in...');
+    });
+
+    it('should keep the original label when given no loading label', () => {
+      const { getByTestId } = render(<Button loading>Sign in</Button>);
+
+      expect(getByTestId('button-text')).toHaveTextContent('Sign in');
+    });
+
+    it('should not fire a click while loading', () => {
+      const onClick = vi.fn();
+      const { getByTestId } = render(
+        <Button loading onClick={onClick}>
+          Sign in
+        </Button>
+      );
+
+      fireEvent.click(getByTestId('button'));
+
+      expect(onClick).not.toHaveBeenCalled();
+    });
+
+    it('should mark a link busy and aria-disabled, since an anchor cannot be disabled', () => {
+      const { getByTestId } = render(
+        <Button href="/go" loading>
+          Continue
+        </Button>
+      );
+
+      expect(getByTestId('button')).toHaveAttribute('aria-disabled', 'true');
+      expect(getByTestId('button')).toHaveAttribute('aria-busy', 'true');
+    });
   });
 });
