@@ -8,21 +8,44 @@ Built with React 19 and Tailwind CSS v4 (tokens as CSS custom properties - there
 
 ## 📦 Exports
 
-| Path                       | Contents                                                   |
-| -------------------------- | ---------------------------------------------------------- |
-| `@ordre/ui/components`     | All components, from `src/components/index.ts`             |
-| `@ordre/ui/icons`          | The Lucide set plus custom icons                           |
-| `@ordre/ui/styles/*`       | CSS entry points - `main` pulls in fonts, Tailwind, tokens |
-| `@ordre/ui/fonts/*`        | Self-hosted font files                                     |
-| `@ordre/ui/helpers/*`      | Small styling helpers                                      |
-| `@ordre/ui/hooks/*`        | Shared React hooks                                         |
-| `@ordre/ui/config/postcss` | Shared PostCSS config for consuming apps                   |
+| Path                       | Contents                                                               |
+| -------------------------- | ---------------------------------------------------------------------- |
+| `@ordre/ui/components`     | All components, from `src/components/index.ts`                         |
+| `@ordre/ui/form`           | The shared form mechanism - `useAppForm`, field binding, error mapping |
+| `@ordre/ui/icons`          | The Lucide set plus custom icons                                       |
+| `@ordre/ui/styles/*`       | CSS entry points - `main` pulls in fonts, Tailwind, tokens             |
+| `@ordre/ui/fonts/*`        | Self-hosted font files                                                 |
+| `@ordre/ui/helpers/*`      | Small styling helpers                                                  |
+| `@ordre/ui/hooks/*`        | Shared React hooks                                                     |
+| `@ordre/ui/config/postcss` | Shared PostCSS config for consuming apps                               |
 
 ```ts
 import { Button } from '@ordre/ui/components';
 ```
 
 `@ordre/ui/styles/main` is imported once, in each app's root layout.
+
+## Forms
+
+`@ordre/ui/form` is the mechanism, `src/components/Form/` is the controls. One
+schema in, bound fields and a submit out:
+
+```tsx
+const { field, submit, rootError, isBusy } = useAppForm({ schema, t });
+
+<form onSubmit={submit(handler)}>
+  {rootError && <Alert>{rootError}</Alert>}
+  <TextField {...field('email')} label={t('Login.email.label')} />
+</form>;
+```
+
+It owns the decisions every form would otherwise re-argue: validate `onTouched`
+then `onChange`, resolve messages from the keys the schemas emit, put a failed
+request's `details` on the named fields and everything else in the banner.
+
+`t` is a **parameter, not a hook call**. The apps do not share an i18n runtime -
+the Next apps use `next-intl`, the board uses `i18next` - so a layer that called
+either directly could only ever serve two of the three.
 
 ---
 

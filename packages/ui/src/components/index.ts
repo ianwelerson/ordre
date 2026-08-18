@@ -12,6 +12,7 @@
 
 // Primitives
 export { Alert, type AlertProps } from './Alert/Alert';
+export { Avatar, type AvatarProps } from './Avatar/Avatar';
 export { Button, type ButtonAsButton, type ButtonAsLink, type ButtonProps } from './Button/Button';
 export {
   Divider,
