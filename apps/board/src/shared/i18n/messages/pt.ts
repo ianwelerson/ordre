@@ -1,4 +1,4 @@
-import { pt as globalPt } from '@ordre/i18n/messages';
+import { pt as globalPt } from '@ordre/core/messages';
 
 export default {
   ...globalPt,

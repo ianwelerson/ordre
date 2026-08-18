@@ -1,4 +1,4 @@
-import { en as globalEn } from '@ordre/i18n/messages';
+import { en as globalEn } from '@ordre/core/messages';
 
 export default {
   ...globalEn,

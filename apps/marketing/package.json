@@ -2,7 +2,7 @@
   "name": "marketing",
   "version": "0.1.0",
   "dependencies": {
-    "@ordre/i18n": "workspace:*",
+    "@ordre/core": "workspace:*",
     "@ordre/ui": "workspace:*",
     "@storybook/react": "^10.5.6",
     "@tailwindcss/postcss": "^4.3.3",

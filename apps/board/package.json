@@ -2,7 +2,7 @@
   "name": "board",
   "version": "0.1.0",
   "dependencies": {
-    "@ordre/i18n": "workspace:*",
+    "@ordre/core": "workspace:*",
     "@ordre/ui": "workspace:*",
     "@react-router/node": "8.3.0",
     "@react-router/serve": "8.3.0",

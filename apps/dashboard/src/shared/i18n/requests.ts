@@ -19,7 +19,7 @@ export default getRequestConfig(async () => {
     locale,
     messages: {
       // Global Messages
-      ...(await import(`@ordre/i18n/messages`))[locale],
+      ...(await import(`@ordre/core/messages`))[locale],
       // App Message
       ...(await import(`./messages/${locale}.ts`)).default,
     },

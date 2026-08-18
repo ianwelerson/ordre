@@ -1,7 +1,7 @@
 import { hasLocale } from 'next-intl';
 import { getRequestConfig } from 'next-intl/server';
 
-import { app } from '@ordre/i18n/messages';
+import { app } from '@ordre/core/messages';
 
 import { routing } from './routing';
 
@@ -14,7 +14,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
     messages: {
       // Global Messages
       ...app,
-      ...(await import(`@ordre/i18n/messages`))[locale],
+      ...(await import(`@ordre/core/messages`))[locale],
       // App Message
       ...(await import(`./messages/${locale}.ts`)).default,
     },
