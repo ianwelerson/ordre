@@ -1,8 +1,32 @@
 {
-  "name": "services",
+  "name": "@ordre/services",
   "version": "0.1.0",
+  "dependencies": {
+    "@ordre/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@ordre/config": "workspace:*",
+    "@types/node": "^26.1.2",
+    "@vitest/coverage-v8": "^4.1.10",
+    "@vitest/eslint-plugin": "^1.6.26",
+    "eslint": "^10.8.0",
+    "vitest": "^4.1.10"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "imports": {
+    "#/*": "./src/*"
+  },
+  "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "check-types": "tsc",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "lint": "eslint --max-warnings 0",
+    "test:unit": "vitest --coverage",
+    "test:unit:ci": "vitest run --coverage",
+    "test:unit:ui": "vitest --coverage --ui"
   },
   "type": "module"
 }

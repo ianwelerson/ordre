@@ -1,0 +1,10 @@
+{
+  "extends": "@ordre/config/typescript/base.json",
+  "include": ["src/**/*.ts", "*.config.ts", "*.d.ts"],
+  "exclude": ["node_modules"],
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "types": ["node", "vitest/globals"]
+  }
+}

@@ -16,7 +16,8 @@
     "APP_BASE_URL",
     "APP_DASHBOARD_URL",
     "APP_BOARD_URL",
-    "APP_DOCS_URL"
+    "APP_DOCS_URL",
+    "NEXT_PUBLIC_API_URL"
   ],
   "tasks": {
     "build": {

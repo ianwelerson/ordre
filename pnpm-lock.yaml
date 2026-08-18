@@ -597,7 +597,30 @@ importers:
         specifier: ^4.23.6
         version: 4.23.6
 
-  packages/services: {}
+  packages/services:
+    dependencies:
+      '@ordre/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@ordre/config':
+        specifier: workspace:*
+        version: link:../config
+      '@types/node':
+        specifier: ^26.1.2
+        version: 26.1.2
+      '@vitest/coverage-v8':
+        specifier: ^4.1.10
+        version: 4.1.10(@vitest/browser@4.1.10)(vitest@4.1.10)
+      '@vitest/eslint-plugin':
+        specifier: ^1.6.26
+        version: 1.6.26(@typescript-eslint/eslint-plugin@8.66.0(@typescript-eslint/parser@8.66.0(eslint@10.8.0(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3))(eslint@10.8.0(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3))(eslint@10.8.0(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)(vitest@4.1.10)
+      eslint:
+        specifier: ^10.8.0
+        version: 10.8.0(jiti@2.7.0)(supports-color@10.2.2)
+      vitest:
+        specifier: ^4.1.10
+        version: 4.1.10(@types/node@26.1.2)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(vite@8.2.0(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.6)(yaml@2.9.0))
 
   packages/ui:
     dependencies:
