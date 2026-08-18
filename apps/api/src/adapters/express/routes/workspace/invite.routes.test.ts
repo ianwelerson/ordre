@@ -6,7 +6,7 @@ import { parseBody } from '#/utils/testing.ts';
 import request from 'supertest';
 
 import { API_BASE_PATH, API_ROUTES, buildPath } from '@ordre/core/constants';
-import { BASE_ERRORS } from '@ordre/core/errors';
+import { errorMessage } from '@ordre/core/errors';
 import { ResponseErrorSchema, WorkspaceInviteSchema } from '@ordre/core/schemas';
 
 const inviteUrl = (path: string, params: Record<string, string>) =>
@@ -133,7 +133,7 @@ describe('Workspace Invite (admin)', () => {
       const error = parseBody(ResponseErrorSchema, response.body);
 
       expect(error.code).toBe('UNAUTHORIZED');
-      expect(error.message).toBe(BASE_ERRORS.UNAUTHORIZED.message);
+      expect(error.message).toBe(errorMessage('UNAUTHORIZED'));
     });
 
     // --- Plan quota ---

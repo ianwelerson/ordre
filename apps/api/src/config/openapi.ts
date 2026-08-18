@@ -5,6 +5,8 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { API_BASE_PATH, API_ROUTES } from '@ordre/core/constants';
+import { errorMessage } from '@ordre/core/errors';
+import { validation as englishValidation } from '@ordre/core/messages/en';
 
 import { auth } from './auth.ts';
 
@@ -140,5 +142,41 @@ openApiDocument.components = {
     },
   } as SecuritySchemes,
 };
+
+/**
+ * Documents the error envelope with prose rather than keys.
+ *
+ * Schemas carry no messages, so a validation failure travels as a stable key
+ * (`validation.email`) that each client resolves in its own locale. That is
+ * right for a client and useless in a reference, where the reader wants a
+ * sentence - so the English copy is resolved here, at the one boundary that is a
+ * document rather than a response.
+ *
+ * A spec is a single-language artefact, so English is the only resolution.
+ */
+const responseError = openApiDocument.components?.schemas?.ResponseError;
+
+if (responseError && typeof responseError === 'object') {
+  Object.assign(responseError, {
+    description: [
+      'The error envelope returned by every failing request.',
+      '',
+      '`code` is the contract - map it to your own copy rather than matching on `message`.',
+      'Every code is listed in the Error Codes reference.',
+      '',
+      '`details` is present on validation failures and is keyed by field. Its values are',
+      'translation keys (`validation.email`), not prose, so a client can render them in the',
+      "user's own language. The example below shows them resolved to English.",
+    ].join('\n'),
+    example: {
+      code: 'INVALID_INPUT',
+      message: errorMessage('INVALID_INPUT'),
+      details: {
+        email: englishValidation.email,
+        name: englishValidation.required,
+      },
+    },
+  });
+}
 
 export const openApiSpec: ReturnType<OpenApiGeneratorV31['generateDocument']> = openApiDocument;

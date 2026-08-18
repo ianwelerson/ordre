@@ -1,5 +1,7 @@
 import { APIError } from 'better-auth/api';
 
+import { errorMessage } from '@ordre/core/errors';
+
 import { remapAuthError } from './auth.ts';
 
 describe('config/auth', () => {
@@ -33,7 +35,7 @@ describe('config/auth', () => {
       expect(result?.statusCode).toBe(401);
       expect(result?.body).toMatchObject({
         code: 'INVALID_EMAIL_OR_PASSWORD',
-        message: 'Invalid email or password',
+        message: errorMessage('INVALID_EMAIL_OR_PASSWORD'),
       });
       expect(result?.body).not.toHaveProperty('details');
     });
@@ -49,7 +51,7 @@ describe('config/auth', () => {
       expect(result?.statusCode).toBe(400);
       expect(result?.body).toMatchObject({
         code: 'VALIDATION_ERROR',
-        message: 'Validation Error',
+        message: errorMessage('VALIDATION_ERROR'),
         details: {
           email: 'Invalid input',
           password: 'Invalid input',

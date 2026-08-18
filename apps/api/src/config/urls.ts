@@ -53,4 +53,18 @@ export const urls = {
  */
 export const appOrigins: readonly string[] = [urls.base, urls.dashboard, urls.board, urls.docs];
 
+/**
+ * The domain the session cookie is scoped to, so every app on the umbrella can
+ * read it - `ordre.app` in production, `ordre.localhost` in development.
+ *
+ * Derived from the *base* origin, not from `urls.api`: Better Auth would
+ * otherwise default this to its own hostname (`api.ordre.app`), which is
+ * host-only and invisible to the dashboard - the exact thing crossing subdomains
+ * is meant to fix.
+ *
+ * No leading dot. RFC 6265 tells the browser to ignore one, and `Domain=ordre.app`
+ * already matches every subdomain under it.
+ */
+export const cookieDomain: string = new URL(urls.base).hostname;
+
 export default urls;

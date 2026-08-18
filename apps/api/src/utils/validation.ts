@@ -1,6 +1,6 @@
 import { ZodError, type ZodType } from 'zod';
 
-import { errorResponse, VALIDATION_ERRORS } from '@ordre/core/errors';
+import { errorMessage, errorResponse, VALIDATION_ERRORS } from '@ordre/core/errors';
 import type { Response } from '@ordre/core/types';
 
 /**
@@ -117,7 +117,7 @@ export const validateField = <T>(
     return {
       success: false,
       response: errorResponse(VALIDATION_ERRORS, 'INVALID_INPUT', {
-        [field]: parsed.error.issues[0]?.message ?? VALIDATION_ERRORS.INVALID_INPUT.message,
+        [field]: parsed.error.issues[0]?.message ?? errorMessage('INVALID_INPUT'),
       }),
     };
   }

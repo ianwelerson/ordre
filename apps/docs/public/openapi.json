@@ -330,7 +330,16 @@
         "required": [
           "code",
           "message"
-        ]
+        ],
+        "description": "The error envelope returned by every failing request.\n\n`code` is the contract - map it to your own copy rather than matching on `message`.\nEvery code is listed in the Error Codes reference.\n\n`details` is present on validation failures and is keyed by field. Its values are\ntranslation keys (`validation.email`), not prose, so a client can render them in the\nuser's own language. The example below shows them resolved to English.",
+        "example": {
+          "code": "INVALID_INPUT",
+          "message": "Some of the information you entered isn't valid.",
+          "details": {
+            "email": "Enter a valid email address.",
+            "name": "This field is required."
+          }
+        }
       },
       "WorkspaceLocation": {
         "type": "object",

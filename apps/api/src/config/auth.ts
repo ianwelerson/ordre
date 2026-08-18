@@ -1,7 +1,7 @@
 import { getDb } from '#/config/db-context.ts';
 import { db } from '#/config/db.ts';
 import { logger } from '#/config/logger.ts';
-import { appOrigins, urls } from '#/config/urls.ts';
+import { appOrigins, cookieDomain, urls } from '#/config/urls.ts';
 import { pushToOutbox } from '#/utils/outbox.ts';
 import { parseBetterAuthValidationDetails } from '#/utils/validation.ts';
 import { env } from '#env';
@@ -10,8 +10,8 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { APIError, createAuthMiddleware, isAPIError } from 'better-auth/api';
 import { openAPI } from 'better-auth/plugins';
 
-import { API_BASE_PATH, API_ROUTES } from '@ordre/core/constants';
-import { AUTH_ERRORS, BASE_ERRORS, VALIDATION_ERRORS } from '@ordre/core/errors';
+import { API_BASE_PATH, API_ROUTES, SESSION_COOKIE_PREFIX } from '@ordre/core/constants';
+import { AUTH_ERRORS, BASE_ERRORS, errorMessage, VALIDATION_ERRORS } from '@ordre/core/errors';
 import type { ErrorMap } from '@ordre/core/types';
 import * as schema from '@ordre/db/schemas';
 
@@ -56,7 +56,9 @@ export const remapAuthError = (returned: unknown): APIError | undefined => {
 
   return new APIError(definition.status ?? returned.status, {
     code,
-    message: definition.message,
+    // Better Auth requires a message on its error body, so the wire keeps one.
+    // English, from the shared copy - a client renders its own locale off `code`.
+    message: errorMessage(code),
     ...(details ? { details } : {}),
   });
 };
@@ -81,7 +83,11 @@ export const auth = betterAuth({
     database: {
       generateId: 'uuid', // Set the IDs to be UUID
     },
-    cookiePrefix: 'ordre-app',
+    cookiePrefix: SESSION_COOKIE_PREFIX,
+    crossSubDomainCookies: {
+      enabled: true,
+      domain: cookieDomain,
+    },
   },
   emailAndPassword: {
     enabled: true,

@@ -6,12 +6,7 @@ import { parseBody } from '#/utils/testing.ts';
 import request from 'supertest';
 
 import { API_BASE_PATH, API_ROUTES, buildPath } from '@ordre/core/constants';
-import {
-  BASE_ERRORS,
-  LOCATION_ERRORS,
-  VALIDATION_ERRORS,
-  WORKSPACE_ERRORS,
-} from '@ordre/core/errors';
+import { errorMessage } from '@ordre/core/errors';
 import { ResponseErrorSchema, WorkspaceLocationSchema } from '@ordre/core/schemas';
 
 /** A syntactically valid member id that is never seeded, for behavior cases. */
@@ -114,7 +109,7 @@ describe('Workspace Location', () => {
       const error = parseBody(ResponseErrorSchema, response.body);
 
       expect(error.code).toBe('WORKSPACE_NOT_FOUND');
-      expect(error.message).toBe(WORKSPACE_ERRORS.WORKSPACE_NOT_FOUND.message);
+      expect(error.message).toBe(errorMessage('WORKSPACE_NOT_FOUND'));
     });
 
     test('GET rejects an unauthenticated request with UNAUTHORIZED', async () => {
@@ -123,7 +118,7 @@ describe('Workspace Location', () => {
       const error = parseBody(ResponseErrorSchema, response.body);
 
       expect(error.code).toBe('UNAUTHORIZED');
-      expect(error.message).toBe(BASE_ERRORS.UNAUTHORIZED.message);
+      expect(error.message).toBe(errorMessage('UNAUTHORIZED'));
     });
 
     // Behavior
@@ -181,7 +176,7 @@ describe('Workspace Location', () => {
       const error = parseBody(ResponseErrorSchema, response.body);
 
       expect(error.code).toBe('FORBIDDEN');
-      expect(error.message).toBe(BASE_ERRORS.FORBIDDEN.message);
+      expect(error.message).toBe(errorMessage('FORBIDDEN'));
     });
 
     test('POST hides the workspace from a non-member with WORKSPACE_NOT_FOUND', async () => {
@@ -216,7 +211,7 @@ describe('Workspace Location', () => {
       const error = parseBody(ResponseErrorSchema, response.body);
 
       expect(error.code).toBe('INVALID_INPUT');
-      expect(error.message).toBe(VALIDATION_ERRORS.INVALID_INPUT.message);
+      expect(error.message).toBe(errorMessage('INVALID_INPUT'));
       expect(error.details).toMatchObject({ name: expect.any(String) });
     });
 
@@ -329,7 +324,7 @@ describe('Workspace Location', () => {
       const error = parseBody(ResponseErrorSchema, response.body);
 
       expect(error.code).toBe('LOCATION_NOT_FOUND');
-      expect(error.message).toBe(LOCATION_ERRORS.LOCATION_NOT_FOUND.message);
+      expect(error.message).toBe(errorMessage('LOCATION_NOT_FOUND'));
     });
 
     test('GET rejects a malformed location id with INVALID_INPUT', async () => {
@@ -340,7 +335,7 @@ describe('Workspace Location', () => {
       const error = parseBody(ResponseErrorSchema, response.body);
 
       expect(error.code).toBe('INVALID_INPUT');
-      expect(error.details).toEqual({ locationId: 'Invalid UUID' });
+      expect(error.details).toEqual({ locationId: 'validation.uuid' });
     });
 
     // --- PATCH /workspace/:id/location/:locationId ---
@@ -557,7 +552,7 @@ describe('Workspace Location', () => {
       const error = parseBody(ResponseErrorSchema, response.body);
 
       expect(error.code).toBe('LOCATION_IS_DEFAULT');
-      expect(error.message).toBe(LOCATION_ERRORS.LOCATION_IS_DEFAULT.message);
+      expect(error.message).toBe(errorMessage('LOCATION_IS_DEFAULT'));
     });
 
     test('DELETE returns LOCATION_NOT_FOUND for an unknown location', async () => {
