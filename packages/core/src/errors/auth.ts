@@ -27,194 +27,62 @@ import type { ErrorMap } from '../types/index.ts';
  */
 export const AUTH_ERRORS = {
   // --- User ---
-  USER_NOT_FOUND: {
-    status: 404, // also thrown as 400 / 401 on some routes
-    message: 'User not found',
-  },
-  FAILED_TO_CREATE_USER: {
-    status: 422, // also 400 / 500 depending on cause
-    message: 'Failed to create user',
-  },
-  FAILED_TO_UPDATE_USER: {
-    status: 500,
-    message: 'Failed to update user',
-  },
-  INVALID_USER: {
-    status: 401,
-    message: 'Invalid user',
-  },
-  USER_EMAIL_NOT_FOUND: {
-    status: 401,
-    message: 'User email not found',
-  },
-  USER_ALREADY_EXISTS: {
-    status: 422, // also 400 on some routes
-    message: 'User already exists.',
-  },
-  USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL: {
-    status: 422,
-    message: 'User already exists. Use another email.',
-  },
-  USER_ALREADY_HAS_PASSWORD: {
-    status: 400,
-    message: 'User already has a password. Provide that to delete the account.',
-  },
+  USER_NOT_FOUND: { status: 404 }, // also thrown as 400 / 401 on some routes
+  FAILED_TO_CREATE_USER: { status: 422 }, // also 400 / 500 depending on cause
+  FAILED_TO_UPDATE_USER: { status: 500 },
+  INVALID_USER: { status: 401 },
+  USER_EMAIL_NOT_FOUND: { status: 401 },
+  USER_ALREADY_EXISTS: { status: 422 }, // also 400 on some routes
+  USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL: { status: 422 },
+  USER_ALREADY_HAS_PASSWORD: { status: 400 },
 
   // --- Account / linking ---
-  ACCOUNT_NOT_FOUND: {
-    status: 400,
-    message: 'Account not found',
-  },
-  CREDENTIAL_ACCOUNT_NOT_FOUND: {
-    status: 400,
-    message: 'Credential account not found',
-  },
-  FAILED_TO_UNLINK_LAST_ACCOUNT: {
-    status: 400,
-    message: "You can't unlink your last account",
-  },
-  LINKED_ACCOUNT_ALREADY_EXISTS: {
-    status: 400,
-    message: 'Linked account already exists',
-  },
-  SOCIAL_ACCOUNT_ALREADY_LINKED: {
-    status: 400,
-    message: 'Social account already linked',
-  },
+  ACCOUNT_NOT_FOUND: { status: 400 },
+  CREDENTIAL_ACCOUNT_NOT_FOUND: { status: 400 },
+  FAILED_TO_UNLINK_LAST_ACCOUNT: { status: 400 },
+  LINKED_ACCOUNT_ALREADY_EXISTS: { status: 400 },
+  SOCIAL_ACCOUNT_ALREADY_LINKED: { status: 400 },
 
   // --- Session ---
-  FAILED_TO_CREATE_SESSION: {
-    status: 500, // also 400 / 401 depending on route
-    message: 'Failed to create session',
-  },
-  FAILED_TO_GET_SESSION: {
-    status: 401, // also 500
-    message: 'Failed to get session',
-  },
-  SESSION_EXPIRED: {
-    status: 401, // Better Auth throws 400; an expired session is an authentication failure
-    message: 'Session expired. Re-authenticate to perform this action.',
-  },
-  SESSION_NOT_FRESH: {
-    status: 403,
-    message: 'Session is not fresh',
-  },
+  FAILED_TO_CREATE_SESSION: { status: 500 }, // also 400 / 401 depending on route
+  FAILED_TO_GET_SESSION: { status: 401 }, // also 500
+  SESSION_EXPIRED: { status: 401 }, // Better Auth throws 400; an expired session is an authentication failure
+  SESSION_NOT_FRESH: { status: 403 },
 
   // --- Credentials / password ---
-  INVALID_PASSWORD: {
-    status: 400,
-    message: 'Invalid password',
-  },
-  INVALID_EMAIL: {
-    status: 400,
-    message: 'Invalid email',
-  },
-  INVALID_EMAIL_OR_PASSWORD: {
-    status: 401,
-    message: 'Invalid email or password',
-  },
-  PASSWORD_TOO_SHORT: {
-    status: 400,
-    message: 'Password too short',
-  },
-  PASSWORD_TOO_LONG: {
-    status: 400,
-    message: 'Password too long',
-  },
-  PASSWORD_ALREADY_SET: {
-    status: 400,
-    message: 'User already has a password set',
-  },
+  INVALID_PASSWORD: { status: 400 },
+  INVALID_EMAIL: { status: 400 },
+  INVALID_EMAIL_OR_PASSWORD: { status: 401 },
+  PASSWORD_TOO_SHORT: { status: 400 },
+  PASSWORD_TOO_LONG: { status: 400 },
+  PASSWORD_ALREADY_SET: { status: 400 },
 
   // --- Email ---
-  EMAIL_NOT_VERIFIED: {
-    status: 403,
-    message: 'Email not verified',
-  },
-  EMAIL_CAN_NOT_BE_UPDATED: {
-    status: 400,
-    message: 'Email can not be updated',
-  },
-  CHANGE_EMAIL_DISABLED: {
-    status: 400,
-    message: 'Change email is disabled',
-  },
-  EMAIL_ALREADY_VERIFIED: {
-    status: 400,
-    message: 'Email is already verified',
-  },
-  EMAIL_MISMATCH: {
-    status: 400,
-    message: 'Email mismatch',
-  },
-  VERIFICATION_EMAIL_NOT_ENABLED: {
-    status: 400,
-    message: "Verification email isn't enabled",
-  },
-  FAILED_TO_CREATE_VERIFICATION: {
-    status: 500,
-    message: 'Unable to create verification',
-  },
+  EMAIL_NOT_VERIFIED: { status: 403 },
+  EMAIL_CAN_NOT_BE_UPDATED: { status: 400 },
+  CHANGE_EMAIL_DISABLED: { status: 400 },
+  EMAIL_ALREADY_VERIFIED: { status: 400 },
+  EMAIL_MISMATCH: { status: 400 },
+  VERIFICATION_EMAIL_NOT_ENABLED: { status: 400 },
+  FAILED_TO_CREATE_VERIFICATION: { status: 500 },
 
   // --- Tokens / providers (OAuth / social) ---
-  PROVIDER_NOT_FOUND: {
-    status: 404,
-    message: 'Provider not found',
-  },
-  INVALID_TOKEN: {
-    status: 400, // also 401 / 404 depending on route
-    message: 'Invalid token',
-  },
-  TOKEN_EXPIRED: {
-    status: 400,
-    message: 'Token expired',
-  },
-  ID_TOKEN_NOT_SUPPORTED: {
-    status: 404,
-    message: 'id_token not supported',
-  },
-  FAILED_TO_GET_USER_INFO: {
-    status: 401, // also 404
-    message: 'Failed to get user info',
-  },
+  PROVIDER_NOT_FOUND: { status: 404 },
+  INVALID_TOKEN: { status: 400 }, // also 401 / 404 depending on route
+  TOKEN_EXPIRED: { status: 400 },
+  ID_TOKEN_NOT_SUPPORTED: { status: 404 },
+  FAILED_TO_GET_USER_INFO: { status: 401 }, // also 404
 
   // --- Origin / callback URLs ---
-  INVALID_ORIGIN: {
-    status: 403,
-    message: 'Invalid origin',
-  },
-  MISSING_OR_NULL_ORIGIN: {
-    status: 403,
-    message: 'Missing or null Origin',
-  },
-  INVALID_CALLBACK_URL: {
-    status: 403,
-    message: 'Invalid callbackURL',
-  },
-  INVALID_REDIRECT_URL: {
-    status: 403,
-    message: 'Invalid redirectURL',
-  },
-  INVALID_ERROR_CALLBACK_URL: {
-    status: 403,
-    message: 'Invalid errorCallbackURL',
-  },
-  INVALID_NEW_USER_CALLBACK_URL: {
-    status: 403,
-    message: 'Invalid newUserCallbackURL',
-  },
-  CALLBACK_URL_REQUIRED: {
-    status: 400,
-    message: 'callbackURL is required',
-  },
-  CROSS_SITE_NAVIGATION_LOGIN_BLOCKED: {
-    status: 403,
-    message: 'Cross-site navigation login blocked. This request appears to be a CSRF attack.',
-  },
+  INVALID_ORIGIN: { status: 403 },
+  MISSING_OR_NULL_ORIGIN: { status: 403 },
+  INVALID_CALLBACK_URL: { status: 403 },
+  INVALID_REDIRECT_URL: { status: 403 },
+  INVALID_ERROR_CALLBACK_URL: { status: 403 },
+  INVALID_NEW_USER_CALLBACK_URL: { status: 403 },
+  CALLBACK_URL_REQUIRED: { status: 400 },
+  CROSS_SITE_NAVIGATION_LOGIN_BLOCKED: { status: 403 },
 
   // --- Request ---
-  METHOD_NOT_ALLOWED_DEFER_SESSION_REQUIRED: {
-    status: 405,
-    message: 'POST method requires deferSessionRefresh to be enabled in session config',
-  },
+  METHOD_NOT_ALLOWED_DEFER_SESSION_REQUIRED: { status: 405 },
 } satisfies ErrorMap;

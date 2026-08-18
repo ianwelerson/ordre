@@ -6,4 +6,7 @@ export { MEMBER_ERRORS } from './member.ts';
 export { INVITE_ERRORS } from './invite.ts';
 export { VALIDATION_ERRORS } from './validation.ts';
 export { BILLING_ERRORS } from './billing.ts';
-export { errorResponse } from './response.ts';
+export { CLIENT_ERRORS, type ClientErrorCode } from './client.ts';
+export { ERROR_CATALOG, type ErrorCode } from './catalog.ts';
+export { clientError, ServiceError } from './service-error.ts';
+export { errorMessage, errorResponse } from './response.ts';

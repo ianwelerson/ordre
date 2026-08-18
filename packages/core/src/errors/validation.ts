@@ -10,28 +10,10 @@ import type { ErrorMap } from '../types/index.ts';
  * response can still be mapped by `code`.
  */
 export const VALIDATION_ERRORS = {
-  INVALID_INPUT: {
-    status: 400,
-    message: "Some of the information you entered isn't valid",
-  },
-  VALIDATION_ERROR: {
-    status: 400,
-    message: 'Validation Error',
-  },
-  MISSING_FIELD: {
-    status: 400,
-    message: 'Field is required',
-  },
-  FIELD_NOT_ALLOWED: {
-    status: 400,
-    message: 'Field not allowed to be set',
-  },
-  BODY_MUST_BE_AN_OBJECT: {
-    status: 400,
-    message: 'Body must be an object',
-  },
-  ASYNC_VALIDATION_NOT_SUPPORTED: {
-    status: 500,
-    message: 'Async validation is not supported',
-  },
+  INVALID_INPUT: { status: 400 },
+  VALIDATION_ERROR: { status: 400 },
+  MISSING_FIELD: { status: 400 },
+  FIELD_NOT_ALLOWED: { status: 400 },
+  BODY_MUST_BE_AN_OBJECT: { status: 400 },
+  ASYNC_VALIDATION_NOT_SUPPORTED: { status: 500 },
 } satisfies ErrorMap;

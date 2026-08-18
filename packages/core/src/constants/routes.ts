@@ -11,10 +11,15 @@
  * the API mails out: the point is that `/invite/${token}` is spelled once.
  */
 
+const DASHBOARD_INVITE_BASE = '/invite';
+
 /** Routes served by the operator dashboard (`dashboard.<domain>`). */
 export const DASHBOARD_ROUTES = {
   login: '/login',
-  invite: (token: string) => `/invite/${token}`,
+  register: '/register',
+  getStarted: '/get-started',
+  inviteBase: DASHBOARD_INVITE_BASE,
+  invite: (token: string) => `${DASHBOARD_INVITE_BASE}/${token}`,
 } as const;
 
 /** Routes served by the public marketing site (`<domain>`). */

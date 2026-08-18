@@ -10,16 +10,7 @@ import type { ErrorMap } from '../types/index.ts';
  * and are returned by our own guards.
  */
 export const BASE_ERRORS = {
-  INTERNAL_ERROR: {
-    status: 500,
-    message: 'Something went wrong. Please try again',
-  },
-  UNAUTHORIZED: {
-    status: 401,
-    message: 'Authentication is required to access this resource',
-  },
-  FORBIDDEN: {
-    status: 403,
-    message: "You don't have permission to access this resource",
-  },
+  INTERNAL_ERROR: { status: 500 },
+  UNAUTHORIZED: { status: 401 },
+  FORBIDDEN: { status: 403 },
 } satisfies ErrorMap;

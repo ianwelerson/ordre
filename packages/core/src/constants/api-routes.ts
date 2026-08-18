@@ -42,6 +42,7 @@ export const API_ROUTES = {
     signUp: '/auth/sign-up/email',
     signOut: '/auth/sign-out',
     session: '/auth/get-session',
+    revokeSession: '/auth/revoke-session',
   },
 
   workspace: {

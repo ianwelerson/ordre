@@ -1,4 +1,20 @@
+import { errors as englishErrors } from '../messages/en/index.ts';
 import type { ErrorMap, ErrorStatus, ResponseErrorBody } from '../types/index.ts';
+import type { ErrorCode } from './catalog.ts';
+
+/**
+ * Resolves a code to the English sentence that goes on the wire.
+ *
+ * English, always - the response body is read by developers (logs, `curl`,
+ * Sentry), never rendered to a user. A client looks the same code up in its own
+ * locale through `@ordre/core/messages`, which is why `code` is the contract and
+ * `message` is a courtesy.
+ *
+ * Only English is imported, so nothing that ships this pulls in every locale.
+ */
+export const errorMessage = (code: string): string => {
+  return englishErrors[code as ErrorCode] ?? englishErrors.UNKNOWN_ERROR;
+};
 
 /**
  * Builds the error branch of a `Response` from an error catalog entry.
@@ -16,15 +32,13 @@ export const errorResponse = <M extends ErrorMap, K extends keyof M & string>(
   code: K,
   details?: Record<string, string>
 ): { status: ErrorStatus; body: ResponseErrorBody } => {
-  // `code` is constrained to `keyof M`, so this is always present; the fallbacks
-  // only exist to satisfy `noUncheckedIndexedAccess` on the index signature.
   const definition = map[code];
 
   return {
     status: definition?.status ?? 500,
     body: {
       code,
-      message: definition?.message ?? 'Unexpected error',
+      message: errorMessage(code),
       ...(details && { details }),
     },
   };

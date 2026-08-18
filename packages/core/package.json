@@ -16,7 +16,10 @@
     "./schemas": "./src/schemas/index.ts",
     "./errors": "./src/errors/index.ts",
     "./enums": "./src/enums/index.ts",
-    "./types": "./src/types/index.ts"
+    "./types": "./src/types/index.ts",
+    "./messages": "./src/messages/index.ts",
+    "./messages/en": "./src/messages/en/index.ts",
+    "./messages/pt": "./src/messages/pt/index.ts"
   },
   "private": true,
   "scripts": {

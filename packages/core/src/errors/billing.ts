@@ -10,20 +10,8 @@ import type { ErrorMap } from '../types/index.ts';
  * also return a real 403 from `requireWorkspacePermission`.
  */
 export const BILLING_ERRORS = {
-  PLAN_MISSING: {
-    status: 500,
-    message: "We couldn't find an active plan for this workspace. Please contact support",
-  },
-  PLAN_ENTITLEMENTS_INVALID: {
-    status: 500,
-    message: "We couldn't read the limits on your plan. Please contact support",
-  },
-  PLAN_LOCATION_LIMIT_REACHED: {
-    status: 402,
-    message: "You've reached the maximum number of locations allowed on your plan",
-  },
-  PLAN_SEAT_LIMIT_REACHED: {
-    status: 402,
-    message: "You've used every seat on your plan. Pending invites count as seats",
-  },
+  PLAN_MISSING: { status: 500 },
+  PLAN_ENTITLEMENTS_INVALID: { status: 500 },
+  PLAN_LOCATION_LIMIT_REACHED: { status: 402 },
+  PLAN_SEAT_LIMIT_REACHED: { status: 402 },
 } satisfies ErrorMap;

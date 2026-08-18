@@ -3,7 +3,6 @@ import eslintConfigPrettier from "eslint-config-prettier";
 import tseslint from "typescript-eslint";
 import pluginReactHooks from "eslint-plugin-react-hooks";
 import globals from "globals";
-// @ts-expect-error force the extension
 import { config as baseConfig } from "./base.ts";
 import type { Linter } from "eslint";
 

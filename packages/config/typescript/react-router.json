@@ -5,6 +5,7 @@
     "types": ["node", "vite/client"],
     "module": "ES2022",
     "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
     "verbatimModuleSyntax": true,
     "noEmit": true
