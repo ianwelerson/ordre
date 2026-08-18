@@ -3,10 +3,10 @@
 Ordre is a client communication platform for service providers. It gives every job a private, shareable status page that clients can follow in real time - no app download, no account creation, just a link.
 
 > [!NOTE]
-> **On the project.** Ordre is a **study project**. It exists to explore product concepts, libraries, patterns, and monorepo architecture in depth. Some parts are **intentionally overengineered** (layered packages, swappable service interfaces, multi-app setup, etc.) because the goal is to learn by building, not to ship the smallest possible MVP.
+> **On the project.** Ordre is a **study project**. It exists to explore product concepts, libraries, patterns, and monorepo architecture in depth. Some parts are **intentionally overengineered** (layered packages, swappable service interfaces, multi-app setup, etc.) because the goal is to learn by building.
 
 > [!NOTE]
-> **On AI usage.** AI is part of the development process, but deliberately kept away from the core of it. It's used as a research resource and for supporting tasks - documentation, comments, and smaller pieces of code like speeding up test writing. Most of the work is still done **by hand**, because the whole point is to learn and practice by writing the code myself. That said, this is transparency, not a claim that AI plays no part in the work.
+> **On AI usage.** AI helps around the edges: research, documentation, repetitive work (unit tests, Storybook stories, boilerplate), and a second pair of eyes on code. The decisions and the code that matters are still written **by hand**, because the whole point is to learn by building it myself.
 
 > [!NOTE]
 > **On progress.** The project is **currently in development**. Right now the focus is on the **API implementation** ([`apps/api`](./apps/api)); other apps and packages are still taking shape.
@@ -78,11 +78,10 @@ ordre/
 │
 ├── packages/
 │   ├── config/         # Shared ESLint, TypeScript, and Prettier presets
-│   ├── core/           # Shared schemas and types (Zod)
+│   ├── core/           # Schemas, types, error catalog & translated strings
 │   ├── db/             # Drizzle ORM schemas, migrations, and connection
-│   ├── i18n/           # Shared translations
 │   ├── monitoring/     # Structured logging (pino)
-│   ├── services/       # [PLANNED] HTTP client layer for frontend apps
+│   ├── services/       # HTTP client layer for the frontend apps
 │   └── ui/             # React component library
 │
 ├── turbo.json          # Turborepo pipeline
@@ -105,15 +104,14 @@ Apps are runnable; packages are shared. The package layer follows a strict depen
 
 ### Packages
 
-| Package                                        | Description                                                           |
-| ---------------------------------------------- | --------------------------------------------------------------------- |
-| [**@ordre/ui**](./packages/ui)                 | React component library - atoms and design tokens shared across apps. |
-| [**@ordre/core**](./packages/core)             | Shared schemas and types (Zod) used across apps and packages.         |
-| [**@ordre/db**](./packages/db)                 | Drizzle ORM schemas, migrations, and the database connection.         |
-| [**@ordre/services**](./packages/services)     | _Planned._ HTTP client layer for the frontend apps - stub only today. |
-| [**@ordre/monitoring**](./packages/monitoring) | Structured logging (pino) shared across services.                     |
-| [**@ordre/i18n**](./packages/i18n)             | Shared translations merged with app-specific strings at runtime.      |
-| [**@ordre/config**](./packages/config)         | Shared ESLint, TypeScript, and Prettier presets.                      |
+| Package                                        | Description                                                                |
+| ---------------------------------------------- | -------------------------------------------------------------------------- |
+| [**@ordre/ui**](./packages/ui)                 | React component library - atoms and design tokens shared across apps.      |
+| [**@ordre/core**](./packages/core)             | Schemas, types, the error catalog, and every translated string. The floor. |
+| [**@ordre/db**](./packages/db)                 | Drizzle ORM schemas, migrations, and the database connection.              |
+| [**@ordre/services**](./packages/services)     | HTTP client layer for the frontend apps - one configured surface per app.  |
+| [**@ordre/monitoring**](./packages/monitoring) | Structured logging (pino) shared across services.                          |
+| [**@ordre/config**](./packages/config)         | Shared ESLint, TypeScript, and Prettier presets.                           |
 
 ---
 
@@ -123,7 +121,7 @@ Apps are runnable; packages are shared. The package layer follows a strict depen
 - **Frameworks**: Next.js 16 (dashboard, marketing), React Router v8 framework mode (board)
 - **Backend**: Express (API), Drizzle ORM over PostgreSQL, Better Auth
 - **UI**: React 19, Tailwind CSS v4
-- **i18n**: `next-intl` (Next apps) and `i18next` + `remix-i18next` (board)
+- **i18n**: `next-intl` (Next apps) and `i18next` + `remix-i18next` (board), over strings from `@ordre/core/messages`
 - **Testing**: Vitest + Testing Library; Playwright as the browser provider for Vitest
 - **Docs**: Fumadocs (internal guides + generated API reference)
 - **Tooling**: TypeScript, ESLint 9 (flat config), Prettier, Syncpack, Husky + lint-staged, Commitlint

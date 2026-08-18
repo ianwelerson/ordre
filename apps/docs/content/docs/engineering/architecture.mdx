@@ -18,12 +18,11 @@ ordre/
 │   └── storybook/            # Component documentation
 │
 ├── packages/                 # Shared, reusable code
-│   ├── core/                 # Zod schemas, TypeScript types & shared error catalog
+│   ├── core/                 # Schemas, types, error catalog & every translated string
 │   ├── db/                   # Database schema, migrations & connection
-│   ├── services/             # [PLANNED] HTTP client layer for frontend apps
+│   ├── services/             # HTTP client layer for the frontend apps
 │   ├── monitoring/           # Structured logging (pino) & future error tracking
 │   ├── ui/                   # Design system & components
-│   ├── i18n/                 # Shared translations
 │   └── config/               # Shared tooling configs
 │
 ├── turbo.json                # Turborepo pipeline config
@@ -75,8 +74,9 @@ The packages follow a strict dependency flow. Upper layers may import from lower
               ┌────────────┴────────────┐
               ▼                         ▼
 ┌─────────────────────┐   ┌────────────────────────────────┐
-│      @ordre/ui      │   │          @ordre/i18n           │
-│ Components & tokens │   │      Shared translations       │
+│      @ordre/ui      │   │        @ordre/services         │
+│ Components, tokens, │   │      HTTP client layer         │
+│  the form mechanism │   │                                │
 └─────────────────────┘   └────────────────────────────────┘
 
 
@@ -97,9 +97,9 @@ The packages follow a strict dependency flow. Upper layers may import from lower
 ┌──────────────────────────────────────────────────────────┐
 │                       @ordre/core                        │
 │             schemas · types · errors · enums             │
-│                 constants · permissions                  │
+│           constants · permissions · messages             │
 │             The floor: no Drizzle, no React.             │
-│     Imported directly by apps/api and apps/docs too.     │
+│         Imported by every app and every package.         │
 └──────────────────────────────────────────────────────────┘
 
   @ordre/config  -  devDependency of every workspace that has its own
@@ -111,16 +111,20 @@ The edges above are the real ones today, not the intended end state:
 | Workspace                            | Depends on                                          |
 | ------------------------------------ | --------------------------------------------------- |
 | `apps/api`                           | `@ordre/core`, `@ordre/db`, `@ordre/monitoring`     |
-| `apps/dashboard` · `board` · `marketing` | `@ordre/ui`, `@ordre/i18n`                       |
-| `apps/docs`                          | `@ordre/core` (the error-code page is generated from its catalog) |
+| `apps/dashboard`                     | `@ordre/core`, `@ordre/services`, `@ordre/ui`       |
+| `apps/board` · `marketing`           | `@ordre/core`, `@ordre/ui`                          |
+| `apps/docs`                          | `@ordre/core` (the error-code page is generated from its catalog and its copy) |
 | `apps/storybook`                     | `@ordre/ui`                                         |
-| `@ordre/db`                          | `@ordre/core`                                       |
-| `@ordre/core` · `ui` · `monitoring`  | nothing but `@ordre/config`                         |
-| `@ordre/i18n` · `@ordre/config`      | nothing at all                                      |
+| `@ordre/db` · `@ordre/services` · `@ordre/ui` | `@ordre/core`                       |
+| `@ordre/core` · `monitoring`         | nothing but `@ordre/config`                         |
+| `@ordre/config`                      | nothing at all                                      |
 
-`apps/storybook` and `@ordre/i18n` carry no `@ordre/config` because neither has an
-ESLint or TypeScript config of its own - Storybook lints through the workspaces it
-loads stories from, and `@ordre/i18n` is plain message objects.
+`apps/storybook` carries no `@ordre/config` because it has no ESLint or TypeScript
+config of its own - it lints through the workspaces it loads stories from.
+
+Every workspace that renders anything sits on `@ordre/core`, because that is
+where the strings live as well as the contract. Core has no React and no Drizzle,
+so the edge stays legal from all of them.
 
 Two rules fall out of that shape and are worth stating explicitly:
 
@@ -128,10 +132,11 @@ Two rules fall out of that shape and are worth stating explicitly:
 - **`@ordre/core` is the floor.** It has no Drizzle and no React dependency, which is what lets both the API and the frontends import it.
 
 <Callout>
-  **The frontends do not import `@ordre/core` yet.** They will once they call the
-  API and need its schemas and types - today they consume only `@ordre/ui` and
-  `@ordre/i18n`. The constraint above ("importable by any app") describes what the
-  package is built to allow, not a dependency that exists.
+  **`@ordre/core` holds every translated string - error copy, validation copy, and shared product words.
+  That is a deliberate widening: the copy for an error is keyed by the same
+  `ErrorCode` the catalog defines, and splitting the two across packages meant
+  either duplicating strings or resolving them across a boundary that
+  `errorResponse` could not cross. One package, one vocabulary.
 </Callout>
 
 ---
@@ -140,37 +145,120 @@ Two rules fall out of that shape and are worth stating explicitly:
 
 ### `@ordre/core`
 
-**Purpose:** Shared API contract - Zod schemas, TypeScript types, and a shared error catalog consumed by both the API and frontend apps.
+**Purpose:** The floor. Everything both sides of the wire have to agree on - schemas, types, error codes, route paths, permissions - plus every translated string in the product.
 
 **Tech stack:** Zod 4 only. No Drizzle, no React - that is what keeps it importable by anything.
-
-**Contains:**
-
-- Zod validation schemas (request bodies, response shapes)
-- TypeScript types inferred from those schemas via `z.infer<>`, plus shared type primitives (`ErrorDefinition`, `ErrorMap`, `StatusCodes`)
-- A shared error catalog mapping stable error keys to a message and HTTP status
-- Every path the API serves (`API_ROUTES`), plus the client-side page routes each frontend serves
 
 **Export paths:**
 
 | Path                      | Contents                                                              |
 | ------------------------- | --------------------------------------------------------------------- |
-| `@ordre/core/schemas`     | Zod schemas for request and response validation                       |
-| `@ordre/core/types`       | TypeScript types inferred from schemas                                |
-| `@ordre/core/errors`      | Error catalog (`{ key: { message, status } }`)                        |
+| `@ordre/core/schemas`     | Zod schemas for request and response validation, plus `z` itself      |
+| `@ordre/core/types`       | TypeScript types inferred from schemas, plus primitives (`ErrorDefinition`, `ErrorMap`, `StatusCodes`) |
+| `@ordre/core/errors`      | Error catalogs, `ERROR_CATALOG`, `ErrorCode`, `ServiceError`, `errorResponse` |
 | `@ordre/core/enums`       | Canonical value lists, several of which back Postgres enums           |
-| `@ordre/core/constants`   | Values identical in every environment - API and client route paths, TTLs |
-| `@ordre/core/permissions` | The role/permission matrix and `can()` - see [Authorization](/internal-docs/engineering/authorization) |
+| `@ordre/core/constants`   | Values identical in every environment - route paths, TTLs, cookie names |
+| `@ordre/core/permissions` | The role/permission matrix and `can()`                                |
+| `@ordre/core/messages`    | Every translated string - `{ app, en, pt }`                           |
+| `@ordre/core/messages/en` · `/pt` | One locale on its own                                         |
 
-**Error catalog:** Errors are grouped by domain and keyed by a stable identifier, each resolving to an `ErrorDefinition` (`message` + optional `status`). The API maps these onto its responses - for example, `VALIDATION_ERRORS.INVALID_INPUT` drives the `400` returned when Better Auth rejects a request body.
+**Key constraint:** No Drizzle dependency. No React dependency. Importable by any app - API, dashboard, board, or marketing.
+
+#### Errors
+
+Grouped by domain and keyed by a stable identifier. A definition carries **only a status** - the words live in [Messages](#messages), keyed by the same code.
 
 ```ts
-import { VALIDATION_ERRORS } from "@ordre/core/errors";
+import { VALIDATION_ERRORS, errorMessage } from "@ordre/core/errors";
 
-VALIDATION_ERRORS.INVALID_INPUT; // { status: 400, message: "Validation error" }
+VALIDATION_ERRORS.INVALID_INPUT; // { status: 400 }
+errorMessage("INVALID_INPUT"); // "Some of the information you entered isn't valid."
 ```
 
-**Route table:** `API_ROUTES` holds every path the API serves, absolute and version-free, in `:param` form. It lives here rather than in `apps/api` because three consumers need three spellings of the same path, and no layer inside the API may import from another - the OpenAPI registrations sit in `controllers/` and the routers in `adapters/express/`, so neither can own the shared table.
+`ERROR_CATALOG` merges every domain map into one object and `ErrorCode` is its `keyof`. That union is what types the copy as `Record<ErrorCode, string>`, so a code cannot ship without words for it in every locale. `CLIENT_ERRORS` (`NETWORK_ERROR`, `MALFORMED_RESPONSE`, `UNKNOWN_ERROR`) sit in the same catalog even though the server never returns them, so a consumer maps a dropped connection and a `403` through one vocabulary.
+
+**One string per code.** `errorResponse` fills the wire `message` from the English copy, so a log line or a `curl` stays readable; a client ignores it and resolves the same code in the reader's own locale. The message is a courtesy, the code is the contract.
+
+Every code, its status and its copy: **[Error Codes](/internal-docs/reference/error-codes)**, generated from the catalog.
+
+#### Schemas and validation
+
+Schemas carry **no messages at all** - `z.email()` stays `z.email()`. A global Zod error map, installed on import of `@ordre/core/schemas`, turns each issue into a stable key:
+
+```ts
+z.email()          →  "validation.email"
+z.string().min(1)  →  "validation.required"
+z.uuid()           →  "validation.uuid"
+```
+
+One schema is parsed in three places that need three different renderings: the browser (the user's locale), the API (which puts the key in `details` for a client to resolve), and the OpenAPI reference (English prose, resolved by the generator). Baking a message into the schema picks one and leaves the others wrong.
+
+A rule whose generic wording is not good enough passes its own key, and that wins: `z.string().min(8, "validation.passwordTooShort")`.
+
+**Nothing ever fails loudly.** An issue the map does not recognise falls back rather than emitting a key with no copy, and there are two fallbacks because Zod classifies on two axes:
+
+| Situation | Falls back to |
+| --- | --- |
+| An issue `code` with no `case` (`invalid_union`, `custom`) | `validation.invalid` |
+| `invalid_format` with a `format` not in `KNOWN_FORMATS` (`jwt`, `base64`, …) | `validation.invalidFormat` |
+
+`code` and `format` are separate: `z.email()`, `z.uuid()` and `z.ipv4()` all report `invalid_format` and differ only in `issue.format`, which is why formats are matched by a `Set` inside that one case rather than by their own `case` arms.
+
+**Adding a validation message** means editing two lists plus the copy, and the compiler enforces the last step:
+
+1. `VALIDATION_KEYS` in `error-map.ts` - declares that the key exists
+2. `KNOWN_FORMATS`, **only if** the key is a Zod format name - this is what allows the format to emit its own key instead of the generic one
+3. `messages/en/validation.ts` **and** `messages/pt/validation.ts` - `Record<ValidationKey, string>` will not compile until both are there
+
+Step 2 is the one that is easy to miss: adding `jwt` to `VALIDATION_KEYS` and the copy files without adding it to `KNOWN_FORMATS` leaves `z.jwt()` still resolving to `validation.invalidFormat`, with no error anywhere to say so.
+
+**Import `z` from here, not from `zod`.** A consumer building its own schema - a form extending one of core's - takes zod through this package:
+
+```ts
+import { SignInSchema, z } from "@ordre/core/schemas";
+```
+
+Two copies of zod are two module instances, and the error map is installed on one of them. The second would emit English sentences where the first emits keys - identical types, no compiler complaint, and the only symptom is untranslated text in a UI. One import specifier makes that impossible.
+
+`apps/api` is the exception and keeps its own `zod`, because `@asteasolutions/zod-to-openapi` requires it as a peer. Versions stay aligned by `syncpack`, which runs in CI.
+
+The keys and their copy are listed on the [Error Codes](/internal-docs/reference/error-codes) page. How a form consumes them is in [`@ordre/ui`](#ordreui).
+
+#### Messages
+
+Every translated string in the product. App-specific copy still lives in each app's `shared/i18n/` and is merged with these at runtime - see [i18n Structure](#-i18n-structure).
+
+```
+packages/core/src/messages/
+├── app.ts                # Locale-agnostic constants (name, domains)
+├── en/
+│   ├── errors.ts         # Record<ErrorCode, string>     - copy per catalog code
+│   ├── validation.ts     # Record<ValidationKey, string> - copy per Zod issue key
+│   └── index.ts          # Named namespaces + a default bundle
+├── pt/                   # Same files, same keys
+└── index.ts              # Re-exports { app, en, pt }
+```
+
+**What belongs here:** anything that names a concept rather than a screen - error copy, validation copy, shared product words. A page's own headline stays in that app's `shared/i18n/`.
+
+**Why in core rather than its own package:** the copy for an error is keyed by the same `ErrorCode` the catalog defines. Split across packages, that means either duplicating strings or resolving them across a boundary `errorResponse` cannot cross, since it lives inside core. One package, one vocabulary.
+
+**Coverage is enforced by the compiler.** `errors` is typed `Record<ErrorCode, string>` and `validation` is typed `Record<ValidationKey, string>`. Add a code or a key and core stops compiling until every locale has words for it.
+
+**Per-locale exports matter.** `errorResponse` imports only `messages/en`, because the wire message is always English; nothing that ships the API pulls in Portuguese to do it. Apps import the barrel and pick a locale at runtime.
+
+```ts
+import { app, en, pt } from "@ordre/core/messages";
+import { errors } from "@ordre/core/messages/en"; // one locale, on its own
+
+// In an app, keys are absolute across namespaces:
+t("errors.INVALID_EMAIL_OR_PASSWORD");
+t("validation.email");
+```
+
+#### Routes
+
+`API_ROUTES` holds every path the API serves, absolute and version-free, in `:param` form. It lives here rather than in `apps/api` because three consumers need three spellings of the same path, and no layer inside the API may import from another - the OpenAPI registrations sit in `controllers/` and the routers in `adapters/express/`, so neither can own the shared table.
 
 | Consumer                                   | Spelling         | How                                     |
 | ------------------------------------------ | ---------------- | --------------------------------------- |
@@ -180,37 +268,37 @@ VALIDATION_ERRORS.INVALID_INPUT; // { status: 400, message: "Validation error" }
 
 `API_BASE_PATH` (`/v1`) is joined on at the two edges that own it - the Express mount in `server.ts` and the `servers` list in the OpenAPI document - so the table itself never carries a version.
 
-**Key constraint:** No Drizzle dependency. No React dependency. Importable by any app - API, dashboard, board, or marketing.
+`DASHBOARD_ROUTES` and `MARKETING_ROUTES` are the other half: the pages each frontend serves, spelled once so the API can link to them from an email.
+
+#### Permissions
+
+The role/permission matrix and `can()`. Documented in full under **[Authorization](/internal-docs/engineering/authorization)**.
 
 ---
 
 ### `@ordre/services`
 
-<Callout type="warn">
-  **Not implemented.** `packages/services` currently contains a `package.json` and
-  nothing else - no source, no exports. It is also still named `services` rather
-  than `@ordre/services`, so nothing can import it under the name used throughout
-  these docs. Everything below is the intended design, not a description of code
-  that exists.
-</Callout>
+**Purpose:** HTTP client layer the frontend apps use to call the API, so a component never builds a URL or handles a `fetch` directly.
 
-**Purpose:** HTTP client layer that frontend apps will use to call the API, so a component never builds a URL or handles a `fetch` directly.
+**Tech stack:** native `fetch`, no client library. The transport is one small module; what would have been a library's job - typing, error shape, paths - is already owned by `@ordre/core`.
 
-**Tech stack:** undecided - the client library is chosen when the first service lands.
+**Contains:**
 
-**Planned contents:**
+- `createHttpClient` - the only module that touches `fetch`
+- One service per domain (`auth`, and more as they land), each a thin map from method name to endpoint
 
-- Service interfaces (contracts)
-- HTTP service implementations (call `api.ordre.app` endpoints)
+**The factory, not a singleton.** The package never reads an environment variable: `createServices({ baseUrl })` takes the API origin and each app calls it once, in a single module, which every component then imports.
 
 ```ts
-// packages/services/index.ts
-export const services = {
-  boards: new HttpBoardsService(),
-};
+// apps/dashboard/src/shared/services.ts
+export const services = createServices({ baseUrl: process.env.NEXT_PUBLIC_API_URL });
 ```
 
-**Key constraint:** never imported by `apps/api` - the API is the thing it calls. Requests and responses will be typed with `@ordre/core/schemas` and addressed with `API_ROUTES` from `@ordre/core/constants`, so both halves of the contract are shared rather than restated.
+The alternative - the package reading `process.env` itself - cannot work: the Next apps expose `NEXT_PUBLIC_*` while the board is Vite, and `process.env` in a browser bundle breaks the board outright.
+
+**What the client owns:** joining `API_BASE_PATH` and the origin, `credentials: 'include'` (the session is a cross-origin cookie, and without it every later call is unauthenticated), a JSON content type, and turning any failure - a `403`, an unparseable body, a dropped connection - into a `ServiceError` carrying a catalog `code`.
+
+**Key constraint:** never imported by `apps/api` - the API is the thing it calls. Requests and responses are typed with `@ordre/core/schemas` and addressed with `API_ROUTES` from `@ordre/core/constants`, so both halves of the contract are shared rather than restated. `ServiceError` lives in `@ordre/core` rather than here, so the code that *reads* it - the form layer in `@ordre/ui`, the error copy beside the catalog - never has to import a transport.
 
 ---
 
@@ -309,6 +397,7 @@ const log = logger.child({ controller: "auth" }); // stamps controller: "auth" o
 - Atomic components (`Button`, `TextField`, `Card`, etc.)
 - Design tokens as CSS custom properties
 - Shared global styles
+- The shared form mechanism (`@ordre/ui/form`) - validation, error mapping, field binding
 
 **Structure:**
 
@@ -330,6 +419,10 @@ packages/ui/
 │   │   └── postcss.ts        # Shared PostCSS config for consuming apps
 │   ├── fonts/                # Self-hosted font files (Geist, Geist Mono, Plus Jakarta Sans)
 │   ├── helpers/              # Small styling helpers
+│   ├── form/                 # The shared form mechanism (@ordre/ui/form)
+│   │   ├── useAppForm.ts     # Schema in, bound fields + submit out
+│   │   ├── applyServiceError.ts  # A failed request onto the form
+│   │   └── translate.ts      # The injected `t`, see below
 │   ├── hooks/                # Shared React hooks
 │   ├── icons/
 │   │   ├── Icons.tsx         # Re-exports Lucide icon set + custom icons
@@ -351,6 +444,23 @@ packages/ui/
 field anatomy, cva, and hooks they all compose, because nesting each in its own
 directory would leave every one of them importing its siblings from a parent.
 
+**The form mechanism** (`src/form/`, distinct from `src/components/Form/`, which is the
+controls) is here rather than in `@ordre/core` for one reason: it is React, and core's
+whole value is having none. Every app validates the same way, so the decisions are made
+once - `onTouched` then `onChange`, messages resolved from keys, `details` onto fields and
+everything else into the banner.
+
+```tsx
+const { field, submit, rootError, isBusy } = useAppForm({ schema, t });
+
+<TextField {...field("email")} label={t("Login.email.label")} />;
+```
+
+**Why `t` is a parameter and not a hook call.** The apps do not share an i18n runtime -
+the Next apps use `next-intl`, the board uses `i18next`. A shared layer that called either
+one directly could serve two of the three apps. Injecting the resolved function costs one
+line at each call site and keeps the mechanism portable.
+
 **Component groups:** the headings in `components/index.ts` - Primitives, Form,
 Surfaces, Shell - are also the Storybook sidebar folders. Adding a component to the
 barrel and filing it in Storybook is one decision, not two.
@@ -367,32 +477,6 @@ import "@ordre/ui/styles/main"; // imported once in root layout
 **Storybook requirement:** Every component in `@ordre/ui` must ship with a co-located `.stories.tsx`. Stories are published as part of the deployed Storybook at `storybook.ordre.app` - adding a component without a story is a review blocker.
 
 **Tailwind v4 note:** No `tailwind.config.ts`. Tokens are CSS custom properties consumed directly via Tailwind's `@source` directive.
-
----
-
-### `@ordre/i18n`
-
-**Purpose:** Shared translations used across all apps. App-specific translations live locally in each app's `shared/i18n/` and are merged with this package at runtime.
-
-**Tech stack:** plain TypeScript modules - no i18n library of its own. Each app brings its own and consumes these strings.
-
-**Structure:**
-
-```
-packages/i18n/
-├── messages/
-│   ├── app.ts                # Locale-agnostic app constants (name, domain)
-│   ├── en.ts                 # Shared English strings
-│   ├── pt.ts                 # Shared Portuguese strings
-│   └── index.ts              # Re-exports { app, en, pt }
-└── package.json              # Exposes "./messages" export
-```
-
-**Usage:**
-
-```ts
-import { app, en, pt } from "@ordre/i18n/messages";
-```
 
 ---
 
@@ -607,7 +691,7 @@ apps/marketing/
 │   │   └── i18n/
 │   │       ├── routing.ts            # next-intl routing (locales: en/pt, prefixes: { pt: '/br' }, mode: 'as-needed')
 │   │       ├── navigation.ts         # Locale-aware <Link>, redirect, usePathname, useRouter
-│   │       ├── requests.ts           # getRequestConfig - merges @ordre/i18n app + global + local messages
+│   │       ├── requests.ts           # getRequestConfig - merges @ordre/core app + global + local messages
 │   │       └── messages/
 │   │           ├── en.ts             # App-specific English strings
 │   │           └── pt.ts             # App-specific Portuguese strings
@@ -733,7 +817,7 @@ apps/board/
 │       └── i18n/
 │           ├── index.ts                  # Resource map merging en + pt message bundles
 │           └── messages/
-│               ├── en.ts                 # Merges @ordre/i18n global + app-specific strings
+│               ├── en.ts                 # Merges @ordre/core global + app-specific strings
 │               └── pt.ts
 │
 ├── react-router.config.ts                # Framework config (appDirectory: 'src/app', ssr: true, v8_middleware)
@@ -859,7 +943,7 @@ test('renders board timeline', () => { ... });
 
 **Initial languages:** English (`en`) and Portuguese (`pt`).
 
-**Shared strings** (app constants, status labels, errors, common UI copy) live in `@ordre/i18n` and are merged with app-specific strings at runtime.
+**Shared strings** (app constants, status labels, error and validation copy, common UI words) live in [`@ordre/core/messages`](#messages) and are merged with app-specific strings at runtime. This section covers how each app *consumes* them; what they contain and why they live in core is documented there.
 
 **Libraries per app:**
 
@@ -875,7 +959,7 @@ test('renders board timeline', () => { ... });
 src/shared/i18n/
 ├── routing.ts                 # defineRouting({ locales: ['en','pt'], defaultLocale: 'en', localePrefix: { mode:'as-needed', prefixes:{ pt:'/br' } } })
 ├── navigation.ts              # createNavigation(routing) - exports Link, redirect, usePathname, useRouter, getPathname
-├── requests.ts                # getRequestConfig - spreads @ordre/i18n `app` + global `en|pt` + local messages
+├── requests.ts                # getRequestConfig - spreads @ordre/core `app` + global `en|pt` + local messages
 └── messages/
     ├── en.ts
     └── pt.ts
@@ -898,7 +982,7 @@ src/
 ├── shared/i18n/
 │   ├── index.ts                 # Resource map: { en: { translation: en }, pt: { translation: pt } }
 │   └── messages/
-│       ├── en.ts                # Spreads @ordre/i18n `app` + global `en` + app-specific strings
+│       ├── en.ts                # Spreads @ordre/core `app` + global `en` + app-specific strings
 │       └── pt.ts
 │
 └── app/
