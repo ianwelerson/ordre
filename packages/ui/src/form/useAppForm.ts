@@ -3,6 +3,8 @@
 import { standardSchemaResolver } from '@hookform/resolvers/standard-schema';
 
 import {
+  type FieldError,
+  type FieldErrors,
   type FieldValues,
   type Path,
   useForm,
@@ -52,14 +54,40 @@ export interface AppForm<TValues extends FieldValues> extends UseFormReturn<TVal
 }
 
 /**
+ * Every field path currently carrying an error, in `a.b.c` form.
+ *
+ * `root` is skipped wherever it appears: it names the form-level banner rather
+ * than a field, and `trigger` has nothing to validate under it.
+ */
+const errorPaths = (errors: FieldErrors, prefix = ''): string[] =>
+  Object.entries(errors).flatMap(([name, node]) => {
+    if (!node || name === 'root') {
+      return [];
+    }
+
+    const path = prefix ? `${prefix}.${name}` : name;
+
+    return typeof (node as FieldError).type === 'string'
+      ? [path]
+      : errorPaths(node as FieldErrors, path);
+  });
+
+/**
  * The shared form mechanism: one schema in, bound fields and a submit out.
  *
  * Every app validates the same way for the same reasons, so the decisions live
  * here once rather than being re-argued per form:
  *
- * - **`onTouched`, then `onChange`.** Judge a field when the user leaves it, then
- *   correct live once it is already wrong. Validating from the first keystroke
- *   calls an email invalid while it is still being typed.
+ * - **Only typed fields are judged early.** A field is validated when the user
+ *   leaves it *having typed in it*, and corrected live from there on - across
+ *   every flagged field rather than only the one being edited, so a cross-field
+ *   rule clears from either side. Everything else waits for submit. Validating
+ *   from the first keystroke calls an email invalid while it is still being
+ *   typed; judging an untouched field on blur is worse, because an autofocused
+ *   empty email would sprout an error the moment the user reaches for a link,
+ *   moving that link out from under the click. RHF has no such mode, so
+ *   `field()` builds it: base mode `onSubmit`, with blur and change handlers
+ *   that trigger validation themselves once a field has earned it.
  * - **Messages are keys.** Schemas carry none (see the Zod error map in
  *   `@ordre/core/schemas`), so what reaches `errors.x.message` is
  *   `validation.email`, and `field()` resolves it through the injected `t`.
@@ -73,7 +101,7 @@ export const useAppForm = <TValues extends FieldValues>({
 }: AppFormOptions<TValues>): AppForm<TValues> => {
   const form = useForm<TValues>({
     resolver: standardSchemaResolver(schema),
-    mode: 'onTouched',
+    mode: 'onSubmit',
     reValidateMode: 'onChange',
     ...options,
   });
@@ -83,10 +111,30 @@ export const useAppForm = <TValues extends FieldValues>({
   } = form;
 
   const field = (name: Path<TValues>): FieldBinding => {
-    const message = errors[name]?.message;
+    // `form.formState` so this reads the snapshot the render is drawing from.
+    const message = form.getFieldState(name, form.formState).error?.message;
+    const registration = form.register(name);
 
     return {
-      ...form.register(name),
+      ...registration,
+      onChange: async (event) => {
+        await registration.onChange(event);
+
+        // `control._formState`, not `form.formState`: the snapshot is a keystroke
+        // behind by the time a change handler runs.
+        const errored = errorPaths(form.control._formState.errors) as Path<TValues>[];
+
+        if (errored.length > 0) {
+          await form.trigger(errored);
+        }
+      },
+      onBlur: async (event) => {
+        await registration.onBlur(event);
+
+        if (form.getFieldState(name).isDirty) {
+          await form.trigger(name);
+        }
+      },
       invalid: Boolean(message),
       invalidMessage: typeof message === 'string' ? t(message) : undefined,
     };
@@ -94,8 +142,6 @@ export const useAppForm = <TValues extends FieldValues>({
 
   const submit: AppForm<TValues>['submit'] = (handler) =>
     form.handleSubmit(async (values) => {
-      // Clear the previous attempt's banner. Field errors are re-derived by the
-      // resolver on every submit, so they need no clearing.
       form.clearErrors('root');
 
       try {
@@ -105,8 +151,6 @@ export const useAppForm = <TValues extends FieldValues>({
       }
     });
 
-  // Form state holds keys, never sentences - `field()` above and this line are
-  // the only two places a key becomes text.
   const rootMessage = errors.root?.message;
 
   return {
