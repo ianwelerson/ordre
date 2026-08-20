@@ -32,4 +32,5 @@ export const validation: Record<ValidationKey, string> = {
   invalidOption: 'Escolha uma das opções disponíveis.',
   invalidNumber: 'Informe um número válido.',
   unknownField: 'Este campo não é reconhecido.',
+  passwordMismatch: 'As senhas não coincidem.',
 };

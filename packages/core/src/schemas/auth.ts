@@ -6,6 +6,16 @@ export const SignInSchema = z.object({
   rememberMe: z.boolean().optional(),
 });
 
+export const RequestPasswordResetSchema = z.object({
+  email: z.email(),
+  redirectTo: z.url(),
+});
+
+export const ResetPasswordSchema = z.object({
+  newPassword: z.string().min(8),
+  token: z.string(),
+});
+
 export const RevokeSessionSchema = z.object({
   token: z.string(),
 });
@@ -48,6 +58,8 @@ export const AuthSuccessResponseSchema = z.object({
 });
 
 export type SignInInput = z.infer<typeof SignInSchema>;
+export type RequestPasswordResetInput = z.infer<typeof RequestPasswordResetSchema>;
+export type ResetPasswordInput = z.infer<typeof ResetPasswordSchema>;
 export type SignInResponse = z.infer<typeof SignInResponseSchema>;
 export type SessionResponse = z.infer<typeof SessionResponseSchema>;
 export type RevokeSessionInput = z.infer<typeof RevokeSessionSchema>;

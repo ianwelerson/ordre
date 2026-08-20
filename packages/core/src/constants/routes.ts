@@ -17,6 +17,8 @@ const DASHBOARD_INVITE_BASE = '/invite';
 export const DASHBOARD_ROUTES = {
   login: '/login',
   register: '/register',
+  forgotPassword: '/forgot-password',
+  setPassword: '/set-password',
   getStarted: '/get-started',
   inviteBase: DASHBOARD_INVITE_BASE,
   invite: (token: string) => `${DASHBOARD_INVITE_BASE}/${token}`,

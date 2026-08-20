@@ -43,6 +43,8 @@ export const API_ROUTES = {
     signOut: '/auth/sign-out',
     session: '/auth/get-session',
     revokeSession: '/auth/revoke-session',
+    requestPasswordReset: '/auth/request-password-reset',
+    resetPassword: '/auth/reset-password',
   },
 
   workspace: {
