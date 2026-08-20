@@ -124,7 +124,6 @@ export const WorkspaceInviteSchema = z.object({
   name: z.string(),
   role: z.enum(WORKSPACE_MEMBER_ROLES),
   status: z.enum(WORKSPACE_INVITE_STATUSES),
-  token: z.string().min(1),
   workspaceId: z.uuid(),
   locationId: z.uuid().nullish(),
   invitedByMemberId: z.uuid().nullish(),

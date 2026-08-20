@@ -37,7 +37,6 @@ export const toInviteResponse = (invite: WorkspaceInviteForResponse): WorkspaceI
   locationId: invite.locationId,
   status: invite.status,
   invitedByMemberId: invite.invitedByMemberId,
-  token: invite.token,
   createdAt: invite.createdAt.toISOString(),
   updatedAt: invite.updatedAt.toISOString(),
   expiresAt: invite.expiresAt.toISOString(),
