@@ -1,4 +1,3 @@
-import { logger } from '#/config/logger.ts';
 import type { NextFunction, Request, Response } from 'express';
 import { isIP } from 'node:net';
 
@@ -10,48 +9,6 @@ import { isIP } from 'node:net';
  * guarantee `x-forwarded-for` cannot give.
  */
 export const CLIENT_IP_HEADER = 'x-ordre-client-ip';
-
-/**
- * @TODO Remove this log, and the `loggedChain` flag with it, once `hops` has
- * been read off a deployed instance and `trust proxy` in `server.ts` set to it.
- */
-let loggedChain = false;
-
-/**
- * Logs one sample of the forwarded chain, so `trust proxy` can be set from
- * reality rather than assumed.
- *
- * If the platform runs more hops than `trust proxy` counts, the resolved IP is
- * an internal address identical for every request, and every caller lands in one
- * rate-limit bucket - the failure this middleware exists to prevent. Read `hops`
- * and set `trust proxy` to it; `resolved` should be an address you recognise as
- * the client.
- *
- * `hops` comes off the raw header because `req.ips` cannot answer this: Express
- * truncates the chain by the very `trust proxy` value being checked.
- *
- * Once per process, and only for a request carrying the header, so a health
- * check on a direct connection can't be mistaken for the sample.
- */
-const logForwardedChain = (req: Request) => {
-  const forwarded = req.headers['x-forwarded-for'];
-
-  if (loggedChain || typeof forwarded !== 'string') {
-    return;
-  }
-
-  loggedChain = true;
-
-  logger.info(
-    {
-      forwarded,
-      hops: forwarded.split(',').filter((entry) => entry.trim()).length,
-      resolved: req.ip,
-      trustProxy: req.app.get('trust proxy'),
-    },
-    'client ip: forwarded chain sample - set `trust proxy` to `hops`'
-  );
-};
 
 /**
  * Restates Express's resolved client IP as a header, for the one consumer that
@@ -73,8 +30,6 @@ const logForwardedChain = (req: Request) => {
  * of an empty string equal for every caller.
  */
 export const clientIp = (req: Request, _res: Response, next: NextFunction) => {
-  logForwardedChain(req);
-
   if (req.ip && isIP(req.ip)) {
     req.headers[CLIENT_IP_HEADER] = req.ip;
   } else {

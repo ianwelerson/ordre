@@ -13,7 +13,12 @@ import routes from './routes/index.ts';
 
 const app: Express = express();
 
-app.set('trust proxy', 1);
+/**
+ * Two proxies sit in front of this app, so the client is the third address from
+ * the socket end: the edge appends the tier ahead of it, and that tier appends
+ * the client.
+ */
+app.set('trust proxy', 2);
 
 /**
  * Everything this service serves lives under `API_BASE_PATH`, so anything else
