@@ -1,9 +1,25 @@
-import { useTranslations } from 'next-intl';
+'use client';
 
+import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
+
+import { DASHBOARD_ROUTES } from '@ordre/core/constants';
+import { Button } from '@ordre/ui/components';
 import Icon from '@ordre/ui/icons';
+
+import { services } from '@/shared/services';
 
 export default function Home(): React.ReactElement {
   const t = useTranslations();
+  const router = useRouter();
+
+  const signOut = async () => {
+    try {
+      await services.auth.signOut();
+    } finally {
+      router.replace(DASHBOARD_ROUTES.login);
+    }
+  };
 
   return (
     <main className="flex h-screen w-screen flex-col flex-wrap items-center justify-center gap-3">
@@ -16,6 +32,9 @@ export default function Home(): React.ReactElement {
           <p className="font-body">{t('app.tagline')}</p>
         </div>
         <p className="font-mono text-sm">{t('app.domain.dashboard')}</p>
+        <Button onClick={signOut} size="sm">
+          Sign out
+        </Button>
       </div>
     </main>
   );
