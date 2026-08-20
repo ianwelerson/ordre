@@ -24,6 +24,12 @@ import * as schema from '@ordre/db/schemas';
 const ERROR_CATALOG: ErrorMap = { ...BASE_ERRORS, ...AUTH_ERRORS, ...VALIDATION_ERRORS };
 
 /**
+ * The field an alert rule keys off, so one rule covers every producer below
+ * rather than three fragile matches on message text.
+ */
+const OUTBOX_PUSH_FAILED = 'outbox.push_failed';
+
+/**
  * Remaps a Better Auth API error onto our own catalog definition, keeping the
  * `code` so the client can still map it. Returns `undefined` - meaning "leave
  * Better Auth's response untouched" - when the value isn't a Better Auth API
@@ -63,11 +69,27 @@ export const remapAuthError = (returned: unknown): APIError | undefined => {
   });
 };
 
+/** The shape the sign-up defaulting below needs, and nothing more. */
+type SignUpContext = { path: string; body?: { callbackURL?: string } };
+
 /**
- * TODO
+ * Gives a sign-up somewhere to land once the emailed link is verified.
  *
- * - Create the custom user fields
+ * Better Auth defaults `callbackURL` to `"/"`, which the browser resolves
+ * against the *API* origin - so verification succeeds and then drops the visitor
+ * on this service's 404. Defaulted here rather than at the call site so no caller
+ * can forget, and mutated rather than returned because `ctx.body` is the same
+ * object the endpoint goes on to read.
+ *
+ * Exported for unit testing; the `before` hook below is its only caller.
  */
+export const defaultSignUpCallbackUrl = (ctx: SignUpContext): void => {
+  if (ctx.path !== '/sign-up/email' || !ctx.body || ctx.body.callbackURL) {
+    return;
+  }
+
+  ctx.body.callbackURL = urls.dashboard;
+};
 
 // Better Auth Configuration
 export const auth = betterAuth({
@@ -91,6 +113,54 @@ export const auth = betterAuth({
   },
   emailAndPassword: {
     enabled: true,
+    sendResetPassword: async ({ user, url }) => {
+      try {
+        await pushToOutbox(getDb(), {
+          channel: 'email',
+          topic: 'account:reset-password',
+          to: user.email,
+          variables: { user_email: user.email, reset_url: url },
+        });
+      } catch (error) {
+        logger.error(
+          {
+            err: error,
+            userId: user.id,
+            event: OUTBOX_PUSH_FAILED,
+            topic: 'account:reset-password',
+          },
+          'failed to queue account:reset-password email'
+        );
+      }
+    },
+  },
+  emailVerification: {
+    sendOnSignUp: true,
+    // Increase the expire due to the sendAfter + Outbox Sweep
+    expiresIn: 24 * 60 * 60,
+    autoSignInAfterVerification: true,
+    sendVerificationEmail: async ({ user, url }) => {
+      try {
+        await pushToOutbox(getDb(), {
+          channel: 'email',
+          topic: 'account:verify-email',
+          to: user.email,
+          variables: { user_email: user.email, verify_url: url },
+          /**
+           * When this mail becomes eligible to send, rather than immediately.
+           *
+           * Verifying is not required to sign in, so it has no business landing in
+           * the same breath as the welcome message and competing with it for the click.
+           */
+          sendAfter: new Date(Date.now() + 30 * 60 * 1000),
+        });
+      } catch (error) {
+        logger.error(
+          { err: error, userId: user.id, event: OUTBOX_PUSH_FAILED, topic: 'account:verify-email' },
+          'failed to queue account:verify-email email'
+        );
+      }
+    },
   },
 
   plugins: [
@@ -108,13 +178,19 @@ export const auth = betterAuth({
               variables: { user_name: user.name, user_email: user.email },
             });
           } catch (error) {
-            logger.error({ err: error, userId: user.id }, 'failed to queue account:created email');
+            logger.error(
+              { err: error, userId: user.id, event: OUTBOX_PUSH_FAILED, topic: 'account:created' },
+              'failed to queue account:created email'
+            );
           }
         },
       },
     },
   },
   hooks: {
+    before: createAuthMiddleware(async (ctx) => {
+      defaultSignUpCallbackUrl(ctx);
+    }),
     after: createAuthMiddleware(async (ctx) => {
       const remapped = remapAuthError(ctx.context.returned);
 

@@ -1,8 +1,9 @@
+import { urls } from '#/config/urls.ts';
 import { APIError } from 'better-auth/api';
 
 import { errorMessage } from '@ordre/core/errors';
 
-import { remapAuthError } from './auth.ts';
+import { defaultSignUpCallbackUrl, remapAuthError } from './auth.ts';
 
 describe('config/auth', () => {
   describe('remapAuthError', () => {
@@ -57,6 +58,39 @@ describe('config/auth', () => {
           password: 'Invalid input',
         },
       });
+    });
+  });
+
+  describe('defaultSignUpCallbackUrl', () => {
+    it('points a sign-up with no callback at the dashboard', () => {
+      const ctx = { path: '/sign-up/email', body: {} };
+
+      defaultSignUpCallbackUrl(ctx);
+
+      expect(ctx.body).toEqual({ callbackURL: urls.dashboard });
+    });
+
+    it('leaves a callback the caller chose alone', () => {
+      const ctx = {
+        path: '/sign-up/email',
+        body: { callbackURL: 'https://dashboard.test/welcome' },
+      };
+
+      defaultSignUpCallbackUrl(ctx);
+
+      expect(ctx.body.callbackURL).toBe('https://dashboard.test/welcome');
+    });
+
+    it.each(['/sign-in/email', '/reset-password', '/get-session'])('ignores %s', (path) => {
+      const ctx = { path, body: {} as { callbackURL?: string } };
+
+      defaultSignUpCallbackUrl(ctx);
+
+      expect(ctx.body.callbackURL).toBeUndefined();
+    });
+
+    it('tolerates an endpoint reached with no body', () => {
+      expect(() => defaultSignUpCallbackUrl({ path: '/sign-up/email' })).not.toThrow();
     });
   });
 });
