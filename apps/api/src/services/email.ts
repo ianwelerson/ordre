@@ -41,6 +41,8 @@ const EMAIL_FROM = 'Ordre <onboarding@ordre.app>';
 
 const RESEND_TEMPLATE_IDS: Record<OutboxDelivery, string> = {
   'email:account:created': 'account-created-1',
+  'email:account:verify-email': 'email-verification-1',
+  'email:account:reset-password': 'reset-password-1',
   'email:workspace:created': 'workspace-created-1',
   'email:invite:created': 'workspace-invitation-1',
 };

@@ -15,7 +15,13 @@ export type OutboxChannel = (typeof OUTBOX_CHANNELS)[number];
  * dead-lettered rows can be grouped without a jsonb scan, and because `<channel>`
  * and `<topic>` together name what gets rendered (see `OUTBOX_PAYLOAD_SCHEMAS`).
  */
-export const OUTBOX_TOPICS = ['account:created', 'workspace:created', 'invite:created'] as const;
+export const OUTBOX_TOPICS = [
+  'account:created',
+  'account:verify-email',
+  'account:reset-password',
+  'workspace:created',
+  'invite:created',
+] as const;
 export type OutboxTopic = (typeof OUTBOX_TOPICS)[number];
 
 /**
@@ -50,6 +56,8 @@ export const OUTBOX_VARIABLES = [
   'invite_url',
   'user_name',
   'user_email',
+  'verify_url',
+  'reset_url',
   ...OUTBOX_DEFAULT_VARIABLES,
 ] as const;
 export type OutboxVariable = (typeof OUTBOX_VARIABLES)[number];

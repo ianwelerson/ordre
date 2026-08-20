@@ -47,6 +47,26 @@ export const OUTBOX_PAYLOAD_SCHEMAS = {
       privacy_url: true,
     }),
   }),
+  'email:account:verify-email': z.object({
+    to: z.email(),
+    variables: OutboxVariablesSchema.pick({
+      user_email: true,
+      verify_url: true,
+      base_url: true,
+      help_url: true,
+      privacy_url: true,
+    }),
+  }),
+  'email:account:reset-password': z.object({
+    to: z.email(),
+    variables: OutboxVariablesSchema.pick({
+      user_email: true,
+      reset_url: true,
+      base_url: true,
+      help_url: true,
+      privacy_url: true,
+    }),
+  }),
   'email:workspace:created': z.object({
     to: z.email(),
     variables: OutboxVariablesSchema.pick({
