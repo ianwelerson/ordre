@@ -45,9 +45,11 @@ export const requireWorkspaceAccess = async (req: Request, res: Response, next: 
 
     // A route carries either `:id` or `:slug`, so only fail when neither is valid.
     if (!idParam.success && !slugParam.success) {
+      const firstIssue = (error: z.ZodError) => error.issues[0]?.message ?? 'Invalid value';
+
       const { status, body } = errorResponse(VALIDATION_ERRORS, 'INVALID_INPUT', {
-        id: req.params.id && JSON.parse(idParam.error.message)[0].message,
-        slug: req.params.slug && JSON.parse(slugParam.error.message)[0].message,
+        ...(req.params.id !== undefined && { id: firstIssue(idParam.error) }),
+        ...(req.params.slug !== undefined && { slug: firstIssue(slugParam.error) }),
       });
 
       return res.status(status).json(body);
