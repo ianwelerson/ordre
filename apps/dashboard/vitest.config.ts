@@ -19,6 +19,7 @@ export default defineConfig({
   resolve: {
     alias: {
       'next/font/local': fileURLToPath(new URL('./vitest/next-font.ts', import.meta.url)),
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
   test: {
@@ -27,13 +28,31 @@ export default defineConfig({
       provider: 'v8',
       exclude: EXCLUDE_PATTERN,
     },
-    include: ['src/**/*.{test,spec}.{ts,tsx}'],
     exclude: EXCLUDE_PATTERN,
-    browser: {
-      provider: playwright(),
-      enabled: true,
-      headless: true,
-      instances: [{ browser: 'chromium' }],
-    },
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'browser',
+          include: ['src/**/*.{test,spec}.tsx'],
+          exclude: EXCLUDE_PATTERN,
+          browser: {
+            provider: playwright(),
+            enabled: true,
+            headless: true,
+            instances: [{ browser: 'chromium' }],
+          },
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'node',
+          include: ['src/**/*.{test,spec}.ts'],
+          exclude: EXCLUDE_PATTERN,
+          environment: 'node',
+        },
+      },
+    ],
   },
 });
