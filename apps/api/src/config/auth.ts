@@ -1,3 +1,4 @@
+import { CLIENT_IP_HEADER } from '#/adapters/express/middlewares/client-ip.ts';
 import { getDb } from '#/config/db-context.ts';
 import { db } from '#/config/db.ts';
 import { logger } from '#/config/logger.ts';
@@ -109,6 +110,17 @@ export const auth = betterAuth({
     crossSubDomainCookies: {
       enabled: true,
       domain: cookieDomain,
+    },
+    /**
+     * Read the address Express resolved, rather than re-parsing the forwarded
+     * chain here. Better Auth's own parser rejects any chain longer than one
+     * entry unless it is told which proxies to trust, and an unresolved IP puts
+     * every caller in one shared rate-limit bucket - see `client-ip.ts` for why
+     * that is a lockout anyone can trigger. This is also what gives a session
+     * row a real `ipAddress`.
+     */
+    ipAddress: {
+      ipAddressHeaders: [CLIENT_IP_HEADER],
     },
   },
   emailAndPassword: {
