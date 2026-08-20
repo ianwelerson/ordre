@@ -42,6 +42,20 @@ type PushToOutboxInput<C extends OutboxChannel, T extends OutboxTopic> = {
   topic: T;
   to: string;
   variables: Omit<OutboxVariablesFor<`${C}:${T}`>, OutboxDefaultVariable>;
+  /**
+   * Hold the row back until this moment, rather than sending as soon as the
+   * transaction commits. Defaults to immediately.
+   *
+   * This is `next_attempt_at`, the same column the retry backoff writes, because
+   * it already means exactly this: do not attempt before. The worker's claim
+   * filter and its index are both on it, so a held row costs nothing to skip.
+   *
+   * Keep it well inside the worker's `MAX_AGE` (23 hours). That cap is applied
+   * to `created_at`, not to this, so a row scheduled beyond it would come due
+   * only after it had already aged out of the claim filter - queued, never sent,
+   * and never failed either.
+   */
+  sendAfter?: Date;
 };
 
 /**
@@ -60,7 +74,7 @@ type PushToOutboxInput<C extends OutboxChannel, T extends OutboxTopic> = {
  */
 export const pushToOutbox = async <C extends OutboxChannel, T extends OutboxTopic>(
   transaction: OutboxDb,
-  { channel, topic, to, variables }: PushToOutboxInput<C, T>
+  { channel, topic, to, variables, sendAfter }: PushToOutboxInput<C, T>
 ) => {
   await transaction.insert(schema.outbox).values({
     channel,
@@ -69,7 +83,17 @@ export const pushToOutbox = async <C extends OutboxChannel, T extends OutboxTopi
     // generic it can't prove this object is a member of the payload union, even
     // though `PushToOutboxInput` just constrained it to exactly that.
     payload: { to, variables: { ...DEFAULT_VARIABLES, ...variables } } as OutboxPayload,
+    // Left to the column default when absent, so an immediate row still reads
+    // `now()` from the database's clock rather than this process's.
+    ...(sendAfter && { nextAttemptAt: sendAfter }),
   });
+
+  // A row that is not due yet is nothing to wake for: the drain would claim
+  // nothing and go back to sleep. It waits for the sweep instead, which is why a
+  // held row's delivery is `sendAfter` plus up to one sweep interval.
+  if (sendAfter && sendAfter.getTime() > Date.now()) {
+    return;
+  }
 
   // Awaited above on purpose. Inside a request this only queues the callback, so
   // the order wouldn't matter - but outside one `afterCommit` runs it inline, and

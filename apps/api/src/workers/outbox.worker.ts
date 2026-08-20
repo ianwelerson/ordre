@@ -16,10 +16,14 @@ import type { OutboxChannel, OutboxTopic } from '@ordre/core/enums';
 import type { OutboxPayload } from '@ordre/core/types';
 
 /**
- * Safety net only - delivery latency comes from {@link wakeOutboxWorker}. Neon's
- * free plan suspends after five idle minutes and bills for being awake, so a
- * faster sweep keeps the compute up 24/7 and exhausts the monthly budget against
- * an empty table.
+ * How often the worker sweeps unprompted.
+ *
+ * For an ordinary row this is a safety net: latency comes from
+ * {@link wakeOutboxWorker}, which fires as soon as the producing transaction
+ * commits. For a row queued with `sendAfter` it is the delivery mechanism -
+ * holding a row means deliberately not waking for it, so it waits for this.
+ * A held row therefore arrives between its own delay and that delay plus one
+ * sweep.
  */
 const SWEEP_MS = 30 * 60 * 1000;
 

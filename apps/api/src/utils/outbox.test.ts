@@ -96,4 +96,43 @@ describe('utils/outbox', () => {
 
     expect(order).toEqual(['insert', 'afterCommit']);
   });
+
+  describe('sendAfter', () => {
+    const verifyEmail = (sendAfter?: Date) =>
+      pushToOutbox(transaction, {
+        channel: 'email',
+        topic: 'account:verify-email',
+        to: 'user@example.com',
+        variables: { user_email: 'user@example.com', verify_url: 'https://api.test/verify' },
+        ...(sendAfter && { sendAfter }),
+      });
+
+    it('leaves `nextAttemptAt` to the column default when absent', async () => {
+      await verifyEmail();
+
+      const [row] = values.mock.calls[0] as [Record<string, unknown>];
+
+      expect('nextAttemptAt' in row).toBe(false);
+    });
+
+    it('holds the row back to the given moment', async () => {
+      const sendAfter = new Date(Date.now() + 30 * 60 * 1000);
+
+      await verifyEmail(sendAfter);
+
+      expect(values).toHaveBeenCalledWith(expect.objectContaining({ nextAttemptAt: sendAfter }));
+    });
+
+    it('does not wake the worker for a row that is not due yet', async () => {
+      await verifyEmail(new Date(Date.now() + 30 * 60 * 1000));
+
+      expect(afterCommit).not.toHaveBeenCalled();
+    });
+
+    it('still wakes the worker when the moment has already passed', async () => {
+      await verifyEmail(new Date(Date.now() - 1000));
+
+      expect(afterCommit).toHaveBeenCalledWith(wakeOutboxWorker);
+    });
+  });
 });
