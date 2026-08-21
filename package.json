@@ -2,15 +2,15 @@
   "name": "ordre",
   "version": "0.1.0",
   "devDependencies": {
-    "@commitlint/cli": "^21.2.1",
-    "@commitlint/config-conventional": "^21.2.0",
+    "@commitlint/cli": "^21.2.2",
+    "@commitlint/config-conventional": "^21.2.2",
     "husky": "^9.1.7",
     "lint-staged": "^17.3.0",
     "playwright": "^1.62.1",
     "portless": "^0.15.5",
     "prettier": "^3.9.6",
-    "syncpack": "^15.3.2",
-    "turbo": "^2.10.8",
+    "syncpack": "^15.3.3",
+    "turbo": "^2.10.11",
     "typescript": "^6.0.3"
   },
   "engines": {

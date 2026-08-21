@@ -1421,6 +1421,9 @@
             "type": "string",
             "readOnly": true
           },
+          "issuer": {
+            "type": "string"
+          },
           "accountId": {
             "type": "string"
           },
@@ -1464,6 +1467,7 @@
         },
         "required": [
           "id",
+          "issuer",
           "accountId",
           "providerId",
           "userId",
@@ -3874,6 +3878,16 @@
                     "type": "string",
                     "description": "The login hint to use for the authorization code request"
                   },
+                  "additionalParams": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "Extra query parameters to append to the provider authorization URL (e.g. Cognito identity_provider, Google hd)."
+                  },
                   "additionalData": {
                     "type": "object",
                     "propertyNames": {
@@ -4181,6 +4195,9 @@
                     "type": "string"
                   },
                   "user": {
+                    "type": "string"
+                  },
+                  "iss": {
                     "type": "string"
                   }
                 }
@@ -4586,11 +4603,25 @@
         ],
         "parameters": [],
         "requestBody": {
+          "required": false,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "properties": {}
+                "properties": {
+                  "callbackURL": {
+                    "type": "string",
+                    "description": "The URL to redirect to after provider logout"
+                  },
+                  "disableRedirect": {
+                    "type": "boolean",
+                    "description": "Return the provider logout URL without redirecting"
+                  },
+                  "state": {
+                    "type": "string",
+                    "description": "State to pass to the provider logout endpoint"
+                  }
+                }
               }
             }
           }
@@ -4605,6 +4636,14 @@
                   "properties": {
                     "success": {
                       "type": "boolean"
+                    },
+                    "url": {
+                      "type": "string",
+                      "description": "Provider logout URL when RP-initiated logout is available"
+                    },
+                    "redirect": {
+                      "type": "boolean",
+                      "description": "Whether the client should redirect to the provider logout URL"
                     }
                   }
                 }
@@ -7510,12 +7549,6 @@
                       },
                       "refreshToken": {
                         "type": "string"
-                      },
-                      "scopes": {
-                        "type": "array",
-                        "items": {
-                          "type": "string"
-                        }
                       }
                     },
                     "required": [
@@ -7539,6 +7572,20 @@
                   "disableRedirect": {
                     "type": "boolean",
                     "description": "Disable automatic redirection to the provider. Useful for handling the redirection yourself"
+                  },
+                  "loginHint": {
+                    "type": "string",
+                    "description": "The login hint to use for the authorization code request"
+                  },
+                  "additionalParams": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "Extra query parameters to append to the provider authorization URL (e.g. Cognito identity_provider, Google hd)."
                   },
                   "additionalData": {
                     "type": "object",
@@ -7718,6 +7765,9 @@
                         "type": "string",
                         "format": "date-time"
                       },
+                      "issuer": {
+                        "type": "string"
+                      },
                       "accountId": {
                         "type": "string"
                       },
@@ -7736,6 +7786,7 @@
                       "providerId",
                       "createdAt",
                       "updatedAt",
+                      "issuer",
                       "accountId",
                       "userId",
                       "scopes"
@@ -8021,15 +8072,13 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "providerId": {
-                    "type": "string"
-                  },
                   "accountId": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "The Better Auth account ID to unlink"
                   }
                 },
                 "required": [
-                  "providerId"
+                  "accountId"
                 ]
               }
             }
@@ -8168,23 +8217,41 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "providerId": {
-                    "type": "string",
-                    "description": "The provider ID for the OAuth provider"
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "accountId": {
+                        "type": "string",
+                        "description": "The Better Auth account ID"
+                      },
+                      "userId": {
+                        "type": "string",
+                        "description": "The user ID associated with the account"
+                      }
+                    },
+                    "required": [
+                      "accountId"
+                    ]
                   },
-                  "accountId": {
-                    "type": "string",
-                    "description": "The account ID associated with the refresh token"
-                  },
-                  "userId": {
-                    "type": "string",
-                    "description": "The user ID associated with the account"
+                  {
+                    "type": "object",
+                    "properties": {
+                      "useAccountCookie": {
+                        "enum": [
+                          true
+                        ],
+                        "description": "Select the current OAuth account from its signed cookie"
+                      },
+                      "userId": {
+                        "type": "string",
+                        "description": "The user ID associated with the account"
+                      }
+                    },
+                    "required": [
+                      "useAccountCookie"
+                    ]
                   }
-                },
-                "required": [
-                  "providerId"
                 ]
               }
             }
@@ -8325,23 +8392,41 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "providerId": {
-                    "type": "string",
-                    "description": "The provider ID for the OAuth provider"
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "accountId": {
+                        "type": "string",
+                        "description": "The Better Auth account ID"
+                      },
+                      "userId": {
+                        "type": "string",
+                        "description": "The user ID associated with the account"
+                      }
+                    },
+                    "required": [
+                      "accountId"
+                    ]
                   },
-                  "accountId": {
-                    "type": "string",
-                    "description": "The account ID associated with the refresh token"
-                  },
-                  "userId": {
-                    "type": "string",
-                    "description": "The user ID associated with the account"
+                  {
+                    "type": "object",
+                    "properties": {
+                      "useAccountCookie": {
+                        "enum": [
+                          true
+                        ],
+                        "description": "Select the current OAuth account from its signed cookie"
+                      },
+                      "userId": {
+                        "type": "string",
+                        "description": "The user ID associated with the account"
+                      }
+                    },
+                    "required": [
+                      "useAccountCookie"
+                    ]
                   }
-                },
-                "required": [
-                  "providerId"
                 ]
               }
             }
@@ -8481,14 +8566,12 @@
                     "user": {
                       "type": "object",
                       "properties": {
-                        "id": {
-                          "type": "string"
-                        },
                         "name": {
                           "type": "string"
                         },
                         "email": {
-                          "type": "string"
+                          "type": "string",
+                          "nullable": true
                         },
                         "image": {
                           "type": "string"
@@ -8498,9 +8581,32 @@
                         }
                       },
                       "required": [
-                        "id",
                         "emailVerified"
                       ]
+                    },
+                    "account": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "providerId": {
+                          "type": "string"
+                        },
+                        "issuer": {
+                          "type": "string"
+                        },
+                        "accountId": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "providerId",
+                        "issuer",
+                        "accountId"
+                      ],
+                      "additionalProperties": false
                     },
                     "data": {
                       "type": "object",
@@ -8510,7 +8616,8 @@
                   },
                   "required": [
                     "user",
-                    "data"
+                    "data",
+                    "account"
                   ],
                   "additionalProperties": false
                 }
