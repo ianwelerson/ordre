@@ -1,5 +1,6 @@
 import { createAuthService } from './auth/auth.service.ts';
 import { createHttpClient, type HttpClientOptions } from './http/client.ts';
+import { createInviteService } from './invite/invite.service.ts';
 
 export type Services = ReturnType<typeof createServices>;
 
@@ -13,5 +14,6 @@ export const createServices = (options: HttpClientOptions) => {
 
   return {
     auth: createAuthService(http),
+    invite: createInviteService(http),
   };
 };
