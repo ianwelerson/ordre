@@ -38,15 +38,18 @@ export interface AppFormOptions<TValues extends FieldValues> extends Omit<
   schema: StandardSchema<TValues>;
   /** The app's own translator - see `Translate`. */
   t: Translate;
+  /**
+   * What a valid submission does. Wrapped before it is handed back, so a thrown
+   * `ServiceError` lands on the form rather than on the caller.
+   */
+  onSubmit: (values: TValues) => Promise<void> | void;
 }
 
 export interface AppForm<TValues extends FieldValues> extends UseFormReturn<TValues> {
   /** Everything a control needs for `name`: registration, invalid state, translated message. */
   field: (name: Path<TValues>) => FieldBinding;
-  /** Wraps a submit handler so a thrown `ServiceError` lands on the form. */
-  submit: (
-    handler: (values: TValues) => Promise<void> | void
-  ) => ReturnType<UseFormReturn<TValues>['handleSubmit']>;
+  /** Ready to hand straight to a `form`'s `onSubmit`. */
+  onSubmit: ReturnType<UseFormReturn<TValues>['handleSubmit']>;
   /** The form-level message, translated and ready for an `Alert`. */
   rootError?: string;
   /** True while submitting *and* through a redirect that follows a success. */
@@ -97,6 +100,7 @@ const errorPaths = (errors: FieldErrors, prefix = ''): string[] =>
 export const useAppForm = <TValues extends FieldValues>({
   schema,
   t,
+  onSubmit: handler,
   ...options
 }: AppFormOptions<TValues>): AppForm<TValues> => {
   const form = useForm<TValues>({
@@ -140,23 +144,22 @@ export const useAppForm = <TValues extends FieldValues>({
     };
   };
 
-  const submit: AppForm<TValues>['submit'] = (handler) =>
-    form.handleSubmit(async (values) => {
-      form.clearErrors('root');
+  const onSubmit = form.handleSubmit(async (values) => {
+    form.clearErrors('root');
 
-      try {
-        await handler(values);
-      } catch (error) {
-        applyServiceError(form, error);
-      }
-    });
+    try {
+      await handler(values);
+    } catch (error) {
+      applyServiceError(form, error);
+    }
+  });
 
   const rootMessage = errors.root?.message;
 
   return {
     ...form,
     field,
-    submit,
+    onSubmit,
     rootError: typeof rootMessage === 'string' ? t(rootMessage) : undefined,
     // `isSubmitting` goes false the moment the handler resolves, but a success
     // usually starts a navigation that has not happened yet - without this the

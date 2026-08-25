@@ -10,27 +10,24 @@ import { services } from '@/shared/services';
 
 import { LoginFormSchema, type LoginFormValues } from './schema';
 
-type LoginForm = AppForm<LoginFormValues> & {
-  onSubmit: ReturnType<AppForm<LoginFormValues>['submit']>;
-};
-
-export const useLoginForm = (): LoginForm => {
+/**
+ * Signs in, then honours the `?next=` the proxy stashed when it bounced the
+ * visitor here - `safeRedirect` is what makes that query param safe to follow.
+ */
+export const useLoginForm = (): AppForm<LoginFormValues> => {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const t = useTranslations();
 
-  const form = useAppForm<LoginFormValues>({
+  return useAppForm<LoginFormValues>({
     schema: LoginFormSchema,
     t,
     defaultValues: { email: '', password: '', rememberMe: true },
+    onSubmit: async (values) => {
+      await services.auth.signIn(values);
+
+      router.replace(safeRedirect(searchParams.get('next')));
+    },
   });
-
-  const onSubmit = form.submit(async (values) => {
-    await services.auth.signIn(values);
-
-    router.replace(safeRedirect(searchParams.get('next')));
-  });
-
-  return { ...form, onSubmit };
 };

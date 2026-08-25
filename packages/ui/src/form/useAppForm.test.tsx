@@ -37,14 +37,15 @@ const Field = ({ binding, name }: { binding: FieldBinding; name: string }) => {
 };
 
 const TestForm = () => {
-  const { field, submit } = useAppForm<Values>({
+  const { field, onSubmit } = useAppForm<Values>({
     schema: Schema,
     t,
     defaultValues: { newPassword: '', confirmPassword: '' },
+    onSubmit: () => {},
   });
 
   return (
-    <form onSubmit={submit(() => {})} noValidate>
+    <form onSubmit={onSubmit} noValidate>
       <Field name="newPassword" binding={field('newPassword')} />
       <Field name="confirmPassword" binding={field('confirmPassword')} />
       <button type="submit">Save</button>

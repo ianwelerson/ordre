@@ -11,29 +11,28 @@ import { services } from '@/shared/services';
 
 import { SetPasswordFormSchema, type SetPasswordFormValues } from './schema';
 
-type SetPasswordForm = AppForm<SetPasswordFormValues> & {
-  onSubmit: ReturnType<AppForm<SetPasswordFormValues>['submit']>;
-};
-
 /**
+ * Sets the password, then hands the visitor to the login screen with a notice
+ * saying so - the API does not sign them in, so the new password has to be used
+ * once before anything else works.
+ *
  * @param token - The reset token from the emailed link.
  */
-export const useSetPasswordForm = (token: string): SetPasswordForm => {
+export const useSetPasswordForm = (token: string): AppForm<SetPasswordFormValues> => {
   const router = useRouter();
 
   const t = useTranslations();
 
-  const form = useAppForm<SetPasswordFormValues>({
+  return useAppForm<SetPasswordFormValues>({
     schema: SetPasswordFormSchema,
     t,
     defaultValues: { newPassword: '', confirmPassword: '' },
+    onSubmit: async ({ newPassword }) => {
+      await services.auth.resetPassword({ newPassword, token });
+
+      router.replace(
+        `${DASHBOARD_ROUTES.login}?${LOGIN_NOTICE_PARAM}=${LOGIN_NOTICE.passwordReset}`
+      );
+    },
   });
-
-  const onSubmit = form.submit(async ({ newPassword }) => {
-    await services.auth.resetPassword({ newPassword, token });
-
-    router.replace(`${DASHBOARD_ROUTES.login}?${LOGIN_NOTICE_PARAM}=${LOGIN_NOTICE.passwordReset}`);
-  });
-
-  return { ...form, onSubmit };
 };

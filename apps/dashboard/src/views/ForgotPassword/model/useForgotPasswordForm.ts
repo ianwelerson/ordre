@@ -2,20 +2,21 @@
 
 import { useTranslations } from 'next-intl';
 
-import { DASHBOARD_ROUTES } from '@ordre/core/constants';
 import { type AppForm, useAppForm } from '@ordre/ui/form';
 
-import { SET_PASSWORD_SOURCE, SET_PASSWORD_SOURCE_PARAM } from '@/shared/constants';
 import { services } from '@/shared/services';
 
 import { ForgotPasswordFormSchema, type ForgotPasswordFormValues } from './schema';
 
 type ForgotPasswordForm = AppForm<ForgotPasswordFormValues> & {
-  onSubmit: ReturnType<AppForm<ForgotPasswordFormValues>['submit']>;
   /** True once the request has been accepted; the view swaps the form for the confirmation. */
   isSuccess: boolean;
 };
 
+/**
+ * Requests the reset mail. There is no success redirect: the view swaps itself
+ * for the confirmation, because the next step happens in the user's inbox.
+ */
 export const useForgotPasswordForm = (): ForgotPasswordForm => {
   const t = useTranslations();
 
@@ -23,19 +24,13 @@ export const useForgotPasswordForm = (): ForgotPasswordForm => {
     schema: ForgotPasswordFormSchema,
     t,
     defaultValues: { email: '' },
-  });
-
-  const onSubmit = form.submit(async (values) => {
-    const redirectTo = new URL(DASHBOARD_ROUTES.setPassword, window.location.origin);
-
-    redirectTo.searchParams.set(SET_PASSWORD_SOURCE_PARAM, SET_PASSWORD_SOURCE.forgotPassword);
-
-    await services.auth.requestPasswordReset({ ...values, redirectTo: redirectTo.href });
+    onSubmit: async (values) => {
+      await services.auth.requestPasswordReset(values);
+    },
   });
 
   return {
     ...form,
-    onSubmit,
     isSuccess: form.formState.isSubmitSuccessful,
   };
 };

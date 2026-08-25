@@ -1,12 +1,14 @@
 import { API_ROUTES } from '@ordre/core/constants';
 import {
+  AuthSessionResponseSchema,
   AuthSuccessResponseSchema,
   type RequestPasswordResetInput,
   type ResetPasswordInput,
   type RevokeSessionInput,
   SessionResponseSchema,
   type SignInInput,
-  SignInResponseSchema,
+  SignOutResponseSchema,
+  SignUpInput,
 } from '@ordre/core/schemas';
 
 import type { HttpClient } from '../http/client.ts';
@@ -20,8 +22,10 @@ export type AuthService = ReturnType<typeof createAuthService>;
  */
 export const createAuthService = (http: HttpClient) => ({
   signIn: (payload: SignInInput) =>
-    http.post(API_ROUTES.auth.signIn, payload, SignInResponseSchema),
-  signOut: () => http.post(API_ROUTES.auth.signOut, undefined, AuthSuccessResponseSchema),
+    http.post(API_ROUTES.auth.signIn, payload, AuthSessionResponseSchema),
+  signOut: () => http.post(API_ROUTES.auth.signOut, undefined, SignOutResponseSchema),
+  signUp: (payload: SignUpInput) =>
+    http.post(API_ROUTES.auth.signUp, payload, AuthSessionResponseSchema),
   requestPasswordReset: (payload: RequestPasswordResetInput) =>
     http.post(API_ROUTES.auth.requestPasswordReset, payload, AuthSuccessResponseSchema),
   resetPassword: (payload: ResetPasswordInput) =>
