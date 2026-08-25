@@ -7,7 +7,7 @@
   /* The one shadow small enough to sit on a control: a switch knob against its track. */
   --shadow-knob: 0 1px 2px rgba(26, 29, 38, 0.15);
   /* Focus rings. Spread only, so they ring the border rather than lift the element. */
-  --shadow-amber: 0 0 0 3px rgba(224, 145, 62, 0.14);
+  --shadow-accent: 0 0 0 3px rgba(224, 145, 62, 0.14);
   --shadow-invalid: 0 0 0 3px rgba(196, 75, 63, 0.14);
   /* Named for the edge the panel is anchored to - the shadow falls the other way. */
   --shadow-drawer-left: 24px 0 60px -20px rgba(26, 29, 38, 0.25);

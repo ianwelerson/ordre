@@ -103,7 +103,7 @@ export const Ink: Story = {
   render: (args) => (
     <Surface tone="snow">
       <Card {...args}>
-        <span className="text-2xs tracking-label text-amber font-mono font-medium uppercase">
+        <span className="text-2xs tracking-label text-accent font-mono font-medium uppercase">
           Ink
         </span>
         <p className="font-headline leading-title tracking-title text-xl font-semibold text-white">
@@ -178,7 +178,7 @@ export const AllVariants: Story = {
 
       <Surface tone="snow">
         <Card {...args} variant="ink">
-          <span className="text-2xs tracking-label text-amber font-mono font-medium uppercase">
+          <span className="text-2xs tracking-label text-accent font-mono font-medium uppercase">
             Ink
           </span>
           <p className="font-headline leading-title tracking-title text-xl font-semibold text-white">

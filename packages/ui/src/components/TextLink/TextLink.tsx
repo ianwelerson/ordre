@@ -42,9 +42,9 @@ const variants = cva(
       { variant: 'nav', active: false, class: 'text-foreground-muted hover:text-foreground' },
       { variant: 'nav', active: true, class: 'text-foreground font-medium' },
       { variant: 'menu', active: false, class: 'text-foreground' },
-      { variant: 'menu', active: true, class: 'text-button-hover' },
-      { variant: 'inline', active: false, class: 'text-foreground hover:text-button-hover' },
-      { variant: 'inline', active: true, class: 'text-button-hover' },
+      { variant: 'menu', active: true, class: 'text-accent-strong' },
+      { variant: 'inline', active: false, class: 'text-foreground hover:text-accent-strong' },
+      { variant: 'inline', active: true, class: 'text-accent-strong' },
     ],
     defaultVariants: {
       variant: 'nav',

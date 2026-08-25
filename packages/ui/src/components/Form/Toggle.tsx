@@ -25,8 +25,8 @@ const trackVariants = cva(
     'after:absolute after:top-0.5 after:left-0.5 after:size-4 after:rounded-full',
     'after:bg-background-elevated after:shadow-knob',
     'after:transition-transform after:duration-base after:ease-standard',
-    'peer-checked:bg-button peer-checked:after:translate-x-4',
-    'peer-focus-visible:shadow-amber peer-disabled:cursor-not-allowed peer-disabled:opacity-40',
+    'peer-checked:bg-accent peer-checked:after:translate-x-4',
+    'peer-focus-visible:shadow-accent peer-disabled:cursor-not-allowed peer-disabled:opacity-40',
   ],
   {
     variants: {

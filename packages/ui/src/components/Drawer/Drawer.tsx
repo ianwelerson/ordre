@@ -139,7 +139,7 @@ export const Drawer = ({
         onClick={onClose}
         data-testid="drawer-overlay"
         data-open={open || undefined}
-        className="bg-midnight/32 duration-slow ease-standard pointer-events-none fixed inset-0 z-60 opacity-0 transition-opacity data-open:pointer-events-auto data-open:opacity-100"
+        className="bg-foreground/32 duration-slow ease-standard pointer-events-none fixed inset-0 z-60 opacity-0 transition-opacity data-open:pointer-events-auto data-open:opacity-100"
       ></div>
       <div
         id={id}
@@ -152,7 +152,7 @@ export const Drawer = ({
         inert={!open}
         data-open={open || undefined}
         className={cx(
-          'bg-snow border-ash duration-deliberate ease-decelerate fixed top-0 z-70 flex h-lvh flex-col border-solid transition-transform outline-none data-open:translate-x-0',
+          'bg-background border-border duration-deliberate ease-decelerate fixed top-0 z-70 flex h-lvh flex-col border-solid transition-transform outline-none data-open:translate-x-0',
           sideClasses[side],
           className
         )}

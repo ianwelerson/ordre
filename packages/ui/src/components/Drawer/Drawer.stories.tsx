@@ -42,7 +42,7 @@ const Demo = (args: Partial<DrawerProps>) => {
       </div>
 
       <Drawer {...args} open={open} onClose={() => setOpen(false)}>
-        <div className="border-ash flex h-17 shrink-0 items-center justify-between border-b border-solid pr-5 pl-6">
+        <div className="border-border flex h-17 shrink-0 items-center justify-between border-b border-solid pr-5 pl-6">
           <span className="font-headline font-semibold">Panel</span>
           <Button
             leadingIcon="x"

@@ -201,7 +201,7 @@ export const WithLabelAction: Story = {
     labelAction: (
       <a
         href="#reset"
-        className="font-body text-foreground hover:text-button-hover text-xs font-medium underline underline-offset-3"
+        className="font-body text-foreground hover:text-accent-strong text-xs font-medium underline underline-offset-3"
       >
         Forgot?
       </a>

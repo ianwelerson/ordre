@@ -141,7 +141,7 @@ describe('MobileMenu.tsx', () => {
       links: [{ label: 'Product', href: '/features' }],
     });
 
-    expect(getByTestId('drawer').querySelector('.bg-warm-gray')).toBeNull();
+    expect(getByTestId('drawer').querySelector('.bg-background-alt')).toBeNull();
   });
 
   it('should keep the footer block for a footer without actions', () => {

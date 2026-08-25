@@ -54,7 +54,7 @@ const labelVariants = cva(['font-mono font-medium'], {
     },
     tone: {
       light: 'text-foreground-muted',
-      ink: 'text-amber',
+      ink: 'text-accent',
     },
   },
   defaultVariants: {

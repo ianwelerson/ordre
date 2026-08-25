@@ -83,7 +83,7 @@ export const SiteHeader = ({
       <header
         data-testid="site-header"
         data-scrolled={alwaysScrolled || hasScrolled || undefined}
-        className="data-scrolled:bg-background/88 data-scrolled:border-ash duration-slow ease-standard sticky top-0 z-50 border-b border-solid border-transparent bg-transparent transition-all data-scrolled:backdrop-blur-md"
+        className="data-scrolled:bg-background/88 data-scrolled:border-border duration-slow ease-standard sticky top-0 z-50 border-b border-solid border-transparent bg-transparent transition-all data-scrolled:backdrop-blur-md"
       >
         <div className="max-w-site nav:px-7 mx-auto flex h-17 items-center gap-8 px-5">
           {/* Logo */}

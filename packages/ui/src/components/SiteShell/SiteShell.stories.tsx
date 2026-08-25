@@ -15,7 +15,7 @@ const Page = () => (
 );
 
 const Footer = () => (
-  <div className="border-ash bg-warm-gray border-t border-solid px-6 py-8">
+  <div className="border-border bg-background-alt border-t border-solid px-6 py-8">
     <Typography tag="p" variant="mono-label">
       Ordre · The Digital Atelier
     </Typography>

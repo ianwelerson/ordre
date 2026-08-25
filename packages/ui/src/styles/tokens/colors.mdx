@@ -8,7 +8,7 @@ The palette is defined as Tailwind v4 CSS variables in `./colors.css`. Every var
 
 The palette comes in two layers:
 
-- **Tokens** (prefer these) - semantic names that encode intent: `background`, `background-alt`, `background-elevated`, `background-accent`, `background-info`, `foreground`, `foreground-muted`, `foreground-subtle`, `button`, `button-hover`, `success`, `invalid`, `invalid-hover`, `info`, `border`.
+- **Tokens** (prefer these) - semantic names that encode intent: `background`, `background-alt`, `background-elevated`, `background-accent`, `background-info`, `foreground`, `foreground-muted`, `foreground-subtle`, `accent`, `accent-strong`, `success`, `invalid`, `invalid-hover`, `info`, `border`.
 - **Base colors** - the raw hues tokens resolve to: neutrals (`midnight`, `slate`, `stone`, `ash`, `warm-gray`, `snow`, `white`), brand (`amber`, `deep-amber`, `sage`, `brick`, `deep-brick`, `ink-blue`) and the accent washes (`amber-wash`, `info-wash`).
 
 ## Usage
@@ -16,7 +16,7 @@ The palette comes in two layers:
 ```tsx
 // Semantic tokens (preferred)
 <div className="bg-background text-foreground border-border" />
-<button className="bg-button hover:bg-button-hover text-white" />
+<button className="bg-accent hover:bg-accent-strong text-white" />
 
 // Raw CSS variable
 <div style={{ background: 'var(--color-background-alt)' }} />
@@ -183,21 +183,22 @@ Prefer these in components. They carry meaning, so the palette can evolve withou
     cssVar="--color-foreground-subtle"
   />
   <ColorRow
-    swatch="var(--color-button)"
-    name="button"
-    subtitle="CTA colors."
+    swatch="var(--color-accent)"
+    name="accent"
+    subtitle="The single accent. CTAs, focus rings, selected and active state."
     value="#e0913e"
     resolvesTo="amber"
-    utility="bg-button"
-    cssVar="--color-button"
+    utility="bg-accent / text-accent"
+    cssVar="--color-accent"
   />
   <ColorRow
-    swatch="var(--color-button-hover)"
-    name="button-hover"
+    swatch="var(--color-accent-strong)"
+    name="accent-strong"
+    subtitle="The deeper step: hover and pressed on an accent fill, and accent text on an accent tint."
     value="#c67a2e"
     resolvesTo="deep-amber"
-    utility="bg-button-hover"
-    cssVar="--color-button-hover"
+    utility="bg-accent-strong / text-accent-strong"
+    cssVar="--color-accent-strong"
   />
   <ColorRow
     swatch="var(--color-success)"

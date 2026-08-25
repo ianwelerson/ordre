@@ -47,14 +47,14 @@ export const shellVariants = cva(
       {
         variant: 'outlined',
         invalid: false,
-        class: 'border-border focus-within:border-amber focus-within:shadow-amber',
+        class: 'border-border focus-within:border-accent focus-within:shadow-accent',
       },
       {
         variant: 'outlined',
         invalid: true,
         class: 'border-invalid focus-within:border-invalid focus-within:shadow-invalid',
       },
-      { variant: 'filled', invalid: false, class: 'border-transparent focus-within:border-amber' },
+      { variant: 'filled', invalid: false, class: 'border-transparent focus-within:border-accent' },
       // Filled rests on a transparent border, so invalid is what makes one appear.
       { variant: 'filled', invalid: true, class: 'border-invalid' },
     ],

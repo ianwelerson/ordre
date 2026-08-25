@@ -15,7 +15,7 @@ They live as Tailwind v4 CSS variables in `packages/ui/src/styles/tokens/`, one 
 ## Why tokens
 
 - **Consistency** - one source of truth means the same "amber" appears on every button, border, and hover state.
-- **Theming** - semantic aliases (e.g. `--color-button → --color-amber`) let the palette shift without touching call sites.
+- **Theming** - semantic aliases (e.g. `--color-accent → --color-amber`) let the palette shift without touching call sites.
 - **Low drift** - hex values and ad-hoc SVGs don't creep into feature code.
 
 ## What's in the system
@@ -37,7 +37,7 @@ Each page below documents one file in `styles/tokens/`, and ends with how to add
 ```tsx
 // Tailwind utilities (preferred for layout and components)
 <h1 className="font-headline text-foreground">Hello</h1>
-<button className="bg-button hover:bg-button-hover text-white">Save</button>
+<button className="bg-accent hover:bg-accent-strong text-white">Save</button>
 
 // Raw CSS variable (when inline styles or CSS-in-JS are unavoidable)
 <div style={{ background: 'var(--color-background)' }} />

@@ -49,7 +49,7 @@ export const MobileMenu = ({
       className="w-[min(320px,86vw)]"
       wrapperClassName="nav:hidden"
     >
-      <div className="border-ash flex h-17 shrink-0 items-center justify-between border-b border-solid pr-5 pl-6">
+      <div className="border-border flex h-17 shrink-0 items-center justify-between border-b border-solid pr-5 pl-6">
         <a
           href={logoHref}
           onClick={onClose}
@@ -89,7 +89,7 @@ export const MobileMenu = ({
         </>
       )}
       {(actions.length > 0 || menuFooter) && (
-        <div className="bg-warm-gray border-ash mt-auto flex shrink-0 flex-col gap-2.5 border-t border-solid px-6 pt-5 pb-7">
+        <div className="bg-background-alt border-border mt-auto flex shrink-0 flex-col gap-2.5 border-t border-solid px-6 pt-5 pb-7">
           {actions.map(({ label, href, role }) => (
             <Button
               key={href}

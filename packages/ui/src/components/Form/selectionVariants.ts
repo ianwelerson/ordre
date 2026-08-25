@@ -15,7 +15,7 @@ export const markVariants = cva(
   [
     'grid shrink-0 place-items-center border border-solid text-transparent',
     'transition-all duration-base ease-standard',
-    'peer-checked:text-amber peer-focus-visible:shadow-amber',
+    'peer-checked:text-accent peer-focus-visible:shadow-accent',
     'peer-disabled:cursor-not-allowed peer-disabled:opacity-40',
   ],
   {

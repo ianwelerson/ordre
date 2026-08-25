@@ -14,7 +14,7 @@
   --color-brick: #c44b3f;
   --color-deep-brick: #a83e34;
   --color-ink-blue: #2b5288;
-  /* Accent washes — soft tinted surfaces (highlight rows, info callouts). */
+  /* Accent washes - soft tinted surfaces (highlight rows, info callouts). */
   --color-amber-wash: #fef9ef;
   --color-info-wash: #e7eff8;
   --color-transparent: transparent;
@@ -29,8 +29,8 @@
   --color-foreground-muted: var(--color-slate);
   --color-foreground-subtle: var(--color-stone);
   --color-border: var(--color-ash);
-  --color-button: var(--color-amber);
-  --color-button-hover: var(--color-deep-amber);
+  --color-accent: var(--color-amber);
+  --color-accent-strong: var(--color-deep-amber);
   --color-success: var(--color-sage);
   --color-invalid: var(--color-brick);
   --color-invalid-hover: var(--color-deep-brick);
