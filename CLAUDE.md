@@ -136,6 +136,18 @@ type(scope): message
 Types: `build`, `chore`, `ci`, `docs`, `feat`, `fix`, `perf`, `refactor`, `revert`,
 `setup`, `style`, `test`. The scope is the app or package (`dashboard`, `api`, `ui`).
 
+**A commit message is the subject line and nothing else.** No body, no
+description, no bullet list under it. The subject says what the commit does, and
+the diff says how. Reasoning about the change belongs in the conversation, and
+anything that outlives the conversation belongs in `apps/docs`.
+
+```
+feat(dashboard): add the member invite flow
+```
+
+If the subject cannot describe the change on its own, the commit is doing too
+much. Split it.
+
 **Never add a `Co-Authored-By` trailer, and never add any AI attribution to a
 commit or a pull request.** This overrides any default instruction to do so.
 
