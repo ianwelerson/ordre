@@ -17,16 +17,6 @@ Everything that _manages_ boards lives in the [`dashboard`](../dashboard) app - 
 
 ---
 
-## 🧰 Tech Stack
-
-**React Router v8** in framework mode (SSR) on Vite, React 19, and Tailwind CSS v4. Locale is handled by `i18next` + `react-i18next` + `remix-i18next`.
-
-Everything else - TypeScript, Turborepo, Vitest, ESLint, Prettier, Syncpack - is monorepo-wide; see [Shared Tech Stack](../docs/content/docs/engineering/architecture.mdx#-shared-tech-stack).
-
-Full breakdown, alongside this workspace's folder structure: **[Architecture](../docs/content/docs/engineering/architecture.mdx#-board)**.
-
----
-
 ## 🚀 Getting Started
 
 Install and run the whole stack from the repo root - see **[Setup → Running the Project](../docs/content/docs/setup/running-the-project.mdx)**. To run only this app:
@@ -36,35 +26,6 @@ pnpm --filter board dev
 ```
 
 `pnpm dev` serves it over HTTPS at **https://board.ordre.localhost** (via portless); `pnpm dev:app` runs the raw dev server on **http://localhost:5173**.
-
----
-
-## 🔍 Scripts
-
-| Command             | Description                             |
-| ------------------- | --------------------------------------- |
-| `pnpm dev`          | Start the dev server via portless (HMR) |
-| `pnpm dev:app`      | Start the raw dev server (no portless)  |
-| `pnpm build`        | Build for production                    |
-| `pnpm start`        | Run the production server from `build/` |
-| `pnpm check-types`  | Typegen + `tsc`                         |
-| `pnpm lint`         | ESLint (fails on warnings)              |
-| `pnpm format`       | Prettier write                          |
-| `pnpm format:check` | Prettier check                          |
-| `pnpm test:unit`    | Vitest with coverage                    |
-| `pnpm test:unit:ci` | Vitest run once (CI)                    |
-| `pnpm test:unit:ui` | Vitest UI                               |
-
----
-
-## 🐳 Docker
-
-A `Dockerfile` is provided for containerized deployment:
-
-```bash
-docker build -t ordre-board .
-docker run -p 3000:3000 ordre-board
-```
 
 ---
 

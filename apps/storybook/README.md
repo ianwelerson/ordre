@@ -16,48 +16,6 @@ Storybook does not contain product code - it is a thin app whose only job is to 
 
 ---
 
-## 📁 Structure
-
-```
-apps/storybook/
-├── .storybook/
-│   ├── main.ts               # Storybook config (stories glob, addons, Vite tweaks)
-│   ├── preview.ts            # Global parameters (story sort, backgrounds, controls)
-│   ├── global.css            # Global styles loaded into every story
-│   └── shims/                # Local module shims for Storybook/Vite
-│
-├── Introduction/
-│   └── Introduction.mdx      # The landing page, first in the sidebar
-│
-├── DesignTokens/
-│   └── Introduction.mdx      # Intro to the token system; the token pages
-│                             # themselves live beside their CSS in @ordre/ui
-│
-├── postcss.config.ts
-├── turbo.json
-└── package.json
-```
-
-### Where stories come from
-
-Stories are resolved from across the monorepo - any `*.stories.tsx` or `*.mdx` file in `apps/*` or `packages/*` is picked up by the glob in [`.storybook/main.ts`](./.storybook/main.ts). Adding a new story means creating it next to its component in the relevant workspace; Storybook picks it up automatically.
-
-### Story ordering
-
-`preview.ts` pins the sidebar to **Design Tokens → Components** with an `Introduction` entry first inside each group, so anyone opening Storybook lands on orientation pages before browsing individual stories.
-
----
-
-## 🧰 Tech Stack
-
-**Storybook 10** on `@storybook/react-vite`, with `@storybook/addon-docs` and `remark-gfm` for MDX tables. Tailwind v4 is wired in through `@tailwindcss/vite`.
-
-Everything else - TypeScript, Turborepo, Vitest, ESLint, Prettier, Syncpack - is monorepo-wide; see [Shared Tech Stack](../docs/content/docs/engineering/architecture.mdx#-shared-tech-stack).
-
-Full breakdown, alongside this workspace's folder structure: **[Architecture](../docs/content/docs/engineering/architecture.mdx#-storybook)**.
-
----
-
 ## 🚀 Getting Started
 
 Install and run the whole stack from the repo root - see **[Setup → Running the Project](../docs/content/docs/setup/running-the-project.mdx)**. To run only Storybook:
@@ -70,23 +28,11 @@ pnpm storybook
 
 ---
 
-## 🔍 Scripts
-
-| Command                | Description                                            |
-| ---------------------- | ------------------------------------------------------ |
-| `pnpm storybook`       | Start Storybook in dev mode via portless (HTTPS proxy) |
-| `pnpm storybook:app`   | Start the raw Storybook dev server (no portless)       |
-| `pnpm storybook:build` | Build the static Storybook site to `storybook-static/` |
-
----
-
-## 🚢 Deployment
-
-The static build (`storybook-static/`) is deployed to Vercel as part of the monorepo's workflow deployments. See the root [`vercel.json`](../../vercel.json) and [GitHub workflows](../../.github) for the pipeline.
-
----
-
 ## 📚 Further Reading
 
+The stories glob, the sidebar order, and the deployment are documented once in the
+docs project:
+
+- [Architecture → storybook](../docs/content/docs/engineering/architecture.mdx#-storybook)
+- [Architecture → `@ordre/ui`](../docs/content/docs/engineering/architecture.mdx#ordreui) - the component and story conventions
 - [Root README](../../README.md) - monorepo overview
-- [Architecture](../docs/content/docs/engineering/architecture.mdx) - monorepo architecture (docs project)

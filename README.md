@@ -16,12 +16,8 @@ Ordre is a client communication platform for service providers. It gives every j
 - [The Idea](#-the-idea)
 - [Documentation](#-documentation)
 - [Project Structure](#-project-structure)
-- [Tech Stack](#-tech-stack)
 - [Quick Start](#-quick-start)
-- [Available Scripts](#-available-scripts)
-- [Testing](#-testing)
-- [Code Quality Standards](#-code-quality-standards)
-- [Merging Strategy](#-merging-strategy)
+- [AI Assistance](#-ai-assistance)
 - [License](#-license)
 
 ---
@@ -48,17 +44,18 @@ Run it locally with `pnpm dev` (or just the docs app via `pnpm --filter docs doc
 and open the docs site, or read the MDX sources directly under
 [`apps/docs/content/docs`](./apps/docs/content/docs):
 
-| Section                                             | What's there                                                                                  |
-| --------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| [Overview](./apps/docs/content/docs/index.mdx)      | What Ordre is, and how the docs are organized.                                                |
-| [Setup](./apps/docs/content/docs/setup)             | Running the project, environment variables, and database roles.                               |
-| [Product](./apps/docs/content/docs/product)         | Feature specs, pricing & billing, and the roadmap.                                            |
-| [Engineering](./apps/docs/content/docs/engineering) | Architecture, tech stack, data model, authorization, the outbox, testing, and infrastructure. |
-| [Design](./apps/docs/content/docs/design/brand.mdx) | Brand, color system, typography, and component patterns.                                      |
+| Section                                             | What's there                                                                                                 |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| [Overview](./apps/docs/content/docs/index.mdx)      | What Ordre is, and how the docs are organized.                                                               |
+| [Setup](./apps/docs/content/docs/setup)             | Running the project, environment variables, database roles, workflow, and deployment.                        |
+| [Product](./apps/docs/content/docs/product)         | Feature specs, pricing & billing, and the roadmap.                                                           |
+| [Engineering](./apps/docs/content/docs/engineering) | Architecture, tech stack, data model, authorization, the outbox, testing, AI assistance, and infrastructure. |
+| [Design](./apps/docs/content/docs/design/brand.mdx) | Brand, color system, typography, and component patterns.                                                     |
 
-To keep a single source of truth, this README stays focused on repo-level
-mechanics (structure, scripts, tooling); product and infrastructure detail lives
-in the docs.
+To keep a single source of truth, this README says only what the repo **is** and
+where each part lives. Everything else - commands, conventions, tech stack,
+testing, workflow, product, and infrastructure - is documented in the docs, and
+linked from here rather than restated.
 
 ---
 
@@ -115,133 +112,26 @@ Apps are runnable; packages are shared. The package layer follows a strict depen
 
 ---
 
-## 🧰 Tech Stack
-
-- **Monorepo**: Turborepo + pnpm workspaces
-- **Frameworks**: Next.js 16 (dashboard, marketing), React Router v8 framework mode (board)
-- **Backend**: Express (API), Drizzle ORM over PostgreSQL, Better Auth
-- **UI**: React 19, Tailwind CSS v4
-- **i18n**: `next-intl` (Next apps) and `i18next` + `remix-i18next` (board), over strings from `@ordre/core/messages`
-- **Testing**: Vitest + Testing Library; Playwright as the browser provider for Vitest
-- **Docs**: Fumadocs (internal guides + generated API reference)
-- **Tooling**: TypeScript, ESLint 9 (flat config), Prettier, Syncpack, Husky + lint-staged, Commitlint
-
-This is the summary. The per-workspace breakdown - which libraries each app and
-package uses, alongside its folder structure - lives in
-[Architecture](./apps/docs/content/docs/engineering/architecture.mdx), with the
-monorepo-wide base in
-[Shared Tech Stack](./apps/docs/content/docs/engineering/architecture.mdx#-shared-tech-stack).
-For the hosting and service stack (Railway, Neon, Cloudflare R2, and the rest),
-see the [Infrastructure docs](./apps/docs/content/docs/engineering/infrastructure.mdx).
-
----
-
 ## 🚀 Quick Start
 
-### Prerequisites
-
-- **Node.js**: `>=18` (see [`.nvmrc`](./.nvmrc) for the exact version)
-- **pnpm**: `10.x` (see `packageManager` in [`package.json`](./package.json))
-
-### Installation
-
 ```bash
-# 1. Clone the repo
 git clone https://github.com/ianwelerson/ordre.git
 cd ordre
-
-# 2. Install dependencies
 pnpm install
-
-# 3. Start every app in dev mode
 pnpm dev
 ```
 
-Full setup - environment variables, database roles, per-app dev URLs, and how to run one app at a time - lives in the internal docs:
-
-- **[Setup → Running the Project](./apps/docs/content/docs/setup/running-the-project.mdx)**
-- **[Setup → Environment Variables](./apps/docs/content/docs/setup/environment-variables.mdx)**
-- **[Setup → Database Roles & RLS](./apps/docs/content/docs/setup/database-roles.mdx)**
-
-Each app also has its own README with app-specific notes.
+Prerequisites, environment variables, database roles, per-app dev URLs, and how to
+run one app at a time: **[Setup → Running the Project](./apps/docs/content/docs/setup/running-the-project.mdx)**.
 
 ---
 
-## 🔍 Available Scripts
+## 🤖 AI Assistance
 
-Run from the repo root - Turborepo will fan commands out to the right apps and packages.
-
-### Development
-
-| Command      | Description                                |
-| ------------ | ------------------------------------------ |
-| `pnpm dev`   | Start every app in watch mode              |
-| `pnpm build` | Build every app and package for production |
-
-### Code Quality
-
-| Command              | Description                                        |
-| -------------------- | -------------------------------------------------- |
-| `pnpm lint`          | Run ESLint across the monorepo                     |
-| `pnpm format`        | Format everything with Prettier                    |
-| `pnpm format:check`  | Verify formatting without writing                  |
-| `pnpm check-types`   | Run TypeScript type-checking                       |
-| `pnpm packages:lint` | Check dependency versions and `package.json` order |
-| `pnpm packages:fix`  | Fix version drift and re-format `package.json`     |
-
-### Testing
-
-| Command             | Description                        |
-| ------------------- | ---------------------------------- |
-| `pnpm test:unit`    | Run unit tests with coverage       |
-| `pnpm test:unit:ci` | Run unit tests once in CI mode     |
-| `pnpm test:unit:ui` | Run Vitest with the interactive UI |
-
----
-
-## 🧪 Testing
-
-- **Framework**: [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/)
-- **Browser provider**: [Playwright](https://playwright.dev/) (for component tests that need a real browser)
-- **Location**: Tests are colocated with source files (`*.test.ts`, `*.test.tsx`)
-- **Coverage**: Enabled by default via `@vitest/coverage-v8`
-
-See each app or package's `vitest.config.ts` for specifics.
-
----
-
-## 📏 Code Quality Standards
-
-### Pre-commit Hooks
-
-[Husky](https://typicode.github.io/husky/) + [lint-staged](https://github.com/lint-staged/lint-staged) run on every commit:
-
-| File Types      | Actions                                 | Tools             |
-| --------------- | --------------------------------------- | ----------------- |
-| `*.{js,ts,tsx}` | Format and lint                         | Prettier + ESLint |
-| `package.json`  | Validate dependency versions + ordering | Syncpack          |
-
-### Commit Message Convention
-
-All commits follow [Conventional Commits](https://www.conventionalcommits.org/):
-
-```
-type(scope): message
-```
-
-**Allowed types**: `build`, `chore`, `ci`, `docs`, `feat`, `fix`, `perf`, `refactor`, `revert`, `setup`, `style`, `test`.
-
-**Example**: `feat(dashboard): add member invite flow`
-
----
-
-## 🔀 Merging Strategy
-
-This project uses a **rebase and merge** strategy to keep the history linear.
-
-- Rebase feature branches on top of `develop` before merging
-- Avoid merge commits - each commit should be a logical, atomic change
-- PR reviews focus on the final shape of the diff, not the path taken to get there
+Instructions, hooks, and skills are tracked in [`CLAUDE.md`](./CLAUDE.md) and
+[`.claude/`](./.claude), so the rules travel with the repo. What each one does and
+how to add to them:
+**[Engineering → AI Assistance](./apps/docs/content/docs/engineering/ai-assistance.mdx)**.
 
 ---
 

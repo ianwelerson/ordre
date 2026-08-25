@@ -1,5 +1,11 @@
 {
   "title": "Setup",
   "icon": "Settings",
-  "pages": ["running-the-project", "environment-variables", "database-roles", "deployment"]
+  "pages": [
+    "running-the-project",
+    "environment-variables",
+    "database-roles",
+    "workflow",
+    "deployment"
+  ]
 }
