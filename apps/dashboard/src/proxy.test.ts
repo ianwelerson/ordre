@@ -83,6 +83,27 @@ describe('proxy', () => {
     });
 
     /**
+     * The one public route a session is welcome on. Whether *this* account is
+     * the invited one is the page's question to answer, so it has to be reached.
+     */
+    it('lets an invite through without asking the API', async () => {
+      const response = await proxy(buildRequest('/invite/tok_abc', SESSION_COOKIE));
+
+      expect(redirectedTo(response)).toBeNull();
+      expect(getSession).not.toHaveBeenCalled();
+    });
+
+    /**
+     * Otherwise `login?next=/invite/:token` - where an invitee is sent to sign
+     * in - drops them on the dashboard with the invite unaccepted.
+     */
+    it('bounces to an invite the login redirect stashed', async () => {
+      const response = await proxy(buildRequest('/login?next=%2Finvite%2Ftok_abc', SESSION_COOKIE));
+
+      expect(redirectedTo(response)).toBe('/invite/tok_abc');
+    });
+
+    /**
      * Both would land back on an auth screen, which would bounce again on
      * arrival. `safeRedirect` only proves same-origin, so the public check is
      * what actually breaks the loop.

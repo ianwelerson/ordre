@@ -41,9 +41,28 @@ const PUBLIC_ROUTES = [
  */
 const SESSION_CHECK_TIMEOUT_MS = 2_000;
 
-/** Whether `pathname` is a public route, or nested under one (`/invite/:token`). */
+/**
+ * Public routes a live session is still welcome on.
+ *
+ * The bounce below exists to keep a signed-in visitor off the sign-in screens.
+ * An invite is not one of those: whether *this* account is the one the invite
+ * was sent to is a question only the page can answer, so the session has to be
+ * let through to be told. Bouncing also dead-ends `login?next=/invite/:token`,
+ * which is where a returning invitee is sent to sign in.
+ */
+const SESSION_TOLERANT_ROUTES = [DASHBOARD_ROUTES.inviteBase];
+
+/** `pathname` is one of `routes`, or nested under one (`/invite/:token`). */
+const matches = (pathname: string, routes: readonly string[]) => {
+  return routes.some((route) => pathname === route || pathname.startsWith(`${route}/`));
+};
+
 const isPublic = (pathname: string) => {
-  return PUBLIC_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`));
+  return matches(pathname, PUBLIC_ROUTES);
+};
+
+const allowsSession = (pathname: string) => {
+  return matches(pathname, SESSION_TOLERANT_ROUTES);
 };
 
 /**
@@ -108,8 +127,9 @@ const sessionIsValid = async (request: NextRequest): Promise<boolean> => {
  */
 const bounceTarget = (request: NextRequest): string => {
   const next = safeRedirect(request.nextUrl.searchParams.get('next'));
+  const target = new URL(next, request.url).pathname;
 
-  return isPublic(new URL(next, request.url).pathname) ? '/' : next;
+  return isPublic(target) && !allowsSession(target) ? '/' : next;
 };
 
 /**
@@ -137,7 +157,7 @@ export default async function proxy(request: NextRequest) {
     return NextResponse.redirect(login);
   }
 
-  if (hasSession && isPublic(pathname)) {
+  if (hasSession && isPublic(pathname) && !allowsSession(pathname)) {
     const isSessionValid = await sessionIsValid(request);
 
     if (isSessionValid) {
