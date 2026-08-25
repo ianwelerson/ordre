@@ -44,6 +44,10 @@ app.use((req, res, next) => {
 
 app.use(helmet());
 
+// @TODO: No rate limiter is mounted. Better Auth limits its own routes, but
+// everything we serve ourselves is unmetered - including the public invite
+// routes, which run an unauthenticated database call per request.
+
 // Credentialed CORS against an explicit origin list.
 app.use(cors({ origin: [...appOrigins], credentials: true }));
 
