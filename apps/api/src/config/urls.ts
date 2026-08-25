@@ -15,7 +15,12 @@
  */
 import { env } from '#env';
 
-import { DASHBOARD_ROUTES, MARKETING_ROUTES } from '@ordre/core/constants';
+import {
+  DASHBOARD_ROUTES,
+  MARKETING_ROUTES,
+  SET_PASSWORD_SOURCE,
+  SET_PASSWORD_SOURCE_PARAM,
+} from '@ordre/core/constants';
 
 export const urls = {
   /** The API's own public origin. */
@@ -29,6 +34,11 @@ export const urls = {
   /** Documentation site. */
   docs: env.APP_DOCS_URL,
   dashboardLogin: `${env.APP_DASHBOARD_URL}${DASHBOARD_ROUTES.login}`,
+  /**
+   * Where a password reset link lands. The `source` param picks the screen's
+   * copy, so the mail and the page agree on which arrival this is.
+   */
+  setPassword: `${env.APP_DASHBOARD_URL}${DASHBOARD_ROUTES.setPassword}?${SET_PASSWORD_SOURCE_PARAM}=${SET_PASSWORD_SOURCE.forgotPassword}`,
   help: `${env.APP_BASE_URL}${MARKETING_ROUTES.help}`,
   privacy: `${env.APP_BASE_URL}${MARKETING_ROUTES.privacy}`,
 

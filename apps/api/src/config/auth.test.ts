@@ -3,7 +3,7 @@ import { APIError } from 'better-auth/api';
 
 import { errorMessage } from '@ordre/core/errors';
 
-import { defaultSignUpCallbackUrl, remapAuthError } from './auth.ts';
+import { defaultPasswordResetRedirect, defaultSignUpCallbackUrl, remapAuthError } from './auth.ts';
 
 describe('config/auth', () => {
   describe('remapAuthError', () => {
@@ -91,6 +91,37 @@ describe('config/auth', () => {
 
     it('tolerates an endpoint reached with no body', () => {
       expect(() => defaultSignUpCallbackUrl({ path: '/sign-up/email' })).not.toThrow();
+    });
+  });
+
+  describe('defaultPasswordResetRedirect', () => {
+    it('points a reset request at the set-password screen', () => {
+      const ctx = { path: '/request-password-reset', body: {} as { redirectTo?: string } };
+
+      defaultPasswordResetRedirect(ctx);
+
+      expect(ctx.body.redirectTo).toBe(urls.setPassword);
+    });
+
+    /** The destination is ours to choose, so a caller's own is not honoured. */
+    it('overwrites a destination the caller supplied', () => {
+      const ctx = { path: '/request-password-reset', body: { redirectTo: 'https://evil.test' } };
+
+      defaultPasswordResetRedirect(ctx);
+
+      expect(ctx.body.redirectTo).toBe(urls.setPassword);
+    });
+
+    it('leaves another endpoint alone', () => {
+      const ctx = { path: '/sign-in/email', body: {} as { redirectTo?: string } };
+
+      defaultPasswordResetRedirect(ctx);
+
+      expect(ctx.body.redirectTo).toBeUndefined();
+    });
+
+    it('tolerates an endpoint reached with no body', () => {
+      expect(() => defaultPasswordResetRedirect({ path: '/request-password-reset' })).not.toThrow();
     });
   });
 });

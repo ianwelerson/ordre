@@ -92,6 +92,28 @@ export const defaultSignUpCallbackUrl = (ctx: SignUpContext): void => {
   ctx.body.callbackURL = urls.dashboard;
 };
 
+/** The shape the reset defaulting below needs, and nothing more. */
+type PasswordResetContext = { path: string; body?: { redirectTo?: string } };
+
+/**
+ * Points the emailed reset link at the dashboard's set-password screen.
+ *
+ * Overwritten rather than defaulted: the address of a page this service mails
+ * people to is the API's to decide, and a browser that supplies its own only
+ * gets as far as Better Auth's `trustedOrigins` check anyway. Mutated rather
+ * than returned because `ctx.body` is the same object the endpoint goes on to
+ * read.
+ *
+ * Exported for unit testing; the `before` hook below is its only caller.
+ */
+export const defaultPasswordResetRedirect = (ctx: PasswordResetContext): void => {
+  if (ctx.path !== '/request-password-reset' || !ctx.body) {
+    return;
+  }
+
+  ctx.body.redirectTo = urls.setPassword;
+};
+
 // Better Auth Configuration
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -202,6 +224,7 @@ export const auth = betterAuth({
   hooks: {
     before: createAuthMiddleware(async (ctx) => {
       defaultSignUpCallbackUrl(ctx);
+      defaultPasswordResetRedirect(ctx);
     }),
     after: createAuthMiddleware(async (ctx) => {
       const remapped = remapAuthError(ctx.context.returned);
