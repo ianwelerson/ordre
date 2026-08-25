@@ -13,7 +13,9 @@
 // Primitives
 export { Alert, type AlertProps } from './Alert/Alert';
 export { Avatar, type AvatarProps } from './Avatar/Avatar';
+export { Badge, type BadgeProps } from './Badge/Badge';
 export { Button, type ButtonAsButton, type ButtonAsLink, type ButtonProps } from './Button/Button';
+export { Chip, type ChipProps, type ChipWithDot, type ChipWithIcon } from './Chip/Chip';
 export {
   Divider,
   type DividerAsHorizontal,
@@ -21,6 +23,7 @@ export {
   type DividerProps,
 } from './Divider/Divider';
 export { Eyebrow, type EyebrowProps } from './Eyebrow/Eyebrow';
+export { Skeleton, type SkeletonProps } from './Skeleton/Skeleton';
 export { TextLink, type TextLinkProps } from './TextLink/TextLink';
 export { Typography, type TypographyProps } from './Typography/Typography';
 
