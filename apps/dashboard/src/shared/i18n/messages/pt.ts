@@ -92,4 +92,52 @@ export default {
       link: 'Solicite um novo',
     },
   },
+  Invite: {
+    eyebrow: 'Entrar no workspace',
+    invitedBy: '<b>{name}</b> convidou você para entrar em <b>{workspace}</b>',
+    /** The API leaves `invitedByName` empty when the inviting member is gone. */
+    invitedByUnknown: 'Você foi convidado para entrar em <b>{workspace}</b>',
+    roles: {
+      owner: 'Acesso de proprietário',
+      admin: 'Acesso de administrador',
+      member: 'Acesso de membro',
+    },
+    signUp: {
+      title: 'Configure sua conta.',
+      subtitle: 'Você vai entrar com <mono>{email}</mono>.',
+    },
+    accept: {
+      title: 'Aceite seu convite.',
+      subtitle:
+        'Você está conectado como <mono>{email}</mono>. Ao aceitar, esta conta entra no workspace.',
+    },
+    mismatch: {
+      eyebrow: 'Conta incorreta',
+      title: 'Este convite é para outra pessoa.',
+      subtitle:
+        'Ele foi enviado para <mono>{invited}</mono>, mas você está conectado como <mono>{current}</mono>.',
+      submit: 'Sair e continuar',
+      submitting: 'Saindo...',
+      dashboard: 'Voltar para o dashboard',
+    },
+    name: {
+      label: 'Seu nome',
+      placeholder: 'ex.: Lucas Marino',
+      helper: 'Exibido apenas para colegas.',
+    },
+    password: {
+      label: 'Criar senha',
+      placeholder: 'Pelo menos 8 caracteres',
+    },
+    submit: 'Aceitar convite e continuar',
+    submitting: 'Entrando no workspace...',
+    terms:
+      'Ao continuar, você concorda com os <terms>Termos</terms> e a <privacy>Política de Privacidade</privacy> da Ordre.',
+    loading: 'Carregando convite',
+    error: {
+      eyebrow: 'Convite indisponível',
+      title: 'Não foi possível abrir este convite.',
+      action: 'Ir para o login',
+    },
+  },
 };

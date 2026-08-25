@@ -19,7 +19,7 @@ The features clients and workspace members experience.
 
 | Feature                    | Description                                                                            | Status |
 | -------------------------- | -------------------------------------------------------------------------------------- | ------ |
-| Registration & onboarding  | Industry selection, provider type (Individual / Business), contact info, password set in the flow; creates a user account and workspace | 🚧 |
+| Registration & onboarding  | Industry selection, provider type (Individual / Business), contact info, password set in the flow; creates a user account and workspace. The invite half - accepting into an existing workspace - is built end to end | 🚧 |
 | Board creation and sharing | Unique link per job, shareable via SMS, email, or WhatsApp                              | 📋 |
 | Timeline updates           | Text and photo updates posted by members, visible to the client in real time           | 📋 |
 | Photo documentation        | Before/during/after shots attached to timeline updates                                 | 📋 |
@@ -59,11 +59,33 @@ The runnable surfaces of the product.
 | App                                     | Stack                                    | Status |
 | --------------------------------------- | ---------------------------------------- | ------ |
 | API (`api.ordre.app`)                   | Express on Railway                       | 🚧 |
-| Dashboard (`dashboard.ordre.app`)       | Next.js - used by workspace members      | 🚧 |
+| Dashboard (`dashboard.ordre.app`)       | Next.js - used by workspace members. Auth screens done, see below | 🚧 |
 | Client board (`go.ordre.app`)           | React Router v8, framework mode (SSR)    | 🚧 |
 | Marketing site (`ordre.app`)            | Next.js                                  | 🚧 |
 | Storybook (`storybook.ordre.app`)       | Component docs for `@ordre/ui`           | ✅ |
 | Docs & API reference (`docs.ordre.app`) | Fumadocs - guides plus the API reference | ✅ |
+
+### Dashboard screens
+
+The signed-out surface is built; everything behind a session is still to come.
+Each screen is a view under `src/views/`, with its route in `src/app/(auth)/` or
+`src/app/(authenticated)/`.
+
+| Screen                             | Description                                                                                         | Status |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------- | ------ |
+| Route gate (`src/proxy.ts`)        | Picks the auth shell or the app shell per request; carries the intended destination through `?next=` | ✅ |
+| Sign in (`/login`)                 | Email and password, keep-me-signed-in, arrival notices, and the `?next=` round trip                  | ✅ |
+| Forgot password (`/forgot-password`) | Requests the reset mail and swaps itself for the confirmation; reveals nothing about the address    | ✅ |
+| Set password (`/set-password`)     | Serves both the reset and the invite's first password, plus the expired-link dead end               | ✅ |
+| Invite (`/invite/:token`)          | Preview, sign-up-and-join, one-click join for a signed-in invitee, wrong-account, and error states   | ✅ |
+| Decline an invite                  | The API endpoint is live; the dashboard has no "not you?" action yet                                | 📋 |
+| Registration (`/get-started`)      | Placeholder screen. `/register` redirects here from `next.config.ts`; the flow in [Specs](/internal-docs/product/specs) is unbuilt | 🚧 |
+| Sign-in link (magic link)          | Drafted on the login screen and commented out pending the API endpoint                              | 📋 |
+| Workspace home, boards, members, settings | Everything behind the session                                                                 | 📋 |
+
+The five built screens share one anatomy - `AuthCard`, `AuthHeading`, `AuthAction`,
+`AuthFootnote` in `src/shared/components/` - so the card width, the spacing rhythm
+and the primary action are decided once rather than per screen.
 
 ## Platform & Services
 

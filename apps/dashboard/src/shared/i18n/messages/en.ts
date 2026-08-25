@@ -92,4 +92,52 @@ export default {
       link: 'Request a new one',
     },
   },
+  Invite: {
+    eyebrow: 'Join workspace',
+    invitedBy: '<b>{name}</b> invited you to join <b>{workspace}</b>',
+    /** The API leaves `invitedByName` empty when the inviting member is gone. */
+    invitedByUnknown: 'You were invited to join <b>{workspace}</b>',
+    roles: {
+      owner: 'Owner access',
+      admin: 'Admin access',
+      member: 'Member access',
+    },
+    signUp: {
+      title: 'Set up your account.',
+      subtitle: "You'll sign in with <mono>{email}</mono>.",
+    },
+    accept: {
+      title: 'Accept your invite.',
+      subtitle:
+        "You're signed in as <mono>{email}</mono>. Accepting adds this account to the workspace.",
+    },
+    mismatch: {
+      eyebrow: 'Wrong account',
+      title: 'This invite is for someone else.',
+      subtitle:
+        'It was sent to <mono>{invited}</mono>, but you are signed in as <mono>{current}</mono>.',
+      submit: 'Sign out and continue',
+      submitting: 'Signing out...',
+      dashboard: 'Back to the dashboard',
+    },
+    name: {
+      label: 'Your name',
+      placeholder: 'e.g. Lucas Marino',
+      helper: 'Shown to teammates only.',
+    },
+    password: {
+      label: 'Create password',
+      placeholder: 'At least 8 characters',
+    },
+    submit: 'Accept invite & continue',
+    submitting: 'Joining workspace...',
+    terms:
+      "By continuing you agree to Ordre's <terms>Terms</terms> and <privacy>Privacy Policy</privacy>.",
+    loading: 'Loading invite',
+    error: {
+      eyebrow: 'Invite unavailable',
+      title: "This invite can't be opened.",
+      action: 'Go to sign in',
+    },
+  },
 };
