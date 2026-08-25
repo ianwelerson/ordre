@@ -248,9 +248,9 @@ The service's exact configuration (skipped build, direct `node` start command, V
 
 **Hosting:** Deployed to `storybook.ordre.app` via Vercel as a static export.
 
-**Scope:** Documents all components in `@ordre/ui`. App-specific components in `apps/*/src/shared/components/` are documented locally and not published to the shared Storybook.
+**Scope:** Documents all components in `@ordre/ui`, plus the app-specific components in `apps/*/src/shared/components/`. App components are filed under a top-level folder named for their app (`Dashboard/`), below the design system's own groups, so it stays clear which components are shared and which belong to one surface.
 
-**Process:** Every new component added to `@ordre/ui` ships with a `.stories.tsx` file alongside its implementation - there is no "add story later" path. Design tokens (colors, iconography) are documented via MDX pages in the same Storybook.
+**Process:** Every new component added to `@ordre/ui` ships with a `.stories.tsx` file alongside its implementation - there is no "add story later" path. App-specific components follow the same layout: one directory per component holding its `.tsx`, `.test.tsx` and `.stories.tsx`. Design tokens (colors, iconography) are documented via MDX pages in the same Storybook.
 
 ---
 

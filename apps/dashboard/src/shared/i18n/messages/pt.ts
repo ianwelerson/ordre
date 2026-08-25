@@ -38,6 +38,7 @@ export default {
     createOne: 'Crie uma',
     notices: {
       'password-reset': 'Sua senha foi redefinida. Entre com sua nova senha.',
+      'account-exists': 'Você já tem uma conta. Entre para aceitar o convite.',
     },
   },
   ForgotPassword: {

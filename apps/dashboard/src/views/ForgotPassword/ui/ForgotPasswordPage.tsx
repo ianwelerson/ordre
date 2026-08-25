@@ -3,15 +3,9 @@
 import { useTranslations } from 'next-intl';
 
 import { DASHBOARD_ROUTES } from '@ordre/core/constants';
-import {
-  Alert,
-  Button,
-  Card,
-  Eyebrow,
-  TextField,
-  TextLink,
-  Typography,
-} from '@ordre/ui/components';
+import { Alert, TextField, TextLink } from '@ordre/ui/components';
+
+import { AuthAction, AuthCard, AuthFootnote, AuthHeading } from '@/shared/components';
 
 import { useForgotPasswordForm } from '../model/useForgotPasswordForm';
 
@@ -20,21 +14,12 @@ export default function ForgotPasswordPage() {
   const { field, onSubmit, rootError, isBusy, isSuccess, getValues } = useForgotPasswordForm();
 
   return (
-    <Card
-      padding="none"
-      className="flex w-full max-w-[460px] flex-col gap-7 px-10 pt-10 pb-8 max-[460px]:rounded-none"
-    >
-      <div className="flex flex-col gap-3.5">
-        <Eyebrow>{t('eyebrow')}</Eyebrow>
-        <div className="flex flex-col gap-2.5">
-          <Typography tag="h1" variant="h2">
-            {isSuccess ? t('success.title') : t('title')}
-          </Typography>
-          <Typography tag="p" variant="body">
-            {isSuccess ? t('success.subtitle') : t('subtitle')}
-          </Typography>
-        </div>
-      </div>
+    <AuthCard>
+      <AuthHeading
+        eyebrow={t('eyebrow')}
+        title={isSuccess ? t('success.title') : t('title')}
+        subtitle={isSuccess ? t('success.subtitle') : t('subtitle')}
+      />
       {isSuccess ? (
         <Alert tone="success">{t('success.body', { email: getValues('email') })}</Alert>
       ) : (
@@ -49,27 +34,22 @@ export default function ForgotPasswordPage() {
             autoComplete="email"
             autoFocus
           />
-          <Button
-            size="lg"
-            trailingIcon="arrow-right"
-            fullWidth
+          <AuthAction
             type="submit"
             loading={isBusy}
             disabled={isBusy}
             loadingLabel={t('submitting')}
           >
             {t('submit')}
-          </Button>
+          </AuthAction>
         </form>
       )}
-      <div className="mt-1 text-center">
-        <Typography tag="p" variant="caption">
-          {t('remembered')}{' '}
-          <TextLink variant="inline" href={DASHBOARD_ROUTES.login}>
-            {t('backToLogin')}
-          </TextLink>
-        </Typography>
-      </div>
-    </Card>
+      <AuthFootnote>
+        {t('remembered')}{' '}
+        <TextLink variant="inline" href={DASHBOARD_ROUTES.login}>
+          {t('backToLogin')}
+        </TextLink>
+      </AuthFootnote>
+    </AuthCard>
   );
 }

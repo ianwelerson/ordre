@@ -11,12 +11,15 @@ const preview: Preview = {
         // The component groups mirror `@ordre/ui`'s barrel, so a component's place in
         // the sidebar is decided in the same edit that adds it to the public API. They
         // are listed rather than sorted because alphabetical would open on Form.
+        // The design system comes first, then what each app builds on top of it.
         order: [
           "Introduction",
           "Design Tokens",
           ["Introduction"],
           "Components",
           ["Primitives", "Form", "Surfaces", "Shell"],
+          "Dashboard",
+          ["Auth"],
         ],
       },
     },

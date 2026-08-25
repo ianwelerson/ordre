@@ -3,25 +3,23 @@
 import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 
-import { DASHBOARD_ROUTES } from '@ordre/core/constants';
 import {
-  Alert,
-  Button,
-  Card,
-  Eyebrow,
-  PasswordField,
-  TextLink,
-  Typography,
-} from '@ordre/ui/components';
-
-import {
+  DASHBOARD_ROUTES,
   SET_PASSWORD_SOURCE,
   SET_PASSWORD_SOURCE_PARAM,
   type SetPasswordSource,
-} from '@/shared/constants';
+} from '@ordre/core/constants';
+import { Alert, PasswordField, TextLink } from '@ordre/ui/components';
+
+import { AuthAction, AuthCard, AuthFootnote, AuthHeading } from '@/shared/components';
 
 import { useSetPasswordForm } from '../model/useSetPasswordForm';
 
+/**
+ * The arrival this link represents, or a reset when the param says nothing this
+ * screen recognises - it only picks copy, so an unknown value is not worth a
+ * dead end.
+ */
 const resolveSource = (param: string | null): SetPasswordSource => {
   return Object.values(SET_PASSWORD_SOURCE).includes(param as SetPasswordSource)
     ? (param as SetPasswordSource)
@@ -38,21 +36,12 @@ export default function SetPasswordPage() {
   const copy = token ? source : 'invalidLink';
 
   return (
-    <Card
-      padding="none"
-      className="flex w-full max-w-[460px] flex-col gap-7 px-10 pt-10 pb-8 max-[460px]:rounded-none"
-    >
-      <div className="flex flex-col gap-3.5">
-        <Eyebrow>{t(`${copy}.eyebrow`)}</Eyebrow>
-        <div className="flex flex-col gap-2.5">
-          <Typography tag="h1" variant="h2">
-            {t(`${copy}.title`)}
-          </Typography>
-          <Typography tag="p" variant="body">
-            {t(`${copy}.subtitle`)}
-          </Typography>
-        </div>
-      </div>
+    <AuthCard>
+      <AuthHeading
+        eyebrow={t(`${copy}.eyebrow`)}
+        title={t(`${copy}.title`)}
+        subtitle={t(`${copy}.subtitle`)}
+      />
       {token ? (
         <>
           <form className="flex flex-col gap-4.5" onSubmit={onSubmit} noValidate>
@@ -72,37 +61,25 @@ export default function SetPasswordPage() {
               placeholder={t('confirm.placeholder')}
               autoComplete="new-password"
             />
-            <Button
-              size="lg"
-              trailingIcon="arrow-right"
-              fullWidth
+            <AuthAction
               type="submit"
               loading={isBusy}
               disabled={isBusy}
               loadingLabel={t('submitting')}
             >
               {t('submit')}
-            </Button>
+            </AuthAction>
           </form>
-          <div className="mt-1 text-center">
-            <Typography tag="p" variant="caption">
-              {t('help.entry')}{' '}
-              <TextLink variant="inline" href={DASHBOARD_ROUTES.forgotPassword}>
-                {t('help.link')}
-              </TextLink>
-            </Typography>
-          </div>
+          <AuthFootnote>
+            {t('help.entry')}{' '}
+            <TextLink variant="inline" href={DASHBOARD_ROUTES.forgotPassword}>
+              {t('help.link')}
+            </TextLink>
+          </AuthFootnote>
         </>
       ) : (
-        <Button
-          size="lg"
-          trailingIcon="arrow-right"
-          fullWidth
-          href={DASHBOARD_ROUTES.forgotPassword}
-        >
-          {t('invalidLink.action')}
-        </Button>
+        <AuthAction href={DASHBOARD_ROUTES.forgotPassword}>{t('invalidLink.action')}</AuthAction>
       )}
-    </Card>
+    </AuthCard>
   );
 }

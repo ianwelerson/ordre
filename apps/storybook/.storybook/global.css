@@ -1,2 +1,9 @@
 @import 'tailwindcss';
 @import '@ordre/ui/styles/main';
+
+/*
+ * `@ordre/ui/styles/main` only scans the design system's own components. An app's
+ * components are scanned by that app, so anything of theirs on show here has to be
+ * named too, or its utilities are never generated and the story renders unstyled.
+ */
+@source '../../dashboard/src/shared/components';

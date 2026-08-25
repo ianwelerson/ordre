@@ -38,6 +38,7 @@ export default {
     createOne: 'Create one',
     notices: {
       'password-reset': 'Your password has been reset. Sign in with your new password.',
+      'account-exists': 'You already have an account. Sign in to accept the invite.',
     },
   },
   ForgotPassword: {

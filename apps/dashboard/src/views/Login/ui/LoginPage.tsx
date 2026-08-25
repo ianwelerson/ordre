@@ -6,17 +6,16 @@ import { useSearchParams } from 'next/navigation';
 import { DASHBOARD_ROUTES } from '@ordre/core/constants';
 import {
   Alert,
-  Button,
-  Card,
+  // Button,
   Checkbox,
   // Divider,
-  Eyebrow,
   PasswordField,
   TextField,
   TextLink,
-  Typography,
 } from '@ordre/ui/components';
 
+import { withNext } from '@/shared/authLinks';
+import { AuthAction, AuthCard, AuthFootnote, AuthHeading } from '@/shared/components';
 import { LOGIN_NOTICE, LOGIN_NOTICE_PARAM, type LoginNotice } from '@/shared/constants';
 
 import { useLoginForm } from '../model/useLoginForm';
@@ -37,21 +36,8 @@ export default function LoginPage() {
   const notice = resolveNotice(searchParams.get(LOGIN_NOTICE_PARAM));
 
   return (
-    <Card
-      padding="none"
-      className="flex w-full max-w-[460px] flex-col gap-7 px-10 pt-10 pb-8 max-[460px]:rounded-none"
-    >
-      <div className="flex flex-col gap-3.5">
-        <Eyebrow>{t('eyebrow')}</Eyebrow>
-        <div className="flex flex-col gap-2.5">
-          <Typography tag="h1" variant="h2">
-            {t('title')}
-          </Typography>
-          <Typography tag="p" variant="body">
-            {t('subtitle')}
-          </Typography>
-        </div>
-      </div>
+    <AuthCard>
+      <AuthHeading eyebrow={t('eyebrow')} title={t('title')} subtitle={t('subtitle')} />
       <div className="flex flex-col gap-6">
         <form className="flex flex-col gap-4.5" onSubmit={onSubmit} noValidate>
           {notice && !rootError && <Alert tone="success">{t(`notices.${notice}`)}</Alert>}
@@ -82,31 +68,29 @@ export default function LoginPage() {
             }
           />
           <Checkbox {...field('rememberMe')} label={t('remember')} />
-          <Button
-            size="lg"
-            trailingIcon="arrow-right"
-            fullWidth
+          <AuthAction
             type="submit"
             loading={isBusy}
             disabled={isBusy}
             loadingLabel={t('submitting')}
           >
             {t('submit')}
-          </Button>
+          </AuthAction>
         </form>
         {/* <Divider>{t('or')}</Divider>
         <Button size="lg" leadingIcon="mail" fullWidth variant="secondary">
           {t('magicLink')}
         </Button> */}
       </div>
-      <div className="mt-1 text-center">
-        <Typography tag="p" variant="caption">
-          {t('noAccount')}{' '}
-          <TextLink variant="inline" href={DASHBOARD_ROUTES.getStarted}>
-            {t('createOne')}
-          </TextLink>
-        </Typography>
-      </div>
-    </Card>
+      <AuthFootnote>
+        {t('noAccount')}{' '}
+        <TextLink
+          variant="inline"
+          href={withNext(DASHBOARD_ROUTES.getStarted, searchParams.get('next'))}
+        >
+          {t('createOne')}
+        </TextLink>
+      </AuthFootnote>
+    </AuthCard>
   );
 }

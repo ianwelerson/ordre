@@ -66,6 +66,7 @@ const config: StorybookConfig = {
         include: ["@storybook/addon-docs", "@storybook/addon-docs/blocks"],
       },
       esbuild: {
+        jsx: "automatic",
         // Ensure React is in scope when any classic JSX slips through
         jsxInject: "import React from 'react'",
       },
