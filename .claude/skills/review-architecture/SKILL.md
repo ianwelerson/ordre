@@ -81,8 +81,21 @@ tests assert behaviour rather than the classes a variant emits? What would still
 pass if the change were reverted?
 
 **Comments, JSDoc, and docs**
-Does every export carry a short JSDoc explaining intent? Do comments describe the
-code as it stands, with no trace of what it replaced? Which docs page is now stale?
+Check each comment against four tests, in order:
+
+1. **Does the first sentence say what the thing is or does?** A fragment, an
+   aphorism, or a label-plus-colon opener is a finding on its own.
+2. **Is every factual claim verified?** A statement about a library, an endpoint,
+   a status code, or a runtime behaviour has to be checkable in the source. Open
+   the dependency and confirm it. An unverifiable claim stated confidently is the
+   most expensive kind of comment, because it survives review on tone.
+3. **Is the register plain?** Metaphor, rhetorical inversion, and phrasing chosen
+   for rhythm all belong in the chat, not the file.
+4. **Is it carrying more than one "why"?** Rejected alternatives and trade-off
+   reasoning are conversation, not documentation.
+
+Then: do comments describe the code as it stands, with no trace of what it
+replaced? Does anything reusable lack an `@example`? Which docs page is now stale?
 
 **Performance, where it matters**
 Query counts and N+1 shapes, work repeated per render, bundle weight crossing into

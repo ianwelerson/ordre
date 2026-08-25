@@ -42,17 +42,68 @@ and the brand system.
 
 ## Comments and JSDoc
 
-- Every exported function, component, hook, and any block that carries a real idea
-  gets a JSDoc. Explain the intent and the rule it encodes, not the signature.
-  Keep it short: a couple of sentences beats a paragraph.
-- Inline comments only where the code cannot speak for itself: a constraint being
-  applied, a non-obvious ordering, a decision that would otherwise look arbitrary.
-  Write them for the next developer reading the file.
-- Never narrate the change. No "changed from X to Y", no "we no longer use X", no
-  "was previously". A comment describes the code as it stands now, as if it had
-  always looked this way.
-- Never reference a fix, a ticket, a review comment, or a previous implementation.
-- If something is only worth saying once, say it in the chat, not in a comment.
+Every exported function, component, hook, and any block that carries a real idea
+gets a JSDoc. What it says matters more than that it exists.
+
+**The first sentence states what the thing is or does.** Start with a verb, or
+with a plain noun naming the thing. It has to be a full sentence a reader can
+check against the code.
+
+```ts
+/** Accepts the invite for the signed-in user, then redirects to the dashboard. */
+/** Error codes Better Auth returns when the email already has an account. */
+```
+
+Never open with a fragment, an aphorism, or a label followed by a colon. "The
+one-request half of the flow", "The dead end:", "The wait, shaped like X" all
+read as writing about the code rather than documentation of it.
+
+**Plain technical register.** No metaphor, no rhetorical inversion, no phrasing
+chosen for rhythm. If the sentence would not sit in a library's API reference, it
+does not belong here. Say "returns null when the session check fails", not
+"the question could not be asked".
+
+**Only state what you verified.** A claim about a library, an endpoint, a status
+code, or a runtime behaviour has to be checked in the source or its docs before
+it goes in a comment. If you cannot check it, leave it out and raise it in the
+chat. A confident sentence nobody can verify is worse than no sentence.
+
+**One "why" sentence at most**, and only when the code would look arbitrary
+without it. Rejected alternatives, trade-offs, and the reasoning behind a design
+belong in the chat, not in the file.
+
+**Length.** One sentence, plus at most two more. A JSDoc that needs a second
+paragraph usually means the code needs the clarity instead.
+
+**Tags.**
+
+- `@param` when the parameter's name and type do not already say what it is for.
+  Skip it when they do: `@param token - The token` is noise.
+- `@returns` only when the return is not obvious from the name and the type.
+- `@example` on anything reusable: a `@ordre/ui` component, a shared hook, a
+  helper in `@ordre/core`. One short, realistic call, not a tour of the options.
+
+```ts
+/**
+ * Signs the current user out without navigating away.
+ *
+ * @param onSignedOut - Called once the session is gone, so the caller can
+ *   reload whatever depended on it.
+ * @example
+ * const { signOut, pending } = useInviteSignOut(reload);
+ */
+```
+
+**Inline comments** only where the code cannot speak for itself: a constraint
+being applied, a non-obvious ordering, a decision that would otherwise look
+arbitrary. Same register and same verification rule as above.
+
+**Never narrate the change.** No "changed from X to Y", no "we no longer use X",
+no "was previously". A comment describes the code as it stands now, as if it had
+always looked this way. Never reference a fix, a ticket, a review comment, or a
+previous implementation.
+
+If something is only worth saying once, say it in the chat, not in a comment.
 
 ## Code conventions
 
