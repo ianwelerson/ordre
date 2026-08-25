@@ -44,3 +44,6 @@ yarn-error.log*
 **/__screenshots__/**
 **/.vitest-attachments/**
 **/.vitest-attachments
+
+# Claude Code
+**/.claude/settings.local.json

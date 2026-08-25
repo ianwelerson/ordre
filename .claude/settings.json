@@ -1,0 +1,23 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_response.filePath // .tool_input.file_path // empty' | { read -r f || exit 0; case \"$f\" in ''|*/node_modules/*|*/.next/*|*/.turbo/*|*/.source/*|*/coverage/*|*/dist/*|*/build/*|*/pnpm-lock.yaml|*/package-lock.json|*/yarn.lock|*/openapi.json) exit 0;; esac; [ -f \"$f\" ] || exit 0; d=$(dirname \"$f\"); while [ \"$d\" != \"/\" ] && [ ! -f \"$d/package.json\" ]; do d=$(dirname \"$d\"); done; [ -f \"$d/package.json\" ] || exit 0; r=$(git -C \"$d\" rev-parse --show-toplevel) || exit 0; [ -x \"$r/node_modules/.bin/prettier\" ] || exit 0; (cd \"$d\" && \"$r/node_modules/.bin/prettier\" --write --ignore-unknown \"$f\") >/dev/null 2>&1 || true; }",
+            "timeout": 30,
+            "statusMessage": "Formatting with Prettier"
+          },
+          {
+            "type": "command",
+            "command": "jq -r '.tool_response.filePath // .tool_input.file_path // empty' | { read -r f || exit 0; case \"$f\" in ''|*/node_modules/*|*/drawdb/*|*/.claude/settings.json) exit 0;; esac; [ -f \"$f\" ] || exit 0; grep -nI '—' \"$f\" >&2 || exit 0; echo 'CLAUDE.md forbids the em dash. Replace it with a hyphen, a comma, or a rewrite.' >&2; exit 2; }",
+            "timeout": 10,
+            "statusMessage": "Checking for em dashes"
+          }
+        ]
+      }
+    ]
+  }
+}

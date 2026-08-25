@@ -16,6 +16,7 @@
     "engineering/authorization",
     "engineering/outbox",
     "engineering/testing",
+    "engineering/ai-assistance",
     "engineering/infrastructure",
     "reference"
   ]

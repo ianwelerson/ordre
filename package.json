@@ -24,6 +24,7 @@
     "api:start": "turbo run api:start",
     "build": "turbo run build",
     "check-types": "turbo run check-types",
+    "dashboard:dev": "pnpm --filter dashboard dev",
     "db:generate": "pnpm --filter @ordre/db db:generate",
     "db:migrate": "pnpm --filter @ordre/db db:migrate",
     "db:push": "pnpm --filter @ordre/db db:push",
