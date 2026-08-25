@@ -16,7 +16,7 @@ const replace = vi.fn();
 const signUpRequest = vi.fn();
 const acceptInvite = vi.fn();
 
-/** Which request went out, in order, so the two-step submit can be asserted as one. */
+/** Records which requests went out, in order, so the two-step submit can be asserted as one. */
 let calls: string[] = [];
 
 vi.mock('next/navigation', () => ({

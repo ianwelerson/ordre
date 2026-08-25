@@ -45,7 +45,7 @@ const Host = () => {
   );
 };
 
-/** Lets any pending continuation run, so a state write that should not happen has its chance to. */
+/** Lets any pending continuation run, so a state write that should not happen gets its chance. */
 const flush = () => new Promise((resolve) => setTimeout(resolve, 20));
 
 const setup = () => {

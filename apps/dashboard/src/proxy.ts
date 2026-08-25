@@ -6,20 +6,19 @@ import { createServices } from '@ordre/services';
 import { safeRedirect } from '@/shared/safeRedirect';
 
 /**
- * The dashboard's route gate, run by Next before every matched request.
+ * Decides which shell a visitor lands in, the auth screens or the app, and runs
+ * before every matched request.
  *
- * It decides one thing: which shell a visitor lands in - the auth screens or
- * the app. It is deliberately *not* a security boundary: every piece of data
- * still crosses the API, which authenticates each request and enforces
- * row-level security. Nothing here needs to be right for the data to be safe;
- * it only needs to be right for the navigation to feel coherent.
+ * This is not a security boundary. Every piece of data still crosses the API,
+ * which authenticates each request and enforces row-level security, so this only
+ * has to be right for the navigation to feel coherent.
  */
 
 /**
  * Routes reachable without a session. Everything else requires one.
  *
- * Kept as a list because route groups - `(auth)` vs `(authenticated)` - emit no
- * URL segment, so there is nothing in the path for this to match on instead.
+ * This is a list rather than a path check because the `(auth)` and
+ * `(authenticated)` route groups emit no URL segment to match on.
  */
 const PUBLIC_ROUTES = [
   DASHBOARD_ROUTES.login,
@@ -31,24 +30,21 @@ const PUBLIC_ROUTES = [
 ];
 
 /**
- * How long the session check below may take before the visitor is treated as
- * signed out and handed the auth screens.
+ * The longest the session check may take before the visitor is treated as signed
+ * out.
  *
  * The check sits in front of a navigation, so a hung API must not become a hung
- * page. Timing out into "no session" is the safe direction: the cost is an auth
- * screen offered to someone who did not need it, and signing in again simply
- * overwrites the cookie.
+ * page. Timing out into "no session" costs at most an auth screen shown to
+ * someone who did not need it, and signing in again overwrites the cookie.
  */
 const SESSION_CHECK_TIMEOUT_MS = 2_000;
 
 /**
- * Public routes a live session is still welcome on.
+ * Public routes a live session is still allowed to reach.
  *
- * The bounce below exists to keep a signed-in visitor off the sign-in screens.
- * An invite is not one of those: whether *this* account is the one the invite
- * was sent to is a question only the page can answer, so the session has to be
- * let through to be told. Bouncing also dead-ends `login?next=/invite/:token`,
- * which is where a returning invitee is sent to sign in.
+ * The bounce below keeps a signed-in visitor off the sign-in screens, but an
+ * invite page has to be reachable with a session, because only that page can
+ * tell the visitor whether the invite was addressed to this account.
  */
 const SESSION_TOLERANT_ROUTES = [DASHBOARD_ROUTES.inviteBase];
 
@@ -66,13 +62,11 @@ const allowsSession = (pathname: string) => {
 };
 
 /**
- * Whether a session cookie is present - not whether it is valid.
+ * Returns whether a session cookie is present, not whether it is valid.
  *
- * Optimistic on purpose: verifying would mean an API call on every navigation
- * and buy nothing, since the API re-checks each request anyway. Presence is
- * enough to pick a shell. The one branch where validity genuinely matters -
- * bouncing a visitor *away* from the auth screens - checks it for real with
- * `sessionIsValid`.
+ * Verifying on every navigation would cost an API call and buy nothing, since
+ * the API re-checks each request anyway. The one branch where validity matters,
+ * bouncing a visitor away from the auth screens, calls `sessionIsValid` instead.
  */
 const hasSessionCookie = (request: NextRequest) => {
   return SESSION_COOKIE_NAMES.some((name) => request.cookies.has(name));
@@ -115,15 +109,12 @@ const sessionIsValid = async (request: NextRequest): Promise<boolean> => {
 };
 
 /**
- * Where a confirmed session should land when it turns up on an auth screen.
+ * Returns where a confirmed session should land when it arrives on an auth
+ * screen, which is whatever the login bounce stashed in `?next=`.
  *
- * Back to whatever the login bounce stashed in `?next=`, so arriving at
- * `/login?next=/settings` with a session already in hand goes on to `/settings`
- * rather than dropping the destination at the door.
- *
- * `next` is re-checked against `isPublic` on top of `safeRedirect`, which only
- * proves the value is same-origin. A same-origin value pointing back at an auth
- * screen would arrive here again and bounce again, forever.
+ * The value is checked against `isPublic` as well as `safeRedirect`, because
+ * `safeRedirect` only proves it is same-origin and a same-origin value pointing
+ * back at an auth screen would bounce here forever.
  */
 const bounceTarget = (request: NextRequest): string => {
   const next = safeRedirect(request.nextUrl.searchParams.get('next'));
@@ -133,16 +124,13 @@ const bounceTarget = (request: NextRequest): string => {
 };
 
 /**
- * Two redirects, and otherwise stays out of the way.
+ * Applies the two redirects the gate exists for, and passes everything else
+ * through.
  *
- * No cookie on a protected path goes to the login screen, carrying the intended
- * destination - path and query - in `?next=`.
- *
- * A cookie on a public path goes on to that destination, but only once the
- * session is confirmed real. Bouncing on presence alone would trap a visitor
- * whose cookie has expired: the login screen would refuse them while every page
- * behind it 401s. A dead cookie falls through to the auth screens instead,
- * where signing in simply overwrites it.
+ * No cookie on a protected path goes to the login screen with the intended
+ * destination in `?next=`. A cookie on a public path goes on to that
+ * destination, but only once `sessionIsValid` confirms the session: bouncing on
+ * presence alone would trap a visitor whose cookie has expired.
  */
 export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -169,10 +157,10 @@ export default async function proxy(request: NextRequest) {
 }
 
 /**
- * Limits the gate to page navigations: Next internals and anything with a file
- * extension are skipped. The `.*\.` alternative matches a dot *anywhere* in the
- * path, not just in a final segment - acceptable while this is a UX gate, but
- * worth remembering if a route ever legitimately carries one.
+ * Limits the gate to page navigations, skipping Next internals and anything with
+ * a file extension. The `.*\.` alternative matches a dot anywhere in the path
+ * rather than only in the last segment, so a route carrying one would be skipped
+ * too.
  */
 export const config = {
   matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.).*)'],

@@ -11,8 +11,11 @@ import { services } from '@/shared/services';
 import { LoginFormSchema, type LoginFormValues } from './schema';
 
 /**
- * Signs in, then honours the `?next=` the proxy stashed when it bounced the
- * visitor here - `safeRedirect` is what makes that query param safe to follow.
+ * Signs the visitor in, then redirects to the `?next=` the proxy stashed when it
+ * bounced them here. `safeRedirect` is what makes that param safe to follow.
+ *
+ * @example
+ * const { field, onSubmit, rootError, isBusy } = useLoginForm();
  */
 export const useLoginForm = (): AppForm<LoginFormValues> => {
   const router = useRouter();

@@ -35,12 +35,13 @@ const meta: Meta<typeof AuthHeading> = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** What a screen says it is: an eyebrow, a headline, and the sentence under it. */
+/** The default heading: an eyebrow, a headline, and the sentence under it. */
 export const Default: Story = {};
 
 /**
- * The headline carries the whole message on a screen with nothing to add. The
- * subtitle is dropped rather than left empty, so no gap opens under the title.
+ * Shows the heading without a subtitle, for a screen whose headline carries the
+ * whole message. The subtitle is dropped rather than rendered empty, so no gap
+ * opens under the title.
  */
 export const WithoutSubtitle: Story = {
   args: {
@@ -51,9 +52,9 @@ export const WithoutSubtitle: Story = {
 };
 
 /**
- * `media` belongs to the eyebrow, not to the page. Given one, the headline moves
- * below it as a block of its own, so the card's gap separates the two - which is
- * how the invite screens read as eyebrow, workspace, then title.
+ * Shows the heading with `media`, which belongs with the eyebrow. The headline
+ * then moves below it into its own block, so the card's gap separates the two and
+ * the invite screens read as eyebrow, workspace, then title.
  */
 export const WithMedia: Story = {
   args: {

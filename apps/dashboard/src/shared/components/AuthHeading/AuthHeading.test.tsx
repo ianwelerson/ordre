@@ -8,7 +8,7 @@ describe('AuthHeading.tsx', () => {
     cleanup();
   });
 
-  /** One `h1` per screen, and this is it - the card holds nothing else that ranks. */
+  /** The headline is the screen's only `h1`, since the card holds nothing else that ranks. */
   it('should render the headline as the page heading', () => {
     const { getByRole } = render(<AuthHeading eyebrow="Sign in" title="Welcome back." />);
 
@@ -21,7 +21,7 @@ describe('AuthHeading.tsx', () => {
     expect(getByText('Sign in')).toBeDefined();
   });
 
-  /** A screen with nothing more to say stops at the headline. */
+  /** A screen with nothing more to say renders no subtitle element at all. */
   it('should omit the subtitle when none is given', () => {
     const { queryByText } = render(<AuthHeading eyebrow="Sign in" title="Welcome back." />);
 
@@ -37,8 +37,8 @@ describe('AuthHeading.tsx', () => {
   });
 
   /**
-   * `media` belongs to the eyebrow, so it has to land between the two rather than
-   * after the headline: the invite screens read as eyebrow, workspace, title.
+   * `media` belongs with the eyebrow, so it has to land between the two rather
+   * than after the headline. The invite screens read as eyebrow, workspace, title.
    */
   it('should place media between the eyebrow and the headline', () => {
     const { container } = render(
@@ -58,8 +58,8 @@ describe('AuthHeading.tsx', () => {
   });
 
   /**
-   * Without media the three parts stay in one block and read as a unit; with it
-   * the headline becomes a block of its own so the card's gap separates them.
+   * Without media the three parts stay in one block and read as a unit. With it,
+   * the headline becomes its own block so the card's gap separates them.
    */
   it('should split into two blocks only when it has media', () => {
     const plain = render(<AuthHeading eyebrow="Sign in" title="Welcome back." />);

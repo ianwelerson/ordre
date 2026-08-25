@@ -16,9 +16,8 @@ import { AuthAction, AuthCard, AuthFootnote, AuthHeading } from '@/shared/compon
 import { useSetPasswordForm } from '../model/useSetPasswordForm';
 
 /**
- * The arrival this link represents, or a reset when the param says nothing this
- * screen recognises - it only picks copy, so an unknown value is not worth a
- * dead end.
+ * Resolves the `source` param to a known value, falling back to the reset copy.
+ * The param only picks wording, so an unrecognised value is not an error.
  */
 const resolveSource = (param: string | null): SetPasswordSource => {
   return Object.values(SET_PASSWORD_SOURCE).includes(param as SetPasswordSource)

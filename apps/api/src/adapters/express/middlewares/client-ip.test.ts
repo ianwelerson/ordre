@@ -3,8 +3,8 @@ import type { NextFunction, Request, Response } from 'express';
 import { CLIENT_IP_HEADER, clientIp } from './client-ip.ts';
 
 /**
- * Only the two things this middleware touches. `ip` is what Express resolved
- * from `trust proxy`; `headers` is what Better Auth will later be handed.
+ * Builds the minimal request shape this middleware touches. `ip` is what Express
+ * resolved from `trust proxy`, and `headers` is what Better Auth is later handed.
  */
 const buildRequest = (ip: string | undefined, headers: Record<string, string | undefined> = {}) =>
   ({ ip, headers }) as unknown as Request;
@@ -41,9 +41,8 @@ describe('middleware/clientIp', () => {
   });
 
   /**
-   * The whole point of the header being private: a client that sends one is
-   * writing into the same slot Better Auth reads, so the value has to be
-   * replaced rather than merged with or deferred to.
+   * A client that sends this header writes into the same slot Better Auth reads,
+   * so the value has to be replaced rather than merged with or deferred to.
    */
   it('overwrites a value the client supplied under the same name', () => {
     const req = buildRequest('203.0.113.7', { [CLIENT_IP_HEADER]: '10.0.0.1' });

@@ -13,15 +13,12 @@ import * as schema from '@ordre/db/schemas';
 type OutboxDb = ReturnType<typeof getDb>;
 
 /**
- * The same for every message, so producers don't repeat them.
+ * The variables every outbox message carries, so producers do not repeat them.
  *
- * Read off `urls` rather than written out here: these were literals pointing at
- * production, which meant every email sent from dev or a preview deploy linked
- * users into the live app. The `Record<OutboxDefaultVariable, string>` annotation
- * still makes a new default variable a compile error until it is given a value.
- *
- * These are frozen into the row at write time, so a queued row keeps the origins
- * that were configured when it was produced.
+ * They read off `urls` rather than literals, so a message queued in dev or a
+ * preview deploy links into that environment. The values are frozen into the row
+ * at write time, so a queued row keeps the origins configured when it was
+ * produced.
  */
 const DEFAULT_VARIABLES: Record<OutboxDefaultVariable, string> = {
   base_url: urls.base,

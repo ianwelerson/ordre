@@ -7,12 +7,12 @@ export interface AuthCardProps {
 }
 
 /**
- * The sheet every auth screen is printed on.
+ * Wraps an auth screen's blocks in the shared card. The card's own gap spaces
+ * them, so a screen never sets its own vertical rhythm, and below 460px the
+ * corners square off and it runs edge to edge.
  *
- * Its children are the screen's blocks - a heading, a form, a footnote - and the
- * card's own gap is what separates them, so a screen never sets the rhythm
- * itself. Below its own width the corners square off and it runs edge to edge,
- * which is what stops a narrow phone showing a floating card on a margin.
+ * @example
+ * <AuthCard><AuthHeading … /><form … /></AuthCard>
  */
 export const AuthCard = ({ children }: AuthCardProps) => {
   return (

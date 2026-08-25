@@ -21,8 +21,8 @@ import { LOGIN_NOTICE, LOGIN_NOTICE_PARAM, type LoginNotice } from '@/shared/con
 import { useLoginForm } from '../model/useLoginForm';
 
 /**
- * The query string is the user's to edit, so an unknown notice renders nothing
- * rather than trusting the param.
+ * Resolves the `notice` param to a known value, or `null`. The query string
+ * belongs to the visitor, so an unrecognised value renders no banner.
  */
 const resolveNotice = (param: string | null): LoginNotice | null => {
   return Object.values(LOGIN_NOTICE).includes(param as LoginNotice) ? (param as LoginNotice) : null;

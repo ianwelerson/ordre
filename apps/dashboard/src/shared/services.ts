@@ -7,7 +7,7 @@ if (!baseUrl) {
 }
 
 /**
- * The app's single configured service surface. Import this, never `createServices`,
- * so no call site carries a base URL.
+ * The app's single configured service surface. Import this rather than
+ * `createServices`, so no call site carries a base URL.
  */
 export const services = createServices({ baseUrl });

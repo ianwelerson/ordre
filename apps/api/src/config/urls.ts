@@ -25,13 +25,13 @@ import {
 export const urls = {
   /** The API's own public origin. */
   api: env.BETTER_AUTH_URL,
-  /** Public marketing site. */
+  /** The public marketing site's origin. */
   base: env.APP_BASE_URL,
-  /** Operator dashboard root. */
+  /** The operator dashboard's origin. */
   dashboard: env.APP_DASHBOARD_URL,
-  /** Customer-facing board. */
+  /** The customer-facing board's origin. */
   board: env.APP_BOARD_URL,
-  /** Documentation site. */
+  /** The documentation site's origin. */
   docs: env.APP_DOCS_URL,
   dashboardLogin: `${env.APP_DASHBOARD_URL}${DASHBOARD_ROUTES.login}`,
   /**

@@ -25,7 +25,7 @@ const buildResponse = (statusCode = 200) => {
   };
 };
 
-/** The promise `runWithUser` was given: resolves = commit, rejects = rollback. */
+/** Returns the promise `runWithUser` was given, where resolving commits and rejecting rolls back. */
 const transactionOutcome = () => vi.mocked(runWithUser).mock.results[0]?.value as Promise<void>;
 
 describe('middleware/rlsContext', () => {

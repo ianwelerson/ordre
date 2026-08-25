@@ -24,9 +24,9 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * The way to the screen that would have suited the reader better. It is a direct
- * child of `AuthCard`, never nested inside the form above it, which is what gives
- * every screen the same distance between the action and this line.
+ * The default footnote, linking to the screen that would have suited the reader
+ * better. It is a direct child of `AuthCard` rather than of the form, which is
+ * what gives every screen the same distance between the action and this line.
  */
 export const Default: Story = {
   render: () => (
@@ -39,7 +39,7 @@ export const Default: Story = {
   ),
 };
 
-/** Two links in one sentence, which is what the invite screen's terms line is. */
+/** Shows two links in one sentence, as the invite screen's terms line does. */
 export const WithTwoLinks: Story = {
   render: () => (
     <AuthFootnote>
@@ -56,7 +56,7 @@ export const WithTwoLinks: Story = {
   ),
 };
 
-/** A bare link, with no sentence around it - the way out of the wrong-account card. */
+/** Shows a bare link with no sentence around it, as the wrong-account card uses. */
 export const LinkOnly: Story = {
   render: () => (
     <AuthFootnote>

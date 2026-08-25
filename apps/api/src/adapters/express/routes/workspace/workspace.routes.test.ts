@@ -183,9 +183,9 @@ describe('Workspace', () => {
     test('POST writes no outbox row when the request fails', async () => {
       mockUserSession();
 
-      // A duplicate slug: the handler returns 409 and the transaction rolls back,
-      // taking the outbox row with it. This is the whole point of the pattern -
-      // no email about a workspace that was never created.
+      // A duplicate slug makes the handler return 409 and the transaction roll
+      // back, taking the outbox row with it, so no email is sent about a
+      // workspace that does not exist.
       await request(app)
         .post(BASE)
         .send({ name: 'Test', slug: 'test-workspace', type: 'individual', industry: 'other' })

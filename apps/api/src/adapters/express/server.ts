@@ -14,9 +14,8 @@ import routes from './routes/index.ts';
 const app: Express = express();
 
 /**
- * Two proxies sit in front of this app, so the client is the third address from
- * the socket end: the edge appends the tier ahead of it, and that tier appends
- * the client.
+ * Trusts two proxy hops, so the client is the third address from the socket end.
+ * The edge appends the tier ahead of it, and that tier appends the client.
  */
 app.set('trust proxy', 2);
 

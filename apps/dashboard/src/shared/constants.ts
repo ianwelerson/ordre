@@ -1,11 +1,9 @@
 /**
- * Notices the login page can be arrived at with - `/login?notice=password-reset`
- * renders a confirmation banner above the form. Values are validated on read,
- * so an edited query string renders nothing rather than a broken key.
+ * Notices the login page can be arrived at with, so that
+ * `/login?notice=password-reset` renders a confirmation banner above the form.
  *
- * Unlike the set-password source in `@ordre/core/constants`, these never leave
- * the app: nothing outside it links here with one, so there is nothing to agree
- * with.
+ * These stay in the app rather than in `@ordre/core/constants`, because nothing
+ * outside the dashboard links here with one.
  */
 export const LOGIN_NOTICE_PARAM = 'notice';
 

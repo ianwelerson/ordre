@@ -14,8 +14,12 @@ type ForgotPasswordForm = AppForm<ForgotPasswordFormValues> & {
 };
 
 /**
- * Requests the reset mail. There is no success redirect: the view swaps itself
- * for the confirmation, because the next step happens in the user's inbox.
+ * Requests the password reset email. There is no success redirect, because the
+ * next step happens in the visitor's inbox and the view swaps itself for the
+ * confirmation instead.
+ *
+ * @example
+ * const { field, onSubmit, submitted } = useForgotPasswordForm();
  */
 export const useForgotPasswordForm = (): ForgotPasswordForm => {
   const t = useTranslations();

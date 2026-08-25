@@ -14,7 +14,7 @@ describe('AuthFootnote.tsx', () => {
     expect(getByText('New here?')).toBeDefined();
   });
 
-  /** Prose, not a label: the line is read as a sentence, so it is a paragraph. */
+  /** The line is read as a sentence rather than a label, so it renders as a paragraph. */
   it('should render the note as a paragraph', () => {
     const { getByText } = render(<AuthFootnote>New here?</AuthFootnote>);
 

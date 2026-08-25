@@ -12,11 +12,13 @@ import { services } from '@/shared/services';
 import { SetPasswordFormSchema, type SetPasswordFormValues } from './schema';
 
 /**
- * Sets the password, then hands the visitor to the login screen with a notice
- * saying so - the API does not sign them in, so the new password has to be used
- * once before anything else works.
+ * Sets the password, then sends the visitor to the login screen with a notice.
+ * The API does not create a session, so the new password has to be used once
+ * before anything else works.
  *
  * @param token - The reset token from the emailed link.
+ * @example
+ * const { field, onSubmit, rootError, isBusy } = useSetPasswordForm(token);
  */
 export const useSetPasswordForm = (token: string): AppForm<SetPasswordFormValues> => {
   const router = useRouter();

@@ -3,12 +3,12 @@ import { Button, type ButtonProps } from '@ordre/ui/components';
 export type AuthActionProps = ButtonProps;
 
 /**
- * The one thing a screen asks its reader to do.
+ * Renders the single primary action of an auth screen. Size, width, and icon are
+ * fixed here because they belong to the layout, while behaviour and state still
+ * come from the caller.
  *
- * Presentation is fixed rather than passed: an auth screen has exactly one
- * primary action, so its size, width and icon are a property of the layout, not
- * a decision each screen makes again. Everything about the action itself -
- * whether it submits, navigates, or is busy - still comes from the caller.
+ * @example
+ * <AuthAction type="submit" loading={isBusy}>{t('submit')}</AuthAction>
  */
 export const AuthAction = (props: AuthActionProps) => {
   return <Button {...props} size="lg" trailingIcon="arrow-right" fullWidth />;

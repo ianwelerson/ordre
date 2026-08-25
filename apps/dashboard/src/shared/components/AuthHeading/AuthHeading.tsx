@@ -7,19 +7,20 @@ export interface AuthHeadingProps {
   title: ReactNode;
   subtitle?: ReactNode;
   /**
-   * A block that belongs to the eyebrow rather than to the page - the invite
-   * screens' workspace card. Given one, the title moves below it as a block of
-   * its own.
+   * A block that belongs with the eyebrow rather than the page, such as the
+   * invite screens' workspace card. When given, the title moves below it into a
+   * block of its own.
    */
   media?: ReactNode;
 }
 
 /**
- * What a screen says it is: an eyebrow, a headline, and the sentence under it.
+ * Renders an auth screen's eyebrow, headline, and optional subtitle. Returns a
+ * fragment so that `media` can split the heading into two sibling blocks inside
+ * `AuthCard` and let the card's gap separate them.
  *
- * The fragment is deliberate. `media` splits the heading into two blocks that
- * are siblings inside `AuthCard`, so the card's gap separates them; without it
- * the three parts stay in one block and read as a single unit.
+ * @example
+ * <AuthHeading eyebrow={t('eyebrow')} title={t('title')} subtitle={t('subtitle')} />
  */
 export const AuthHeading = ({ eyebrow, title, subtitle, media }: AuthHeadingProps) => {
   const heading = (

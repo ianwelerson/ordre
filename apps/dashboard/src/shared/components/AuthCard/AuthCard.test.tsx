@@ -19,9 +19,8 @@ describe('AuthCard.tsx', () => {
   });
 
   /**
-   * The card's own gap is what spaces a screen's blocks, so each one has to stay
-   * a direct child. A wrapper slipped in between would collapse three gaps into
-   * one and the screens would drift apart again.
+   * The card's gap is what spaces a screen's blocks, so each has to stay a direct
+   * child. A wrapper in between would collapse three gaps into one.
    */
   it('should keep every block a direct child', () => {
     const { getByTestId } = render(

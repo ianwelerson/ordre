@@ -17,8 +17,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * The sheet on its own. Its children are the screen's blocks, and the card's own
- * gap is what separates them - a screen never sets that spacing itself.
+ * The card on its own. Its children are the screen's blocks, and the card's gap
+ * is what separates them, so a screen never sets that spacing itself.
  */
 export const Default: Story = {
   render: () => (
@@ -45,9 +45,9 @@ export const Default: Story = {
 };
 
 /**
- * Three blocks rather than two, to show the rhythm the card imposes. Nothing here
- * declares a margin: the gap between the heading, the form and the footnote is
- * the same distance on every auth screen because it is set in one place.
+ * Shows three blocks rather than two, so the spacing the card imposes is visible.
+ * Nothing here declares a margin, which is why the distance is identical on every
+ * auth screen.
  */
 export const WithFootnote: Story = {
   render: () => (
@@ -76,9 +76,9 @@ export const WithFootnote: Story = {
 };
 
 /**
- * Below its own width the card squares its corners and runs edge to edge, so a
- * narrow phone does not show a floating sheet on a margin. Resize the frame to
- * cross 460px.
+ * Shows the card below 460px, where it squares its corners and runs edge to edge
+ * so a narrow phone does not display a floating card on a margin. Resize the
+ * frame to cross the breakpoint.
  */
 export const OnANarrowScreen: Story = {
   parameters: {

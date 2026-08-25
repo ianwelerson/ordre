@@ -6,7 +6,7 @@ import { SESSION_COOKIE_NAMES } from '@ordre/core/constants';
 
 import proxy from './proxy';
 
-/** Only the part of the options the proxy actually builds. */
+/** The subset of the service options the proxy actually builds. */
 type ServiceOptions = { baseUrl: string; fetch: typeof globalThis.fetch };
 
 const getSession = vi.fn();
@@ -24,7 +24,7 @@ const SESSION_COOKIE = `${SESSION_COOKIE_NAMES[1]}=abc123`;
 const buildRequest = (path: string, cookie?: string) =>
   new NextRequest(new URL(path, ORIGIN), { headers: cookie ? { cookie } : {} });
 
-/** Where a response sends the browser, or `null` when it lets the request through. */
+/** Returns where a response sends the browser, or `null` when it passes through. */
 const redirectedTo = (response: Response) => {
   const location = response.headers.get('location');
 
@@ -54,7 +54,7 @@ describe('proxy', () => {
       }
     );
 
-    /** Presence is the whole test on this branch; nothing should ask the API. */
+    /** Cookie presence decides this branch, so nothing should reach the API. */
     it('never calls the API', async () => {
       await proxy(buildRequest('/settings'));
 
@@ -83,8 +83,8 @@ describe('proxy', () => {
     });
 
     /**
-     * The one public route a session is welcome on. Whether *this* account is
-     * the invited one is the page's question to answer, so it has to be reached.
+     * The invite is the one public route a session is allowed to reach, because
+     * only the page can tell the visitor whether it was addressed to this account.
      */
     it('lets an invite through without asking the API', async () => {
       const response = await proxy(buildRequest('/invite/tok_abc', SESSION_COOKIE));
@@ -94,8 +94,8 @@ describe('proxy', () => {
     });
 
     /**
-     * Otherwise `login?next=/invite/:token` - where an invitee is sent to sign
-     * in - drops them on the dashboard with the invite unaccepted.
+     * Without this, `login?next=/invite/:token` would drop a returning invitee on
+     * the dashboard with the invite still unaccepted.
      */
     it('bounces to an invite the login redirect stashed', async () => {
       const response = await proxy(buildRequest('/login?next=%2Finvite%2Ftok_abc', SESSION_COOKIE));
@@ -104,9 +104,9 @@ describe('proxy', () => {
     });
 
     /**
-     * Both would land back on an auth screen, which would bounce again on
-     * arrival. `safeRedirect` only proves same-origin, so the public check is
-     * what actually breaks the loop.
+     * Both values would land back on an auth screen and bounce again on arrival.
+     * `safeRedirect` only proves same-origin, so the public check is what breaks
+     * the loop.
      */
     it.each(['%2Flogin', 'https%3A%2F%2Fevil.com'])(
       'ignores a `next` that would bounce again or leave the site (%s)',
@@ -148,8 +148,8 @@ describe('proxy', () => {
 
     /**
      * A middleware-originated fetch carries no cookies of its own, so the
-     * browser's header has to be forwarded by hand - and the wait has to be
-     * capped, because this call sits in front of a navigation.
+     * browser's header is forwarded by hand. The wait is capped because this call
+     * sits in front of a navigation.
      */
     it('forwards the cookie header and caps the wait', async () => {
       const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('null'));

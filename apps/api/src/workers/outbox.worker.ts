@@ -16,14 +16,12 @@ import type { OutboxChannel, OutboxTopic } from '@ordre/core/enums';
 import type { OutboxPayload } from '@ordre/core/types';
 
 /**
- * How often the worker sweeps unprompted.
+ * The interval at which the worker sweeps without being woken.
  *
- * For an ordinary row this is a safety net: latency comes from
- * {@link wakeOutboxWorker}, which fires as soon as the producing transaction
- * commits. For a row queued with `sendAfter` it is the delivery mechanism -
- * holding a row means deliberately not waking for it, so it waits for this.
- * A held row therefore arrives between its own delay and that delay plus one
- * sweep.
+ * For an ordinary row this is a safety net, since latency comes from
+ * {@link wakeOutboxWorker} firing on commit. For a row queued with `sendAfter`
+ * it is the delivery mechanism, so that row arrives between its own delay and
+ * that delay plus one sweep.
  */
 const SWEEP_MS = 30 * 60 * 1000;
 

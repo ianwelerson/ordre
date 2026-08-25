@@ -7,11 +7,12 @@ export interface AuthFootnoteProps {
 }
 
 /**
- * The small centred line under a screen's action: the way to the screen that
- * would have suited the reader better, or the terms they are agreeing to.
+ * Renders the small centred line under an auth screen's action, used for a link
+ * to a better-suited screen or for terms copy. It is a direct child of
+ * `AuthCard` rather than of the form, so every screen sets it off equally.
  *
- * A direct child of `AuthCard`, never nested inside the form above it, so every
- * screen sets it off by the same distance.
+ * @example
+ * <AuthFootnote>{t('noAccount')} <TextLink href={…}>{t('createOne')}</TextLink></AuthFootnote>
  */
 export const AuthFootnote = ({ children }: AuthFootnoteProps) => {
   return (

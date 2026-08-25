@@ -5,7 +5,7 @@ import { DASHBOARD_ROUTES } from '@ordre/core/constants';
 import { AuthAction, AuthHeading } from '@/shared/components';
 
 interface InviteErrorProps {
-  /** Why the preview could not be loaded, already resolved to a sentence. */
+  /** The reason the preview could not be loaded, already resolved to a sentence. */
   message: string;
 }
 

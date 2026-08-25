@@ -21,7 +21,7 @@ describe('config/urls', () => {
   });
 
   it('resolves origins from the environment rather than a hardcoded host', () => {
-    // The whole point of the split: production links must not be baked in.
+    // The split exists so production links are never baked into the build.
     expect(urls.base).not.toContain('ordre.app');
     expect(urls.dashboard).not.toContain('ordre.app');
   });

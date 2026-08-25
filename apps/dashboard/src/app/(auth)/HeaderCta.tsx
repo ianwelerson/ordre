@@ -9,9 +9,8 @@ import { TextLink } from '@ordre/ui/components';
 import { loginRedirect } from '@/shared/authLinks';
 
 /**
- * The screen each auth route points a visitor at when they are on the wrong
- * one. Keyed by route rather than branched in the component, so a new auth
- * screen is one line here.
+ * The counterpart screen each auth route offers, keyed by route so that adding
+ * an auth screen is one line rather than a new branch below.
  */
 const HEADER_CTA = {
   [DASHBOARD_ROUTES.login]: { key: 'login', path: DASHBOARD_ROUTES.getStarted },
@@ -19,10 +18,7 @@ const HEADER_CTA = {
   [DASHBOARD_ROUTES.inviteBase]: { key: 'invite', path: DASHBOARD_ROUTES.login },
 } as const;
 
-/**
- * The counterpart link in the auth header, or nothing on a route with no
- * counterpart to offer.
- */
+/** Renders the auth header's counterpart link, or nothing on an unlisted route. */
 export const HeaderCta = () => {
   const t = useTranslations('AuthHeader');
   const pathname = usePathname();
@@ -35,9 +31,8 @@ export const HeaderCta = () => {
     return null;
   }
 
-  // The invite screen is the one with somewhere to come back to: an invitee who
-  // already has an account has to land on the invite again after signing in, not
-  // on the dashboard.
+  // An invitee who already has an account has to land back on the invite after
+  // signing in, not on the dashboard, so the invite link carries a destination.
   const href = cta.key === 'invite' ? loginRedirect(pathname) : cta.path;
 
   return (

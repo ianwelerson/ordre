@@ -5,11 +5,10 @@ import type { ButtonAsButton } from '@ordre/ui/components';
 import { AuthAction } from './AuthAction';
 
 /**
- * Typed to the button branch rather than to the component. `AuthActionProps` is a
- * union - a button or an anchor, decided by `href` - and Storybook resolves args
- * across a union to `never`, which leaves every story demanding an arg it cannot
- * be given. The anchor still has a story; it renders itself instead of being
- * configured through controls.
+ * Types the meta to the button branch rather than the whole component.
+ * `AuthActionProps` is a union of a button and an anchor, and Storybook resolves
+ * union args to `never`, which would leave every story demanding an arg it
+ * cannot be given.
  */
 const meta: Meta<ButtonAsButton> = {
   title: 'Dashboard/Auth/AuthAction',
@@ -40,15 +39,15 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * The one thing a screen asks its reader to do. Size, width and icon are fixed
- * rather than passed: an auth screen has exactly one primary action, so its
- * presentation is a property of the layout rather than a per-screen decision.
+ * The default action. Size, width, and icon are fixed by the component, because
+ * an auth screen has exactly one primary action and its presentation belongs to
+ * the layout.
  */
 export const Default: Story = {};
 
 /**
- * Mid-request. The label is replaced by one that names the wait, and the button
- * takes itself out of action, so a second click cannot fire a second request.
+ * Shows the action mid-request. The label is replaced by one that names the wait,
+ * and the button disables itself so a second click cannot fire a second request.
  */
 export const Busy: Story = {
   render: () => (
@@ -59,8 +58,9 @@ export const Busy: Story = {
 };
 
 /**
- * With `href` it renders an anchor instead. The dead ends use this - an expired
- * link or a spent invite offers a way onward, not a retry.
+ * Renders an anchor instead of a button when given `href`. The dead-end screens
+ * use this, since an expired link or a spent invite offers a way onward rather
+ * than a retry.
  */
 export const AsALink: Story = {
   render: () => <AuthAction href="/forgot-password">Request a new link</AuthAction>,

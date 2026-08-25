@@ -58,9 +58,9 @@ const countSeats = async (workspaceId: string) => {
 };
 
 /**
- * How each limit measures a workspace's current usage. `satisfies` keeps the map
- * exhaustive, so adding a `PlanLimit` is a compile error until it has a counter
- * here rather than a silently unenforced quota.
+ * The counter that measures current usage for each plan limit. `satisfies` keeps
+ * the map exhaustive, so adding a `PlanLimit` is a compile error until it has a
+ * counter here rather than a silently unenforced quota.
  */
 const USAGE = {
   location: countLocations,

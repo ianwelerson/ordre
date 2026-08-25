@@ -25,8 +25,8 @@ describe('AuthAction.tsx', () => {
   });
 
   /**
-   * The screens that submit a form rely on this reaching the element: `Button`
-   * defaults to `type="button"`, which would leave the form with no way to fire.
+   * `Button` defaults to `type="button"`, so a screen that submits a form depends
+   * on this prop reaching the element.
    */
   it('should pass the button type through', () => {
     const { getByRole } = render(<AuthAction type="submit">Save password</AuthAction>);
