@@ -55,6 +55,7 @@ const memberRow = () => ({
   role: 'owner' as const,
   status: 'active' as const,
   phone: null,
+  locale: 'en' as const,
   createdAt: new Date('2024-01-01T00:00:00.000Z'),
   updatedAt: new Date('2024-01-01T00:00:00.000Z'),
 });

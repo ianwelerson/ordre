@@ -43,6 +43,20 @@
       "when": 1787347340615,
       "tag": "0005_little_ego",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1787697503886,
+      "tag": "0006_gigantic_onslaught",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1787697526204,
+      "tag": "0007_invite_accept_locale",
+      "breakpoints": true
     }
   ]
 }

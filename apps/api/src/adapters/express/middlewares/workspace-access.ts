@@ -95,6 +95,7 @@ export const requireWorkspaceAccess = async (req: Request, res: Response, next: 
     req.member = {
       id: member.id,
       role: member.role,
+      locale: member.locale,
     };
 
     next();

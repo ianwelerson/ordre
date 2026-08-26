@@ -1,11 +1,55 @@
 import { z } from 'zod';
 
+import { DEFAULT_LOCALE, LOCALES } from '../enums/locale.ts';
 import {
   OUTBOX_VARIABLES,
   type OutboxChannel,
   type OutboxTopic,
   type OutboxVariable,
 } from '../enums/outbox.ts';
+import { WORKSPACE_MEMBER_ROLES } from '../enums/workspace.ts';
+
+/**
+ * The schema one variable is validated with, chosen by the suffix in its name.
+ *
+ * The naming convention is `<subject>_<attribute>`, and the attribute already
+ * says what the value is, so it can say how to check it too. Without this every
+ * variable was `z.string().min(1)`, which let a malformed URL through validation
+ * and into a live message as a broken link - the failure the payload registry
+ * exists to prevent.
+ */
+const URL_SCHEMA = z.url();
+const EMAIL_SCHEMA = z.email();
+const ROLE_SCHEMA = z.enum(WORKSPACE_MEMBER_ROLES);
+const TEXT_SCHEMA = z.string().min(1);
+
+const schemaFor = (variable: OutboxVariable) => {
+  if (variable.endsWith('_url')) {
+    return URL_SCHEMA;
+  }
+
+  if (variable.endsWith('_email')) {
+    return EMAIL_SCHEMA;
+  }
+
+  if (variable.endsWith('_role')) {
+    return ROLE_SCHEMA;
+  }
+
+  return TEXT_SCHEMA;
+};
+
+/**
+ * The same choice at the type level, so `invited_role` infers as the role union
+ * rather than widening to the union of every branch's return.
+ */
+type SchemaFor<K extends OutboxVariable> = K extends `${string}_url`
+  ? typeof URL_SCHEMA
+  : K extends `${string}_email`
+    ? typeof EMAIL_SCHEMA
+    : K extends `${string}_role`
+      ? typeof ROLE_SCHEMA
+      : typeof TEXT_SCHEMA;
 
 /**
  * The whole variable vocabulary as a schema, so each template can `.pick` the
@@ -13,10 +57,20 @@ import {
  * source of truth - the cast just re-states what `Object.fromEntries` erases.
  */
 const OutboxVariablesSchema = z.object(
-  Object.fromEntries(OUTBOX_VARIABLES.map((variable) => [variable, z.string().min(1)])) as {
-    [K in OutboxVariable]: z.ZodString;
+  Object.fromEntries(OUTBOX_VARIABLES.map((variable) => [variable, schemaFor(variable)])) as {
+    [K in OutboxVariable]: SchemaFor<K>;
   }
 );
+
+/**
+ * The locale the message renders in, on every payload.
+ *
+ * `.catch` rather than `.default`: it covers an unrecognised locale as well as a
+ * missing one, so a queued row naming a locale this build does not have falls
+ * back to {@link DEFAULT_LOCALE} rather than failing validation in the channel
+ * service, consuming all five attempts and dead-lettering a deliverable message.
+ */
+const OutboxLocaleSchema = z.enum(LOCALES).catch(DEFAULT_LOCALE);
 
 /**
  * Every deliverable thing, keyed `<channel>:<topic>` - the registry that decides
@@ -37,11 +91,10 @@ const OutboxVariablesSchema = z.object(
 export const OUTBOX_PAYLOAD_SCHEMAS = {
   'email:account:created': z.object({
     to: z.email(),
+    locale: OutboxLocaleSchema,
     variables: OutboxVariablesSchema.pick({
       user_name: true,
       user_email: true,
-      base_url: true,
-      dashboard_url: true,
       dashboard_login_url: true,
       help_url: true,
       privacy_url: true,
@@ -49,51 +102,46 @@ export const OUTBOX_PAYLOAD_SCHEMAS = {
   }),
   'email:account:verify-email': z.object({
     to: z.email(),
+    locale: OutboxLocaleSchema,
     variables: OutboxVariablesSchema.pick({
       user_email: true,
       verify_url: true,
-      base_url: true,
       help_url: true,
       privacy_url: true,
     }),
   }),
   'email:account:reset-password': z.object({
     to: z.email(),
+    locale: OutboxLocaleSchema,
     variables: OutboxVariablesSchema.pick({
       user_email: true,
       reset_url: true,
-      base_url: true,
       help_url: true,
       privacy_url: true,
     }),
   }),
   'email:workspace:created': z.object({
     to: z.email(),
+    locale: OutboxLocaleSchema,
     variables: OutboxVariablesSchema.pick({
       workspace_name: true,
       workspace_industry: true,
       workspace_plan: true,
       owner_email: true,
-      base_url: true,
       dashboard_url: true,
-      dashboard_login_url: true,
       help_url: true,
       privacy_url: true,
     }),
   }),
   'email:invite:created': z.object({
     to: z.email(),
+    locale: OutboxLocaleSchema,
     variables: OutboxVariablesSchema.pick({
       workspace_name: true,
-      invitee_name: true,
+      inviter_name: true,
       invitee_email: true,
-      invited_name: true,
-      invited_email: true,
       invited_role: true,
       invite_url: true,
-      base_url: true,
-      dashboard_url: true,
-      dashboard_login_url: true,
       help_url: true,
       privacy_url: true,
     }),

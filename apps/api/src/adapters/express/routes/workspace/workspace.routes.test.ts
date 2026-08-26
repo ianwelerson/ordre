@@ -162,7 +162,7 @@ describe('Workspace', () => {
         await ownerDb.execute<{
           channel: string;
           topic: string;
-          payload: { to: string; variables: Record<string, string> };
+          payload: { to: string; locale: string; variables: Record<string, string> };
         }>(sql`SELECT channel, topic, payload FROM outbox`)
       ).rows;
 
@@ -176,8 +176,12 @@ describe('Workspace', () => {
       expect(rows[0]?.payload.to).toBe(member?.email);
       expect(rows[0]?.payload.variables).toMatchObject({
         workspace_name: 'Outbox',
-        owner_email: member?.email,
+        workspace_plan: expect.any(String),
       });
+
+      // Frozen at write time, so the worker renders in the language the creator
+      // was using rather than negotiating one it has no request for.
+      expect(rows[0]?.payload).toMatchObject({ locale: 'en' });
     });
 
     test('POST writes no outbox row when the request fails', async () => {

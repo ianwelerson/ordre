@@ -1,4 +1,4 @@
-import type { WorkspaceMemberRole } from '@ordre/core/enums';
+import type { Locale, WorkspaceMemberRole } from '@ordre/core/enums';
 
 /** The authenticated user attached to a request by the `authenticate` middleware. */
 export interface SessionUser {
@@ -33,4 +33,10 @@ export interface WorkspaceContext {
 export interface MemberContext {
   id: string;
   role: WorkspaceMemberRole;
+  /**
+   * The language this membership reads in, used to render any message the caller
+   * produces for someone else - an invite is the case that matters, since the
+   * recipient has no membership of their own to read yet.
+   */
+  locale: Locale;
 }

@@ -209,7 +209,11 @@ export const auth = betterAuth({
               channel: 'email',
               topic: 'account:created',
               to: user.email,
-              variables: { user_name: user.name, user_email: user.email },
+              variables: {
+                user_name: user.name,
+                user_email: user.email,
+                dashboard_login_url: urls.dashboardLogin,
+              },
             });
           } catch (error) {
             logger.error(

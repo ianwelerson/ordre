@@ -75,7 +75,7 @@ const LOCATION_ID = '44444444-4444-4444-8444-444444444444';
 const USER_ID = '55555555-5555-4555-8555-555555555555';
 
 const workspace: WorkspaceContext = { id: WORKSPACE_ID, name: 'Workspace' };
-const member: MemberContext = { id: MEMBER_ID, role: 'owner' };
+const member: MemberContext = { id: MEMBER_ID, role: 'owner', locale: 'en' };
 const user: SessionUser = { id: USER_ID, email: 'owner@ordre.app', name: 'Owner' };
 
 /** A workspace_invite row, as Drizzle returns it (Date timestamps). */

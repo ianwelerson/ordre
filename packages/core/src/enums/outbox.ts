@@ -25,17 +25,16 @@ export const OUTBOX_TOPICS = [
 export type OutboxTopic = (typeof OUTBOX_TOPICS)[number];
 
 /**
- * Variables every message carries regardless of event. The producer never passes
- * these - `pushToOutbox` fills them in - so they are listed separately from the
- * per-event vocabulary below and both sides derive from this one list.
+ * Variables every message carries regardless of event, and which every template
+ * therefore renders: the two footer links.
+ *
+ * The producer never passes these - `pushToOutbox` fills them in - so they are
+ * listed separately from the per-event vocabulary below and both sides derive
+ * from this one list. A link only some messages point at, `dashboard_url` among
+ * them, belongs in that vocabulary instead, because a delivery has to opt in to
+ * a variable it actually renders.
  */
-export const OUTBOX_DEFAULT_VARIABLES = [
-  'base_url',
-  'dashboard_url',
-  'dashboard_login_url',
-  'help_url',
-  'privacy_url',
-] as const;
+export const OUTBOX_DEFAULT_VARIABLES = ['help_url', 'privacy_url'] as const;
 export type OutboxDefaultVariable = (typeof OUTBOX_DEFAULT_VARIABLES)[number];
 
 /**
@@ -44,14 +43,14 @@ export type OutboxDefaultVariable = (typeof OUTBOX_DEFAULT_VARIABLES)[number];
  * contract - a variable is only required where a template asks for it.
  */
 export const OUTBOX_VARIABLES = [
+  'dashboard_url',
+  'dashboard_login_url',
   'workspace_name',
   'workspace_industry',
   'workspace_plan',
   'owner_email',
-  'invitee_name',
+  'inviter_name',
   'invitee_email',
-  'invited_name',
-  'invited_email',
   'invited_role',
   'invite_url',
   'user_name',

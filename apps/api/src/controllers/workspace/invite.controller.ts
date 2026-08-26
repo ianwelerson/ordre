@@ -1,5 +1,6 @@
 import { getDb } from '#/config/db-context.ts';
 import { logger } from '#/config/logger.ts';
+import { getRequestLocale } from '#/config/request-context.ts';
 import { urls } from '#/config/urls.ts';
 import type { MemberContext, SessionUser, WorkspaceContext } from '#/types/context.ts';
 import { isUniqueViolation } from '#/utils/db-error.ts';
@@ -119,12 +120,11 @@ export const workspaceInviteCreate = async (
         channel: 'email',
         topic: 'invite:created',
         to: parsedPayload.data.email,
+        locale: member.locale,
         variables: {
           workspace_name: workspace.name,
-          invitee_name: user.name,
-          invitee_email: user.email,
-          invited_name: parsedPayload.data.name,
-          invited_email: parsedPayload.data.email,
+          inviter_name: user.name,
+          invitee_email: parsedPayload.data.email,
           invited_role: parsedPayload.data.role,
           invite_url: urls.invite(inviteData.token),
         },
@@ -347,8 +347,10 @@ export const workspaceInviteAccept = async (token: unknown): Promise<NoContentRe
       return parsedToken.response;
     }
 
+    // The locale is passed in because the function creates the membership row and
+    // has no request to negotiate from. It only lands on a first-time join.
     const result = await getDb().execute<{ app_invite_accept: string }>(
-      sql`SELECT app_invite_accept(${parsedToken.data})`
+      sql`SELECT app_invite_accept(${parsedToken.data}, ${getRequestLocale()})`
     );
 
     const status = result.rows[0]?.app_invite_accept;

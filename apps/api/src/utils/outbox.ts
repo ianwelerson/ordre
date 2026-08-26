@@ -1,8 +1,9 @@
 import { afterCommit, type getDb } from '#/config/db-context.ts';
+import { getRequestLocale } from '#/config/request-context.ts';
 import { urls } from '#/config/urls.ts';
 import { wakeOutboxWorker } from '#/workers/outbox.worker.ts';
 
-import type { OutboxChannel, OutboxDefaultVariable, OutboxTopic } from '@ordre/core/enums';
+import type { Locale, OutboxChannel, OutboxDefaultVariable, OutboxTopic } from '@ordre/core/enums';
 import type { OutboxPayload, OutboxVariablesFor } from '@ordre/core/types';
 import * as schema from '@ordre/db/schemas';
 
@@ -21,9 +22,6 @@ type OutboxDb = ReturnType<typeof getDb>;
  * produced.
  */
 const DEFAULT_VARIABLES: Record<OutboxDefaultVariable, string> = {
-  base_url: urls.base,
-  dashboard_url: urls.dashboard,
-  dashboard_login_url: urls.dashboardLogin,
   help_url: urls.help,
   privacy_url: urls.privacy,
 };
@@ -39,6 +37,15 @@ type PushToOutboxInput<C extends OutboxChannel, T extends OutboxTopic> = {
   topic: T;
   to: string;
   variables: Omit<OutboxVariablesFor<`${C}:${T}`>, OutboxDefaultVariable>;
+  /**
+   * The language to render the message in. Defaults to the locale negotiated for
+   * the in-flight request.
+   *
+   * Pass it explicitly when the recipient's language is known better than the
+   * request's - an invite, where the row is produced by the inviter but read by
+   * someone else, is the case that matters.
+   */
+  locale?: Locale;
   /**
    * Hold the row back until this moment, rather than sending as soon as the
    * transaction commits. Defaults to immediately.
@@ -71,7 +78,7 @@ type PushToOutboxInput<C extends OutboxChannel, T extends OutboxTopic> = {
  */
 export const pushToOutbox = async <C extends OutboxChannel, T extends OutboxTopic>(
   transaction: OutboxDb,
-  { channel, topic, to, variables, sendAfter }: PushToOutboxInput<C, T>
+  { channel, topic, to, variables, locale, sendAfter }: PushToOutboxInput<C, T>
 ) => {
   await transaction.insert(schema.outbox).values({
     channel,
@@ -79,7 +86,11 @@ export const pushToOutbox = async <C extends OutboxChannel, T extends OutboxTopi
     // The cast is the one thing the compiler can't do here: with `C` and `T` still
     // generic it can't prove this object is a member of the payload union, even
     // though `PushToOutboxInput` just constrained it to exactly that.
-    payload: { to, variables: { ...DEFAULT_VARIABLES, ...variables } } as OutboxPayload,
+    payload: {
+      to,
+      locale: locale ?? getRequestLocale(),
+      variables: { ...DEFAULT_VARIABLES, ...variables },
+    } as OutboxPayload,
     // Left to the column default when absent, so an immediate row still reads
     // `now()` from the database's clock rather than this process's.
     ...(sendAfter && { nextAttemptAt: sendAfter }),

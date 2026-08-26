@@ -56,8 +56,8 @@ const CALLER_ID = '22222222-2222-4222-8222-222222222222';
 const TARGET_ID = '33333333-3333-4333-8333-333333333333';
 
 const workspace: WorkspaceContext = { id: WORKSPACE_ID, name: 'Workspace' };
-const owner: MemberContext = { id: CALLER_ID, role: 'owner' };
-const admin: MemberContext = { id: CALLER_ID, role: 'admin' };
+const owner: MemberContext = { id: CALLER_ID, role: 'owner', locale: 'en' };
+const admin: MemberContext = { id: CALLER_ID, role: 'admin', locale: 'en' };
 
 /** A workspace_member row, as Drizzle returns it (Date timestamps). */
 const memberRow = (overrides: Record<string, unknown> = {}) => ({

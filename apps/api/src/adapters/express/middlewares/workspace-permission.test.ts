@@ -18,7 +18,7 @@ const buildResponse = () => {
 describe('middleware/requireWorkspacePermission', () => {
   it('continues when the role holds the required permission', () => {
     const req = buildRequest({
-      member: { id: 'member-1', role: 'owner' },
+      member: { id: 'member-1', role: 'owner', locale: 'en' },
     });
     const { res, status } = buildResponse();
     const next = vi.fn() as unknown as NextFunction;
@@ -31,7 +31,7 @@ describe('middleware/requireWorkspacePermission', () => {
 
   it('responds with forbidden when the role lacks the required permission', () => {
     const req = buildRequest({
-      member: { id: 'member-1', role: 'member' },
+      member: { id: 'member-1', role: 'member', locale: 'en' },
     });
     const { res, status, json } = buildResponse();
     const next = vi.fn() as unknown as NextFunction;

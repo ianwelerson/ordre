@@ -71,6 +71,7 @@ const memberRow = (overrides: Partial<WorkspaceMemberRow> = {}): WorkspaceMember
   role: 'member',
   status: 'active',
   phone: null,
+  locale: 'en',
   createdAt: new Date('2024-01-01T00:00:00.000Z'),
   updatedAt: new Date('2024-01-01T00:00:00.000Z'),
   ...overrides,

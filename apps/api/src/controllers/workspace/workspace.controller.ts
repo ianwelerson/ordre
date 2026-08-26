@@ -1,5 +1,7 @@
 import { getDb } from '#/config/db-context.ts';
 import { logger } from '#/config/logger.ts';
+import { getRequestLocale } from '#/config/request-context.ts';
+import { urls } from '#/config/urls.ts';
 import type { MemberContext, SessionUser, WorkspaceContext } from '#/types/context.ts';
 import { isUniqueViolation } from '#/utils/db-error.ts';
 import { pushToOutbox } from '#/utils/outbox.ts';
@@ -145,6 +147,7 @@ export const workspaceCreate = async (
           workspaceId: id,
           role: 'owner',
           status: 'active',
+          locale: getRequestLocale(),
         })
         .returning();
 
@@ -188,6 +191,7 @@ export const workspaceCreate = async (
           workspace_industry: data.industry,
           workspace_plan: freePlan.title,
           owner_email: user.email,
+          dashboard_url: urls.dashboard,
         },
       });
 

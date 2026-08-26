@@ -51,7 +51,7 @@ const mockUpdate = (result: unknown[] | Error) => {
 
 const WORKSPACE_ID = '11111111-1111-4111-8111-111111111111';
 const workspace: WorkspaceContext = { id: WORKSPACE_ID, name: 'Workspace' };
-const member: MemberContext = { id: 'member-1', role: 'owner' };
+const member: MemberContext = { id: 'member-1', role: 'owner', locale: 'en' };
 
 const validCreatePayload = {
   name: 'Test',

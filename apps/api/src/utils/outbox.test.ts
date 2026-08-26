@@ -27,10 +27,8 @@ describe('utils/outbox', () => {
       to: 'invitee@example.com',
       variables: {
         workspace_name: 'Ordre',
-        invitee_name: 'Ada',
+        inviter_name: 'Ada',
         invitee_email: 'invitee@example.com',
-        invited_name: 'Grace',
-        invited_email: 'grace@example.com',
         invited_role: 'member',
         invite_url: 'https://dashboard.test/invite/token',
       },
@@ -50,7 +48,11 @@ describe('utils/outbox', () => {
       channel: 'email',
       topic: 'account:created',
       to: 'user@example.com',
-      variables: { user_name: 'Ada', user_email: 'user@example.com' },
+      variables: {
+        user_name: 'Ada',
+        user_email: 'user@example.com',
+        dashboard_login_url: urls.dashboardLogin,
+      },
     });
 
     const [{ payload }] = values.mock.calls[0] as [{ payload: { variables: object } }];
@@ -58,8 +60,6 @@ describe('utils/outbox', () => {
     expect(payload.variables).toEqual({
       user_name: 'Ada',
       user_email: 'user@example.com',
-      base_url: urls.base,
-      dashboard_url: urls.dashboard,
       dashboard_login_url: urls.dashboardLogin,
       help_url: urls.help,
       privacy_url: urls.privacy,
@@ -71,7 +71,11 @@ describe('utils/outbox', () => {
       channel: 'email',
       topic: 'account:created',
       to: 'user@example.com',
-      variables: { user_name: 'Ada', user_email: 'user@example.com' },
+      variables: {
+        user_name: 'Ada',
+        user_email: 'user@example.com',
+        dashboard_login_url: urls.dashboardLogin,
+      },
     });
 
     expect(afterCommit).toHaveBeenCalledWith(wakeOutboxWorker);
@@ -91,7 +95,11 @@ describe('utils/outbox', () => {
       channel: 'email',
       topic: 'account:created',
       to: 'user@example.com',
-      variables: { user_name: 'Ada', user_email: 'user@example.com' },
+      variables: {
+        user_name: 'Ada',
+        user_email: 'user@example.com',
+        dashboard_login_url: urls.dashboardLogin,
+      },
     });
 
     expect(order).toEqual(['insert', 'afterCommit']);

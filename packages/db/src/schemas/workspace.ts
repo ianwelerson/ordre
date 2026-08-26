@@ -13,6 +13,8 @@ import {
 } from 'drizzle-orm/pg-core';
 
 import {
+  DEFAULT_LOCALE,
+  LOCALES,
   WORKSPACE_INDUSTRIES,
   WORKSPACE_INVITE_STATUSES,
   WORKSPACE_MEMBER_ROLES,
@@ -31,6 +33,7 @@ export const workspaceIndustry = pgEnum('workspace_industry', WORKSPACE_INDUSTRI
 export const workspaceMemberRole = pgEnum('workspace_member_role', WORKSPACE_MEMBER_ROLES);
 export const workspaceMemberStatus = pgEnum('workspace_member_status', WORKSPACE_MEMBER_STATUSES);
 export const workspaceInviteStatus = pgEnum('workspace_invite_status', WORKSPACE_INVITE_STATUSES);
+export const locale = pgEnum('locale', LOCALES);
 
 // ---- Tables ----
 
@@ -109,6 +112,7 @@ export const workspaceMember = pgTable(
     role: workspaceMemberRole('role').notNull(),
     status: workspaceMemberStatus('status').notNull(),
     phone: text('phone'),
+    locale: locale('locale').notNull().default(DEFAULT_LOCALE),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true })
       .defaultNow()

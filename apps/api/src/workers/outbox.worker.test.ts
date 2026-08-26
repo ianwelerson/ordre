@@ -24,11 +24,10 @@ const resendError = (statusCode: number, name = 'application_error') => ({
 
 const payload: OutboxPayload = {
   to: 'owner@example.com',
+  locale: 'en',
   variables: {
     user_name: 'Ada',
     user_email: 'owner@example.com',
-    base_url: 'https://ordre.test',
-    dashboard_url: 'https://dashboard.test',
     dashboard_login_url: 'https://dashboard.test/login',
     help_url: 'https://help.test',
     privacy_url: 'https://privacy.test',
