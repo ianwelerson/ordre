@@ -98,10 +98,15 @@ paragraph usually means the code needs the clarity instead.
 being applied, a non-obvious ordering, a decision that would otherwise look
 arbitrary. Same register and same verification rule as above.
 
-**Never narrate the change.** No "changed from X to Y", no "we no longer use X",
-no "was previously". A comment describes the code as it stands now, as if it had
-always looked this way. Never reference a fix, a ticket, a review comment, or a
-previous implementation.
+**Never define the code by what it is not.** That covers a previous
+implementation ("changed from X to Y", "we no longer use X", "was previously")
+and equally another package's choice ("Node, not the browser mode `@ordre/ui`
+uses"). A comment describes the code as it stands now, as if it had always
+looked this way and were the only way it had ever been done. Never reference a
+fix, a ticket, a review comment, or a previous implementation.
+
+A contrast is allowed only when both sides are live values at that call site and
+naming the other one removes a real ambiguity.
 
 If something is only worth saying once, say it in the chat, not in a comment.
 

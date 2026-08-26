@@ -81,7 +81,7 @@ tests assert behaviour rather than the classes a variant emits? What would still
 pass if the change were reverted?
 
 **Comments, JSDoc, and docs**
-Check each comment against four tests, in order:
+Check each comment against five tests, in order:
 
 1. **Does the first sentence say what the thing is or does?** A fragment, an
    aphorism, or a label-plus-colon opener is a finding on its own.
@@ -93,9 +93,12 @@ Check each comment against four tests, in order:
    for rhythm all belong in the chat, not the file.
 4. **Is it carrying more than one "why"?** Rejected alternatives and trade-off
    reasoning are conversation, not documentation.
+5. **Is it defining the code by what it is not?** A previous implementation and
+   another package's choice are the same finding. Allow a contrast only where
+   both sides are live values at that call site.
 
-Then: do comments describe the code as it stands, with no trace of what it
-replaced? Does anything reusable lack an `@example`? Which docs page is now stale?
+Then: do comments describe the code as it stands? Does anything reusable lack an
+`@example`? Which docs page is now stale?
 
 **Performance, where it matters**
 Query counts and N+1 shapes, work repeated per render, bundle weight crossing into
@@ -103,12 +106,12 @@ a client component. Ignore micro-optimisation.
 
 ## Step 4: Rank what you found
 
-| Severity      | Meaning                                                              |
-| ------------- | -------------------------------------------------------------------- |
-| **Blocker**   | Wrong behaviour, broken boundary, or a bug that reaches production   |
-| **Should fix**| Real debt: it will cost someone later, and it is cheap to fix now    |
-| **Consider**  | A defensible alternative worth weighing, not a defect                |
-| **Teach**     | The code is fine; here is the pattern or principle underneath it     |
+| Severity       | Meaning                                                            |
+| -------------- | ------------------------------------------------------------------ |
+| **Blocker**    | Wrong behaviour, broken boundary, or a bug that reaches production |
+| **Should fix** | Real debt: it will cost someone later, and it is cheap to fix now  |
+| **Consider**   | A defensible alternative worth weighing, not a defect              |
+| **Teach**      | The code is fine; here is the pattern or principle underneath it   |
 
 Drop anything you cannot justify at one of these levels. A long review is not a
 better review.
@@ -121,9 +124,11 @@ better review.
 <One paragraph: what the change does, and whether the shape is right.>
 
 ### What works well
+
 <One to three specific things, with the reason they are right.>
 
 ### Blocker: <title>
+
 `path/to/file.ts:42`
 **What:** <the defect, in one or two sentences.>
 **Why it matters:** <the concrete consequence.>
@@ -131,16 +136,20 @@ better review.
 **Suggestion:** <the smallest change that fixes it.>
 
 ### Should fix: <title>
+
 ...
 
 ### Consider: <title>
+
 ...
 
 ### Worth knowing
+
 <The concept behind the most interesting finding, explained properly: what the
 pattern is called, why it exists, and where else in this repo it shows up.>
 
 ### Docs
+
 <Pages under apps/docs that this change makes stale, or "nothing to update".>
 ```
 
