@@ -127,8 +127,13 @@ existing one in the same package.
   export. `export *` is banned there on purpose.
 - Every user-facing string lives in `@ordre/core/messages`. Every error lives in
   the catalog in `@ordre/core/errors`, keyed by `ErrorCode`.
-- `@ordre/db` is imported by `apps/api` and nothing else. `@ordre/core` is the
-  floor: no React, no Drizzle.
+- `@ordre/db` and `@ordre/email` are imported by `apps/api` and nothing else.
+  `@ordre/core` is the floor: no React, no Drizzle.
+- `packages/email` is the only workspace with a build step, because it is the only
+  one containing JSX and Node cannot strip that. Everything else is consumed as
+  raw source, and the API stays unbundled.
+- Every user-facing email string lives in `@ordre/core/messages/{en,pt}/emails.ts`;
+  the templates in `packages/email` are layout only.
 
 ## Commits
 
@@ -170,6 +175,8 @@ Only commit when asked. History stays linear: rebase on `develop`, no merge comm
 | `pnpm test:unit:ci` | Vitest single run                             |
 | `pnpm db:generate`  | Generate a Drizzle migration from the schemas |
 | `pnpm db:migrate`   | Apply migrations                              |
+| `pnpm email:build`  | Compile `@ordre/email` for the API            |
+| `pnpm email:dev`    | Preview the email templates in both locales   |
 
 ## Skills
 

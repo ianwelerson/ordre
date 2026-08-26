@@ -22,6 +22,8 @@ minimumReleaseAgeExclude:
   - postcss@8.5.10
   - brace-expansion@2.1.4
   - '@hookform/resolvers@5.9.0'
+  - react-email@6.9.3
+  - '@react-email/ui@6.9.3'
 # GHSA-mh99-v99m-4gvg declares a single flat range (<=5.0.7) with no branch for
 # the 2.x line, so the backported fix in brace-expansion@2.1.4 still trips the
 # audit. We are on 2.1.4 (minimatch@9) and 5.0.8 (minimatch@10) - both patched.
@@ -32,6 +34,12 @@ auditConfig:
     - GHSA-mh99-v99m-4gvg
 overrides:
   postcss@<8.5.10: ^8.5.10
-  esbuild: ^0.28.1
+  # Pinned exactly, not a caret range. `@react-email/ui` ships a Next.js traced
+  # copy of the esbuild JS host inside its prebuilt `.next` output, and that copy
+  # cannot be upgraded from here. The host refuses to run against a platform
+  # binary of a different version, so a range that resolves higher breaks the
+  # email preview server with "Host version X does not match binary version Y".
+  # Raise this only in step with the version `@react-email/ui` was built against.
+  esbuild: 0.28.1
   sharp@<0.35.0: ^0.35.3
   minimatch@9>brace-expansion: ^2.1.4

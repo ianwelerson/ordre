@@ -1,0 +1,8 @@
+{
+  "extends": "@ordre/config/typescript/react-library.json",
+  "include": ["src", "emails", "build.ts", "*.config.ts"],
+  "exclude": ["node_modules", "coverage", "dist", ".react-email"],
+  "compilerOptions": {
+    "types": ["node", "vitest/globals"]
+  }
+}

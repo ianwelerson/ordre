@@ -1,0 +1,55 @@
+{
+  "name": "@ordre/email",
+  "version": "0.1.0",
+  "dependencies": {
+    "@ordre/core": "workspace:*",
+    "esbuild": "0.28.1",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-email": "^6.9.3",
+    "use-intl": "^4.13.7"
+  },
+  "devDependencies": {
+    "@ordre/config": "workspace:*",
+    "@react-email/ui": "6.9.3",
+    "@types/node": "^26.2.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^6.1.0",
+    "@vitest/coverage-v8": "^4.1.11",
+    "@vitest/eslint-plugin": "^1.6.27",
+    "eslint": "^10.8.1",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.11"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "imports": {
+    "#/*": "./src/*"
+  },
+  "portless": {
+    "name": "email.ordre",
+    "script": "email:dev:preview"
+  },
+  "private": true,
+  "scripts": {
+    "check-types": "tsc",
+    "email:build": "tsc -p tsconfig.build.json && node build.ts",
+    "email:dev": "portless",
+    "email:dev:preview": "email dev --dir emails --port ${PORT:-3000}",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "lint": "eslint --max-warnings 0",
+    "test:unit": "vitest --coverage",
+    "test:unit:ci": "vitest run --coverage",
+    "test:unit:ui": "vitest --coverage --ui"
+  },
+  "type": "module"
+}
