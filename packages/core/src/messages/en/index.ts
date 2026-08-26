@@ -1,4 +1,5 @@
 import base from '../app.ts';
+import { emails } from './emails.ts';
 import { errors } from './errors.ts';
 import { validation } from './validation.ts';
 
@@ -13,11 +14,11 @@ import { validation } from './validation.ts';
  * on its own - `errorResponse` fills the wire message from English - and has no
  * business pulling in taglines to do it.
  */
-export { errors, validation };
+export { emails, errors, validation };
 
 export const app = {
   ...base.app,
   tagline: 'Keep every client in the loop.',
 };
 
-export default { app, errors, validation };
+export default { app, emails, errors, validation };
