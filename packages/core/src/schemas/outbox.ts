@@ -18,7 +18,9 @@ import { WORKSPACE_MEMBER_ROLES } from '../enums/workspace.ts';
  * and into a live message as a broken link - the failure the payload registry
  * exists to prevent.
  */
-const URL_SCHEMA = z.url();
+// `protocol` restricts the scheme: `new URL()` alone accepts `javascript:` and
+// `data:`, and every `_url` variable is rendered into an email `href`.
+const URL_SCHEMA = z.url({ protocol: /^https?$/ });
 const EMAIL_SCHEMA = z.email();
 const ROLE_SCHEMA = z.enum(WORKSPACE_MEMBER_ROLES);
 const TEXT_SCHEMA = z.string().min(1);

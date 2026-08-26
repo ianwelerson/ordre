@@ -74,9 +74,10 @@ await pushToOutbox(tx, {
 - Everywhere else `getDb()` is already the request transaction.
 
 Variables are named `<subject>_<attribute>`, and the attribute decides how the
-value is checked: `_url` parses as a URL, `_email` as an address, `_role` against
-`WORKSPACE_MEMBER_ROLES`, everything else as a non-empty string. That is what stops
-a malformed link reaching a live message, which validation alone used to allow.
+value is checked: `_url` parses as an http(s) URL, `_email` as an address,
+`_role` against `WORKSPACE_MEMBER_ROLES`, everything else as a non-empty string.
+That is what stops a malformed link reaching a live message, which validation
+alone used to allow.
 
 `variables` is checked at compile time against `<channel>:<topic>`, minus the
 defaults below, so a missing or misspelled variable - or a channel/topic pair with
