@@ -15,6 +15,7 @@
     "engineering/data-model",
     "engineering/authorization",
     "engineering/outbox",
+    "engineering/runtime",
     "engineering/testing",
     "engineering/ai-assistance",
     "engineering/infrastructure",

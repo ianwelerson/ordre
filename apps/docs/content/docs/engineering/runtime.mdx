@@ -1,0 +1,102 @@
+---
+title: The API Runtime
+icon: Terminal
+description: Why the API has no build step, what that rules out, and what bundling it would and would not buy.
+---
+
+The API runs TypeScript directly on Node. There is no compile step in development
+and none in production:
+
+```bash
+node --watch src/adapters/express/index.ts    # api:dev:app
+node apps/api/src/adapters/express/index.ts   # Railway start command
+```
+
+Node 22 added type stripping behind a flag, Node 23 turned it on by default, and
+Node 24 - the current LTS - runs `.ts` with no flag at all. This page records why
+that is the choice here, and what it costs.
+
+## What it buys
+
+- **What you read is what runs.** A stack trace points at a real line in a real
+  file, with no sourcemap in between.
+- **No build-versus-deploy skew.** There is no artifact that can be stale.
+- **Fewer moving parts.** No bundler config, no watch-and-restart wrapper, no
+  build phase on deploy. See [Deployment](/internal-docs/setup/deployment) for
+  what that saves on Railway.
+
+## What it rules out
+
+Type stripping **erases** type annotations. It does not transform anything, so
+none of the following can appear in `apps/api` or in a package the API imports:
+
+| Not allowed                                          | Why                                                   |
+| ---------------------------------------------------- | ----------------------------------------------------- |
+| JSX                                                  | Not a type annotation. `.tsx` fails to parse outright |
+| `enum` as a value                                    | Emits a runtime object; nothing emits it              |
+| `namespace` with a body                              | Same                                                  |
+| Parameter properties (`constructor(private db: Db)`) | Emits an assignment                                   |
+| Decorators                                           | Emit runtime calls                                    |
+
+The practical consequence is that a NestJS or TypeORM shaped codebase could not
+make this choice at all. Express, Drizzle and Zod need none of it.
+
+<Callout>
+  **The rule is a compiler check, not a convention.** `erasableSyntaxOnly` is set in
+  [`@ordre/config/typescript/base.json`](https://github.com/ianwelerson/ordre/blob/main/packages/config/typescript/base.json),
+  so writing an `enum` or a parameter property is a red squiggle at authoring time rather than a
+  `SyntaxError` at boot.
+</Callout>
+
+### Two things that are easy to get wrong
+
+Both are already handled, and both break the moment someone "tidies" them:
+
+- **Path aliases come from `imports` in `package.json`**, not tsconfig `paths`.
+  `#env` and `#/*` are resolved by Node itself. tsconfig `paths` exist only for
+  the compiler and would resolve to nothing at runtime.
+- **Imports carry explicit `.ts` extensions**, which is what
+  `allowImportingTsExtensions` permits. Node does not guess extensions for ESM.
+
+## The one exception: `@ordre/email`
+
+Every other workspace is consumed as raw TypeScript source. `@ordre/email` is
+built, because it is the only one containing JSX:
+
+```
+packages/email/src/**/*.tsx  ──tsc──────►  dist/**/*.d.ts   (what the API type-checks against)
+                             └─esbuild──►  dist/index.js    (what the API imports)
+```
+
+The declarations matter as much as the bundle. If the API resolved the package's
+types straight from `.tsx`, it would need `jsx` enabled in its own tsconfig, and
+JSX written in `apps/api` would then compile cleanly and fail at boot. Shipping
+built types keeps that impossible.
+
+`esbuild` is a regular **dependency** of that package rather than a devDependency,
+because Railway installs with `NODE_ENV=production` and prunes devDependencies
+before the build command runs.
+
+## Would bundling the API help?
+
+It comes up because bundling would also solve the JSX problem. Measured against
+what it costs, the answer today is no.
+
+|                   | Effect                                                                                                                                                                                                                           |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Response time** | None. Bundling does not change how a running server handles a request                                                                                                                                                            |
+| **Boot time**     | Yes, meaningfully. Thousands of module resolutions collapse into one file, and type stripping stops running per file                                                                                                             |
+| **Memory**        | Partly. It shrinks the module graph, but not the Drizzle schema construction, which is runtime work a bundler cannot precompute. Both were named as causes of the startup spike in [Deployment](/internal-docs/setup/deployment) |
+| **Debuggability** | Worse. Stack traces need sourcemaps, and `--enable-source-maps` has its own cost                                                                                                                                                 |
+
+The two risks that actually bite: **Better Auth and Drizzle both use dynamic
+imports**, which bundlers routinely mangle into failures that only appear on an
+untested code path, and the `NODE_OPTIONS` heap cap in the Railway config applies
+to the build process too.
+
+<Callout type="warn">
+  **The trigger to revisit this is a measurement, not a preference.** Slow restarts or slow deploys
+  are the symptom that would justify bundling. A general wish to optimise is not - the memory spike
+  that prompted the current tuning was already solved by capping the heap, which took the service
+  from ~350 MB to ~83 MB idle.
+</Callout>

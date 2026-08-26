@@ -51,6 +51,7 @@ Each app keeps its own raw dev server (`*:dev:app`); portless is a thin HTTPS pr
 | API       | `pnpm api:dev`   | `https://api.ordre.localhost`       |
 | Docs      | `pnpm docs:dev`  | `https://docs.ordre.localhost`      |
 | Storybook | `pnpm storybook` | `https://storybook.ordre.localhost` |
+| Email previews | `pnpm email:dev` | `https://email.ordre.localhost`      |
 
 ## Running one app at a time
 
@@ -72,6 +73,7 @@ To bypass the HTTPS proxy and run a raw dev server on its default port, use the 
 | API       | `pnpm api:dev:app`     | `http://localhost:3000` |
 | Docs      | `pnpm docs:dev:app`    | (OpenAPI watcher + `next dev`) |
 | Storybook | `pnpm storybook:app`   | `http://localhost:6006` |
+| Email previews | `pnpm email:dev:preview` | `http://localhost:3000` |
 
 ## Common root scripts
 
@@ -84,5 +86,20 @@ To bypass the HTTPS proxy and run a raw dev server on its default port, use the 
 | `pnpm format`       | Format everything with Prettier            |
 | `pnpm test:unit`    | Run unit tests with coverage               |
 | `pnpm db:migrate`   | Apply pending database migrations          |
+| `pnpm email:build`  | Compile `@ordre/email` for the API to import |
+| `pnpm email:dev`    | Preview every email template, in both locales |
 
 Each app README lists its own app-specific scripts.
+
+## Email templates
+
+`pnpm email:dev` runs the React Email preview server over
+[`packages/email/emails/`](https://github.com/ianwelerson/ordre/blob/main/packages/email),
+which holds one entry per template **per locale** - `invite-created.en` beside
+`invite-created.pt` - so the Portuguese gets looked at rather than assumed.
+
+`pnpm email:build` is the only build step in the repo. `pnpm api:dev` and
+`pnpm check-types` both depend on it through Turbo, so it normally runs on its own;
+you only need it by hand after a template change if you are starting the API some
+other way. [The API Runtime](/internal-docs/engineering/runtime) explains why this
+one package is compiled when nothing else is.

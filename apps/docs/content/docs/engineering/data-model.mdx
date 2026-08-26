@@ -191,6 +191,13 @@ Workspace Settings.
 A user's membership in a workspace (`workspace_member`). Custom table - not the
 Better Auth org plugin.
 
+`locale` sits here rather than on `user` so one person can read one workspace in
+English and another in Portuguese. It is seeded from the request's
+`Accept-Language` when the membership is created - on workspace creation, and
+inside `app_invite_accept` on a first-time join - and the invite email is rendered
+in the *inviter's* locale, since its recipient has no membership yet. See
+[Transactional Outbox](/internal-docs/engineering/outbox#copy-and-locale).
+
 | Field         | Type                            | Notes                                                    |
 | ------------- | ------------------------------- | -------------------------------------------------------- |
 | `id`          | uuid                            |                                                          |
@@ -201,6 +208,7 @@ Better Auth org plugin.
 | `role`        | enum `owner \| admin \| member` |                                                          |
 | `status`      | enum `active \| suspended`      | Suspended = soft-removed; the row is kept, access is not |
 | `phone`       | text, nullable                  | Personal account contact (Register step 4, Profile)      |
+| `locale`      | enum `en \| pt`, default `en`    | The language this member reads the product and its email in |
 | `createdAt`   | timestamp                       |                                                          |
 | `updatedAt`   | timestamp                       |                                                          |
 

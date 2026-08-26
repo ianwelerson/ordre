@@ -13,7 +13,7 @@ These settings took the service from ~350 MB of idle memory to ~83 MB (measured 
 | Setting        | Value                                                 |
 | -------------- | ----------------------------------------------------- |
 | Root directory | repo root (not `apps/api`)                            |
-| Build command  | `echo "Skipping build"`                               |
+| Build command  | `pnpm --filter @ordre/email email:build`              |
 | Start command  | `node apps/api/src/adapters/express/index.ts`         |
 | Variables      | `APP_STAGE`, `NODE_OPTIONS` (see below) + the API's own variables |
 
@@ -31,9 +31,16 @@ The API's own variables (`DATABASE_URL`, `BETTER_AUTH_SECRET`, the `APP_*_URL` o
 
 pnpm workspaces only resolve from the repo root - pointing the service root at `apps/api` breaks the install because the workspace packages (`@ordre/db`, `@ordre/core`, ...) and the lockfile live above it. The root stays at the monorepo root; the start command is what narrows the service down to the API.
 
-### Build command: skip it
+### Build command: one package, not the app
 
-The API has no build step. It runs TypeScript natively on Node (type stripping), which is why `api:start` is a plain `node` invocation and the `api` package has no `build` script. Left to auto-detection, Railway runs the root `build` script - `turbo run build` - which builds **every frontend app** (dashboard, board, marketing, docs, storybook) and throws the output away. Replacing it with an `echo` skips all of that; Railway's install phase still runs `pnpm install` at the root regardless, which is everything the API needs.
+The API still has no build step of its own. It runs TypeScript natively on Node (type stripping), which is why `api:start` is a plain `node` invocation and the `api` package has no `build` script. Left to auto-detection, Railway runs the root `build` script - `turbo run build` - which builds **every frontend app** (dashboard, board, marketing, docs, storybook) and throws the output away.
+
+What the command does build is [`@ordre/email`](https://github.com/ianwelerson/ordre/blob/main/packages/email), the one workspace containing JSX and therefore the one Node cannot execute as source. It emits a declaration set and a single esbuild bundle, takes about a second, and exits. [The API Runtime](/internal-docs/engineering/runtime) covers why that exception exists and why the API itself is not bundled.
+
+Two things make this safe under the settings below, and both break if they change:
+
+- **`esbuild` is a regular `dependency`** of that package, not a devDependency, because `NODE_ENV=production` prunes devDependencies before the build command runs.
+- **esbuild is a Go binary**, so the heap cap costs it nothing. The warning below is about the Next.js apps, which are a different order of magnitude.
 
 ### Start command: direct `node`, no wrappers
 
@@ -72,11 +79,12 @@ node --max-old-space-size=192 --max-semi-space-size=16 apps/api/src/adapters/exp
 </Callout>
 
 <Callout type="warn">
-  For the same reason, never reintroduce a real build command while
-  `NODE_OPTIONS` carries the heap cap - 192 MB is far too small to build the
-  Next.js apps, and `NODE_ENV=production` additionally prunes the
-  devDependencies the build tooling lives in. If this service ever needs a build
-  step again, scope the flags to the start command first.
+  For the same reason, never widen the build command to anything that compiles a
+  **frontend app** while `NODE_OPTIONS` carries the heap cap - 192 MB is far too
+  small for a Next.js build, and `NODE_ENV=production` additionally prunes the
+  devDependencies its tooling lives in. The `@ordre/email` build is fine on both
+  counts, as above. If this service ever needs more than that, scope the flags to
+  the start command first.
 </Callout>
 
 ## What "healthy" looks like
