@@ -20,16 +20,15 @@ let resend: Resend | undefined;
 const getResend = () => (resend ??= new Resend(env.RESEND_API_KEY));
 
 /**
- * Delivery -> the template id Resend knows it by.
+ * Loads the template package on first send, for the same reason as the client above.
  *
- * The indirection exists because the right-hand side is not ours: it lives in the
- * Resend dashboard and can be renamed by anyone with access. Keeping it here means
- * a rename, or a new version of a template, is one edit in this file and never
- * reaches a queued row.
- *
- * `Record<OutboxDelivery, string>` makes a new delivery a compile error until it
- * has a Resend template to send with.
+ * `@ordre/email` brings React and `react-dom/server` with it, and this module
+ * reaches every producer transitively, so importing it at module scope would put
+ * that cost on the boot path of a process that may never send anything. Node
+ * caches the module, so only the first call pays.
  */
+const getRenderEmail = async () => (await import('@ordre/email')).renderEmail;
+
 /**
  * Deliberately a constant, not an env-derived origin like the links in the body.
  *
@@ -38,14 +37,6 @@ const getResend = () => (resend ??= new Resend(env.RESEND_API_KEY));
  * preview and production.
  */
 const EMAIL_FROM = 'Ordre <onboarding@ordre.app>';
-
-const RESEND_TEMPLATE_IDS: Record<OutboxDelivery, string> = {
-  'email:account:created': 'account-created-1',
-  'email:account:verify-email': 'email-verification-1',
-  'email:account:reset-password': 'reset-password-1',
-  'email:workspace:created': 'workspace-created-1',
-  'email:invite:created': 'workspace-invitation-1',
-};
 
 /**
  * Flattens a Zod error to one line: the message lands in the row's `last_error`
@@ -59,9 +50,10 @@ const formatIssues = (error: z.ZodError): string =>
  * Sends one outbox row through Resend.
  *
  * The template is resolved here from the row's topic, not read off the payload, so
- * a template rename or version bump never has to reach rows already queued. That
- * also means the payload can only be validated at this point: `topic` picks the
- * schema, which is what checks the variables the chosen template will render.
+ * a template change never has to reach rows already queued. That also means the
+ * payload can only be validated at this point: `topic` picks the schema, which is
+ * what checks the variables the chosen template will render. The payload's own
+ * `locale` picks the language, so nothing about the message is decided here.
  *
  * **Throws on failure, never returns the error.** The worker marks a row processed
  * whenever this resolves, so a swallowed error silently drops the email. Resend's
@@ -69,17 +61,18 @@ const formatIssues = (error: z.ZodError): string =>
  * classifies on.
  *
  * @param topic - The business event the row was queued for.
- * @param payload - The outbox row's payload: recipient and variables.
+ * @param payload - The outbox row's payload: recipient, locale and variables.
  * @param id - The outbox row id, used as the idempotency key so an at-least-once
  *   redelivery inside Resend's 24h window doesn't send twice.
  */
 export const sendEmail = async (topic: OutboxTopic, payload: OutboxPayload, id: string) => {
-  const parsedPayload = z.safeParse(OUTBOX_PAYLOAD_SCHEMAS[`email:${topic}`], payload);
+  const delivery = `email:${topic}` satisfies OutboxDelivery;
+  const parsedPayload = z.safeParse(OUTBOX_PAYLOAD_SCHEMAS[delivery], payload);
   const parsedId = z.safeParse(z.uuid(), id);
 
   if (!parsedPayload.success) {
     throw new Error(
-      `Outbox row ${id} has a payload that does not match the schema for email:${topic}: ${formatIssues(parsedPayload.error)}`
+      `Outbox row ${id} has a payload that does not match the schema for ${delivery}: ${formatIssues(parsedPayload.error)}`
     );
   }
 
@@ -89,14 +82,18 @@ export const sendEmail = async (topic: OutboxTopic, payload: OutboxPayload, id: 
     );
   }
 
-  const { data: payloadData } = parsedPayload;
-  const templateId = RESEND_TEMPLATE_IDS[`email:${topic}`];
+  const renderEmail = await getRenderEmail();
+  const { subject, html, text } = await renderEmail(delivery, parsedPayload.data);
 
   const { data, error } = await getResend().emails.send(
     {
-      to: payloadData.to,
+      to: parsedPayload.data.to,
       from: EMAIL_FROM,
-      template: { id: templateId, variables: payloadData.variables },
+      subject,
+      html,
+      // Every client that cannot show the HTML still gets a readable message, and
+      // spam filters weight a missing plain-text alternative against the sender.
+      text,
     },
     { idempotencyKey: parsedId.data }
   );

@@ -4,6 +4,7 @@
   "dependencies": {
     "@ordre/core": "workspace:*",
     "@ordre/db": "workspace:*",
+    "@ordre/email": "workspace:*",
     "@ordre/monitoring": "workspace:*",
     "better-auth": "^1.7.1",
     "cors": "^2.8.6",
