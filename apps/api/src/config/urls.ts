@@ -4,8 +4,8 @@
  * This is the only module where an origin meets a path. Origins come from the
  * environment because they genuinely differ per deployment; paths come from
  * `@ordre/core/constants` because they never do. Splitting them that way is what
- * stopped `base_url` being a hardcoded production link in dev mail while
- * `invite_url` pointed at localhost in the same message.
+ * keeps every link in one message resolved against the deployment that produced
+ * it.
  *
  * Values are resolved at import, not per call: `env` is already frozen by then, so
  * a getter would only hide the fact that these are constants of the process.

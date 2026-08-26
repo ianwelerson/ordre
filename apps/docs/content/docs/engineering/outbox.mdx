@@ -87,9 +87,9 @@ service re-parses it against the same schema before rendering.
 
 ### Default variables
 
-`base_url`, `help_url`, and `privacy_url` are filled in by `pushToOutbox` from
+`help_url` and `privacy_url` are filled in by `pushToOutbox` from
 [`config/urls.ts`](https://github.com/ianwelerson/ordre/blob/main/apps/api/src/config/urls.ts) -
-producers never pass them. They are the three links every template renders in its
+producers never pass them. They are the two links every template renders in its
 footer, which is what makes them defaults; a link only some messages point at,
 `dashboard_url` among them, is an ordinary variable the delivery opts into. They are read from `urls` rather than hardcoded because
 they were once literals pointing at production, which meant every email sent from
