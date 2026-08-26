@@ -9,6 +9,7 @@ import { API_BASE_PATH } from '@ordre/core/constants';
 import { httpLogger } from '@ordre/monitoring/server';
 
 import { clientIp } from './middlewares/client-ip.ts';
+import { requestLocale } from './middlewares/request-locale.ts';
 import routes from './routes/index.ts';
 
 const app: Express = express();
@@ -55,6 +56,10 @@ app.use(httpLogger('api', !isTest()));
 // Above the routes so everything below - Better Auth included - reads one
 // resolved client IP rather than re-deriving its own from the forwarded chain.
 app.use(clientIp);
+
+// Also above the routes, because the `account:*` emails are produced inside the
+// Better Auth handler, before any session exists to hang a locale off.
+app.use(requestLocale);
 
 // Every route lives under the version prefix; the paths themselves are declared
 // version-free in `@ordre/core/constants` (body parsers are wired inside this router).
