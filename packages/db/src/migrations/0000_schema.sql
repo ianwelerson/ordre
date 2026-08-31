@@ -1,3 +1,4 @@
+CREATE TYPE "public"."locale" AS ENUM('en', 'pt');--> statement-breakpoint
 CREATE TYPE "public"."workspace_industry" AS ENUM('jewelry', 'personal', 'technology', 'automotive', 'construction', 'other');--> statement-breakpoint
 CREATE TYPE "public"."workspace_invite_status" AS ENUM('pending', 'accepted', 'declined', 'expired', 'revoked');--> statement-breakpoint
 CREATE TYPE "public"."workspace_member_role" AS ENUM('owner', 'admin', 'member');--> statement-breakpoint
@@ -7,8 +8,11 @@ CREATE TYPE "public"."plan_code" AS ENUM('free:founding', 'paid:founding');--> s
 CREATE TYPE "public"."plan_status" AS ENUM('active', 'legacy', 'closed');--> statement-breakpoint
 CREATE TYPE "public"."plan_tier" AS ENUM('free', 'paid');--> statement-breakpoint
 CREATE TYPE "public"."subscription_status" AS ENUM('active', 'cancelled');--> statement-breakpoint
+CREATE TYPE "public"."outbox_channel" AS ENUM('email', 'audience');--> statement-breakpoint
+CREATE TYPE "public"."outbox_topic" AS ENUM('account:created', 'account:verify-email', 'account:reset-password', 'workspace:created', 'invite:created', 'contact:sync');--> statement-breakpoint
 CREATE TABLE "account" (
 	"id" uuid PRIMARY KEY DEFAULT pg_catalog.gen_random_uuid() NOT NULL,
+	"issuer" text NOT NULL,
 	"account_id" text NOT NULL,
 	"provider_id" text NOT NULL,
 	"user_id" uuid NOT NULL,
@@ -43,6 +47,9 @@ CREATE TABLE "user" (
 	"image" text,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"first_name" text NOT NULL,
+	"last_name" text NOT NULL,
+	"product_news_opt_in" boolean DEFAULT false,
 	CONSTRAINT "user_email_unique" UNIQUE("email")
 );
 --> statement-breakpoint
@@ -108,6 +115,7 @@ CREATE TABLE "workspace_member" (
 	"role" "workspace_member_role" NOT NULL,
 	"status" "workspace_member_status" NOT NULL,
 	"phone" text,
+	"locale" "locale" DEFAULT 'en' NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "workspace_member_user_workspace_unique" UNIQUE("user_id","workspace_id")
@@ -147,6 +155,20 @@ CREATE TABLE "workspace_subscription" (
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "outbox" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"channel" "outbox_channel" NOT NULL,
+	"topic" "outbox_topic" NOT NULL,
+	"payload" jsonb NOT NULL,
+	"attempts" integer DEFAULT 0 NOT NULL,
+	"next_attempt_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"claimed_at" timestamp with time zone,
+	"processed_at" timestamp with time zone,
+	"last_error" text,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 ALTER TABLE "account" ADD CONSTRAINT "account_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "session" ADD CONSTRAINT "session_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "workspace_invite" ADD CONSTRAINT "workspace_invite_workspace_id_workspace_id_fk" FOREIGN KEY ("workspace_id") REFERENCES "public"."workspace"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -159,6 +181,7 @@ ALTER TABLE "workspace_member_location" ADD CONSTRAINT "workspace_member_locatio
 ALTER TABLE "workspace_member_location" ADD CONSTRAINT "workspace_member_location_location_id_workspace_location_id_fk" FOREIGN KEY ("location_id") REFERENCES "public"."workspace_location"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "workspace_subscription" ADD CONSTRAINT "workspace_subscription_workspace_id_workspace_id_fk" FOREIGN KEY ("workspace_id") REFERENCES "public"."workspace"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "workspace_subscription" ADD CONSTRAINT "workspace_subscription_plan_id_plan_id_fk" FOREIGN KEY ("plan_id") REFERENCES "public"."plan"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+CREATE UNIQUE INDEX "account_issuer_accountId_uidx" ON "account" USING btree ("issuer","account_id");--> statement-breakpoint
 CREATE INDEX "account_userId_idx" ON "account" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "session_userId_idx" ON "session" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "verification_identifier_idx" ON "verification" USING btree ("identifier");--> statement-breakpoint
@@ -172,4 +195,5 @@ CREATE UNIQUE INDEX "workspace_location_one_default_per_workspace" ON "workspace
 CREATE INDEX "workspace_member_workspace_id_idx" ON "workspace_member" USING btree ("workspace_id");--> statement-breakpoint
 CREATE INDEX "workspace_member_location_location_id_idx" ON "workspace_member_location" USING btree ("location_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "plan_one_active_per_tier" ON "plan" USING btree ("tier") WHERE "plan"."status" = 'active';--> statement-breakpoint
-CREATE UNIQUE INDEX "workspace_subscription_one_active_per_workspace" ON "workspace_subscription" USING btree ("workspace_id") WHERE "workspace_subscription"."status" = 'active';
+CREATE UNIQUE INDEX "workspace_subscription_one_active_per_workspace" ON "workspace_subscription" USING btree ("workspace_id") WHERE "workspace_subscription"."status" = 'active';--> statement-breakpoint
+CREATE INDEX "outbox_pending_idx" ON "outbox" USING btree ("next_attempt_at") WHERE "outbox"."processed_at" IS NULL;

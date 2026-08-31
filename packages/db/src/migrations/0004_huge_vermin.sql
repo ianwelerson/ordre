@@ -1,2 +1,0 @@
-ALTER TYPE "public"."outbox_topic" ADD VALUE 'account:verify-email' BEFORE 'workspace:created';--> statement-breakpoint
-ALTER TYPE "public"."outbox_topic" ADD VALUE 'account:reset-password' BEFORE 'workspace:created';

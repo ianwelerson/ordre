@@ -5,57 +5,29 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1785467789880,
-      "tag": "0000_initial_schema",
+      "when": 1788141693969,
+      "tag": "0000_schema",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1785467790255,
+      "when": 1788141710563,
       "tag": "0001_row_level_security",
       "breakpoints": true
     },
     {
       "idx": 2,
       "version": "7",
-      "when": 1785467790623,
-      "tag": "0002_invite_functions",
+      "when": 1788141710886,
+      "tag": "0002_functions",
       "breakpoints": true
     },
     {
       "idx": 3,
       "version": "7",
-      "when": 1785881188181,
-      "tag": "0003_outbox",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1787168063292,
-      "tag": "0004_huge_vermin",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1787347340615,
-      "tag": "0005_little_ego",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1787697503886,
-      "tag": "0006_gigantic_onslaught",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "7",
-      "when": 1787697526204,
-      "tag": "0007_invite_accept_locale",
+      "when": 1788141711217,
+      "tag": "0003_grants",
       "breakpoints": true
     }
   ]

@@ -1,5 +1,5 @@
 -- ============================================================================
--- Invite SECURITY DEFINER functions
+-- SECURITY DEFINER functions
 -- ----------------------------------------------------------------------------
 -- Every function here is SECURITY DEFINER. Normally a function runs with the
 -- privileges of whoever *calls* it; SECURITY DEFINER makes it run with the
@@ -8,8 +8,10 @@
 -- `invite_all` RLS policy is `USING (app_is_member(workspace_id))`, so:
 --   * the public preview/decline calls have no `app.user_id` at all, and
 --   * an accepting invitee is not a member of the target workspace yet,
--- meaning a normal query would see (or write) zero invite rows. This mirrors the
--- existing `app_slug_exists` pattern.
+-- meaning a normal query would see (or write) zero invite rows. The audience
+-- function at the end is here for the same reason from the other direction: it
+-- has to see workspaces the caller is not a member of. This mirrors the
+-- `app_slug_exists` pattern in the previous migration.
 --
 -- Every function also pins `SET search_path = public, pg_temp` - a required
 -- hardening step for SECURITY DEFINER functions so a caller can't point object
@@ -64,42 +66,42 @@ $$;
 --> statement-breakpoint
 
 -- ── 2. Accept (session required; joins or reactivates) ───────────────────────
--- By now the invitee has signed up / logged in, so there IS a session, but they
--- are not an active member of the target workspace yet - though they may be a
--- soft-removed (suspended) member being re-invited, whom this reactivates in
--- place (see the branch below). Two RLS rules block a plain
--- INSERT into workspace_member:
---   * member_insert_bootstrap only allows inserting YOURSELF as `owner` into an
---     empty workspace - not joining a populated one as member/admin.
---   * invite_all hides the invite row itself from non-members.
--- Running the whole accept inside one SECURITY DEFINER function sidesteps both,
--- keeps it atomic, and - crucially - reads the caller from app_current_user_id()
--- (set by rlsContext) instead of trusting a client-supplied id, so nobody can
--- accept on another user's behalf.
+-- Runs atomically: it re-reads the caller from `app_current_user_id()` rather than
+-- trusting the client, verifies the invite is pending and unexpired and that the
+-- caller's email matches the invite's, then creates the membership (and its
+-- location link, if any) and marks the invite accepted. The controller only maps
+-- the returned status string onto a response.
 --
--- `LANGUAGE plpgsql` (not sql): it needs variables and IF branches. It is NOT
--- STABLE because it writes (the default, VOLATILE, is correct for a mutation).
+-- `locale_input` is passed in because the membership row is created here, where
+-- there is no request to negotiate a language from. It only lands on a first-time
+-- join; reinstating a suspended member keeps whatever locale that membership had,
+-- for the same reason the role is reset but the phone is not.
 --
--- Returns a status string the controller maps to an HTTP response:
---   ACCEPTED | ALREADY_MEMBER | INVITE_NOT_FOUND | INVITE_EMAIL_MISMATCH | UNAUTHORIZED
-CREATE FUNCTION app_invite_accept(token_input text)
+-- `display_name` is taken from the accepting user's `first_name`, and coalesced
+-- rather than assigned on reinstatement: a removal keeps the column, so a member
+-- who set their own name keeps it through a re-invite.
+CREATE FUNCTION app_invite_accept(token_input text, locale_input locale)
 RETURNS text
 LANGUAGE plpgsql SECURITY DEFINER
 SET search_path = public, pg_temp
 AS $$
 DECLARE
-  v_user_id    uuid := app_current_user_id();
-  v_user_email text;
-  v_member     workspace_member;
-  v_member_id  uuid;
-  v_invite     workspace_invite;
+  v_user_id         uuid := app_current_user_id();
+  v_user_email      text;
+  v_user_first_name text;
+  v_member          workspace_member;
+  v_member_id       uuid;
+  v_invite          workspace_invite;
 BEGIN
   -- No session -> nobody to attach the membership to.
   IF v_user_id IS NULL THEN
     RETURN 'UNAUTHORIZED';
   END IF;
 
-  SELECT email INTO v_user_email FROM "user" WHERE id = v_user_id;
+  SELECT email, first_name
+    INTO v_user_email, v_user_first_name
+    FROM "user"
+   WHERE id = v_user_id;
 
   -- Lock the invite row (FOR UPDATE) so two concurrent accepts can't both pass the
   -- checks below and insert duplicate memberships.
@@ -139,17 +141,18 @@ BEGIN
 
     -- Suspended (removed earlier): reinstate the existing row rather than inserting
     -- a new one, which the unique (user_id, workspace_id) index would reject. The
-    -- new invite defines the role; phone stays as it was left on removal (null).
+    -- new invite defines the role; phone and locale stay as they were left.
     UPDATE workspace_member
-       SET status = 'active',
-           role   = v_invite.role
+       SET status       = 'active',
+           role         = v_invite.role,
+           display_name = COALESCE(v_member.display_name, v_user_first_name)
      WHERE id = v_member.id;
 
     v_member_id := v_member.id;
   ELSE
     -- First-time join: create the membership, capturing its id for the location link.
-    INSERT INTO workspace_member (user_id, workspace_id, role, status)
-    VALUES (v_user_id, v_invite.workspace_id, v_invite.role, 'active')
+    INSERT INTO workspace_member (user_id, workspace_id, role, status, locale, display_name)
+    VALUES (v_user_id, v_invite.workspace_id, v_invite.role, 'active', locale_input, v_user_first_name)
     RETURNING id INTO v_member_id;
   END IF;
 
@@ -166,7 +169,6 @@ BEGIN
   RETURN 'ACCEPTED';
 END;
 $$;
---> statement-breakpoint
 
 -- ── 3. Decline (public, mutating) ────────────────────────────────────────────
 -- The invitee's "no". Public and token-only: someone shouldn't have to create an
@@ -213,4 +215,49 @@ AS $$
     RETURNING id
   )
   SELECT count(*)::int FROM expired;
+$$;
+
+-- ── 5. Audience state (contact sync for a member the caller acts on) ─────────
+-- Answers what a member's Resend contact should look like: their address, name
+-- parts, and whether they own or belong to a workspace anywhere. The last two are
+-- computed across every workspace, which is why this needs SECURITY DEFINER - RLS
+-- hides the target's other workspaces from an admin acting inside one of them.
+--
+-- Those two booleans are for the outbox payload only. Returning them to a client
+-- would tell one workspace's admin about a tenant they have no relationship with.
+CREATE FUNCTION app_member_audience_state(member_id_input uuid)
+RETURNS TABLE(email text, first_name text, last_name text, is_owner boolean, is_member boolean)
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  v_target_user uuid;
+  v_workspace   uuid;
+BEGIN
+  SELECT m.user_id, m.workspace_id INTO v_target_user, v_workspace
+  FROM workspace_member m WHERE m.id = member_id_input;
+
+  IF NOT FOUND THEN RETURN; END IF;
+
+  -- The caller must be the member themselves, or an active owner/admin of that
+  -- member's workspace. Without this the function hands any user's email to anyone
+  -- who can supply an id.
+  IF NOT EXISTS (
+    SELECT 1 FROM workspace_member c
+    WHERE c.workspace_id = v_workspace
+      AND c.user_id = app_current_user_id()
+      AND c.status = 'active'
+      AND (c.role IN ('owner', 'admin') OR c.user_id = v_target_user)
+  ) THEN
+    RETURN;
+  END IF;
+
+  RETURN QUERY
+  SELECT u.email, u.first_name, u.last_name,
+    EXISTS (SELECT 1 FROM workspace_member m
+             WHERE m.user_id = u.id AND m.status = 'active' AND m.role = 'owner'),
+    EXISTS (SELECT 1 FROM workspace_member m
+             WHERE m.user_id = u.id AND m.status = 'active' AND m.role <> 'owner')
+  FROM "user" u WHERE u.id = v_target_user;
+END;
 $$;
