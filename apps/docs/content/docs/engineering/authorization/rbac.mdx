@@ -12,10 +12,15 @@ The core decision: code checks **permissions**, never role names. A permission i
 
 ```ts
 export const WORKSPACE_PERMISSIONS = [
-  'workspace:read', 'workspace:update', 'workspace:delete',
-  'workspace:member:read', 'workspace:member:manage',
-  'workspace:location:read', 'workspace:location:manage',
-  'workspace:subscription:read', 'workspace:subscription:manage',
+  'workspace:read',
+  'workspace:update',
+  'workspace:delete',
+  'workspace:member:read',
+  'workspace:member:manage',
+  'workspace:location:read',
+  'workspace:location:manage',
+  'workspace:subscription:read',
+  'workspace:subscription:manage',
 ] as const;
 ```
 
@@ -25,17 +30,17 @@ Why permissions over `if (role === 'admin')`: adding a role or shifting what a r
 
 Each role is granted a set of permissions (`WORKSPACE_ROLE_PERMISSIONS`):
 
-| Permission                    | owner | admin | member |
-| ----------------------------- | :---: | :---: | :----: |
-| `workspace:read`              |   ✓   |   ✓   |   ✓    |
-| `workspace:update`            |   ✓   |   ✓   |        |
-| `workspace:delete`            |   ✓   |       |        |
-| `workspace:member:read`       |   ✓   |   ✓   |   ✓    |
-| `workspace:member:manage`     |   ✓   |   ✓   |        |
-| `workspace:location:read`     |   ✓   |   ✓   |   ✓    |
-| `workspace:location:manage`   |   ✓   |   ✓   |        |
-| `workspace:subscription:read` |   ✓   |   ✓   |   ✓    |
-| `workspace:subscription:manage` |  ✓  |       |        |
+| Permission                      | owner | admin | member |
+| ------------------------------- | :---: | :---: | :----: |
+| `workspace:read`                |   ✓   |   ✓   |   ✓    |
+| `workspace:update`              |   ✓   |   ✓   |        |
+| `workspace:delete`              |   ✓   |       |        |
+| `workspace:member:read`         |   ✓   |   ✓   |   ✓    |
+| `workspace:member:manage`       |   ✓   |   ✓   |        |
+| `workspace:location:read`       |   ✓   |   ✓   |   ✓    |
+| `workspace:location:manage`     |   ✓   |   ✓   |        |
+| `workspace:subscription:read`   |   ✓   |   ✓   |   ✓    |
+| `workspace:subscription:manage` |   ✓   |       |        |
 
 One function does every check:
 
@@ -49,18 +54,18 @@ Two middlewares split the work; both run after `authenticate` and `rlsContext` (
 
 **`requireWorkspaceAccess`** - resource-level. Resolves the workspace from `:id` or `:slug`, loads the caller's `workspace_member` row, requires it to be `active`, and attaches **two** separate contexts to the request:
 
-| Property       | Shape                                   | What it is                          |
-| -------------- | --------------------------------------- | ----------------------------------- |
-| `req.workspace`| `{ id, name }`                          | The tenant scope the request operates on |
-| `req.member`   | `{ id, role }`                          | The caller's membership in it       |
+| Property        | Shape          | What it is                               |
+| --------------- | -------------- | ---------------------------------------- |
+| `req.workspace` | `{ id, name }` | The tenant scope the request operates on |
+| `req.member`    | `{ id, role }` | The caller's membership in it            |
 
-They are split on purpose. Most handlers need to know *which workspace* they act on without caring *who* is calling, and taking only `WorkspaceContext` makes that explicit in the signature. `req.member` deliberately carries **no** `workspaceId` - that lives on `req.workspace` alone, so the two can never drift. `req.workspace` is also where workspace-wide state belongs as it is added (plan entitlements, cached workspace fields).
+They are split on purpose. Most handlers need to know _which workspace_ they act on without caring _who_ is calling, and taking only `WorkspaceContext` makes that explicit in the signature. `req.member` deliberately carries **no** `workspaceId` - that lives on `req.workspace` alone, so the two can never drift. `req.workspace` is also where workspace-wide state belongs as it is added (plan entitlements, cached workspace fields).
 
 <Callout type="warn">
-  It returns **`404 WORKSPACE_NOT_FOUND` both when the workspace doesn't exist and when the
-  caller isn't a member** - deliberately indistinguishable, so membership can't be
-  used to probe which workspaces exist. A non-member never learns the difference
-  between "no such workspace" and "not yours".
+  It returns **`404 WORKSPACE_NOT_FOUND` both when the workspace doesn't exist and when the caller
+  isn't a member** - deliberately indistinguishable, so membership can't be used to probe which
+  workspaces exist. A non-member never learns the difference between "no such workspace" and "not
+  yours".
 </Callout>
 
 A **suspended** member is the exception to that masking: they get `403 MEMBER_SELF_SUSPENDED` instead of a `404`. They already know the workspace exists - they used to be in it - so hiding it would leak nothing and would only obscure why they're locked out. Because the check sits in the access guard, it holds for every workspace route including the self-service ones (`/me`, `/leave`) that need no permission at all.
@@ -91,13 +96,13 @@ It drops any relation the role can't see, so the unauthorized data is **never ev
 
 ## Response semantics
 
-| Situation                          | Status | Returned by                  |
-| ---------------------------------- | ------ | ---------------------------- |
-| No session                         | `401`  | `authenticate`               |
-| Not a member (or workspace absent) | `404`  | `requireWorkspaceAccess`     |
-| Suspended member                   | `403`  | `requireWorkspaceAccess`     |
-| Member, but lacks the permission   | `403`  | `requireWorkspacePermission` |
-| Allowed, but the plan is at its cap | `403` | `requireWorkspaceQuota`      |
+| Situation                           | Status | Returned by                  |
+| ----------------------------------- | ------ | ---------------------------- |
+| No session                          | `401`  | `authenticate`               |
+| Not a member (or workspace absent)  | `404`  | `requireWorkspaceAccess`     |
+| Suspended member                    | `403`  | `requireWorkspaceAccess`     |
+| Member, but lacks the permission    | `403`  | `requireWorkspacePermission` |
+| Allowed, but the plan is at its cap | `403`  | `requireWorkspaceQuota`      |
 
 The `404`-not-`403` for non-members is the one deliberate choice worth remembering: **hide existence from outsiders, report permission honestly to insiders.** A suspended member counts as an insider.
 

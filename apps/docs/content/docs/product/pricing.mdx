@@ -10,19 +10,19 @@ description: Pricing tiers, founding member strategy, billing model, and payout 
 
 Available permanently. Functional enough for solo operators with light usage.
 
-| Feature       | Limit                  |
-| ------------- | ---------------------- |
-| Active boards | 3                      |
-| Seats         | 2 (the owner + 1)      |
-| Locations     | 1                      |
-| Templates     | All                    |
-| Chat          | Included               |
-| Approvals     | Included               |
-| Photo uploads | Included               |
+| Feature       | Limit             |
+| ------------- | ----------------- |
+| Active boards | 3                 |
+| Seats         | 2 (the owner + 1) |
+| Locations     | 1                 |
+| Templates     | All               |
+| Chat          | Included          |
+| Approvals     | Included          |
+| Photo uploads | Included          |
 
 > **Active board** = a board that has not been archived or marked as complete. Completed and archived boards do not count toward the limit.
 
-> **Seat** = an active member *or* a pending invite, the workspace owner included. Sending an invite consumes a seat immediately, so a solo owner on Free can have one teammate pending or joined, not one of each.
+> **Seat** = an active member _or_ a pending invite, the workspace owner included. Sending an invite consumes a seat immediately, so a solo owner on Free can have one teammate pending or joined, not one of each.
 
 ---
 
@@ -49,11 +49,10 @@ Removes limits and adds team and multi-location support.
 | Unlimited locations | Removes the 3-location cap | $4.99/mo    | $6.99/mo    | R$11.99/mo  |
 
 <Callout type="info">
-  **What the API enforces today.** The seeded catalog has two plans - `free:founding`
-  ("Free") and `paid:founding` ("Founding", the tier called Premium above) - and only
-  the **seat** and **location** caps are enforced, at invite creation and location
-  creation. Board limits and add-ons are product intent, not yet in the data model.
-  The enforced numbers live in
+  **What the API enforces today.** The seeded catalog has two plans - `free:founding` ("Free") and
+  `paid:founding` ("Founding", the tier called Premium above) - and only the **seat** and
+  **location** caps are enforced, at invite creation and location creation. Board limits and add-ons
+  are product intent, not yet in the data model. The enforced numbers live in
   [`packages/db/src/seeds/plan.ts`](https://github.com/ianwelerson/ordre/blob/main/packages/db/src/seeds/plan.ts);
   change them there, not here, and keep this page in step.
 </Callout>

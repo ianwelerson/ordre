@@ -39,24 +39,23 @@ ordre/
 Every workspace sits on the same base, so the per-workspace sections below list
 only what is specific to them.
 
-| Concern      | Choice                                                        |
-| ------------ | ------------------------------------------------------------- |
-| Language     | TypeScript, strict, via `@ordre/config/typescript/*`          |
-| Monorepo     | Turborepo + pnpm workspaces                                   |
-| Runtime      | Node.js 24+ (see `.nvmrc`)                                    |
-| Testing      | Vitest, with `@vitest/coverage-v8`                            |
-| Linting      | ESLint 9 flat config, via `@ordre/config/eslint/*`            |
-| Formatting   | Prettier with import sorting, via `@ordre/config/prettier`    |
-| Dependencies | Syncpack, keeping shared versions aligned (`pnpm packages:lint`) |
+| Concern      | Choice                                                                         |
+| ------------ | ------------------------------------------------------------------------------ |
+| Language     | TypeScript, strict, via `@ordre/config/typescript/*`                           |
+| Monorepo     | Turborepo + pnpm workspaces                                                    |
+| Runtime      | Node.js 24+ (see `.nvmrc`)                                                     |
+| Testing      | Vitest, with `@vitest/coverage-v8`                                             |
+| Linting      | ESLint 9 flat config, via `@ordre/config/eslint/*`                             |
+| Formatting   | Prettier with import sorting, via `@ordre/config/prettier`                     |
+| Dependencies | Syncpack, keeping shared versions aligned (`pnpm packages:lint`)               |
 | Local HTTPS  | portless - see [Running the Project](/internal-docs/setup/running-the-project) |
 
 Frontend workspaces add React 19, Tailwind CSS v4, and Testing Library with
 Playwright as Vitest's browser provider.
 
 <Callout>
-  **Major versions only, on this page.** Exact versions live in each workspace's
-  `package.json` and in `pnpm-lock.yaml` - a number copied into prose goes stale on
-  the next dependency bump.
+  **Major versions only, on this page.** Exact versions live in each workspace's `package.json` and
+  in `pnpm-lock.yaml` - a number copied into prose goes stale on the next dependency bump.
 </Callout>
 
 ---
@@ -111,16 +110,16 @@ The packages follow a strict dependency flow. Upper layers may import from lower
 
 The edges above are the real ones today, not the intended end state:
 
-| Workspace                            | Depends on                                          |
-| ------------------------------------ | --------------------------------------------------- |
-| `apps/api`                           | `@ordre/core`, `@ordre/db`, `@ordre/email`, `@ordre/monitoring` |
-| `apps/dashboard`                     | `@ordre/core`, `@ordre/services`, `@ordre/ui`       |
-| `apps/board` · `marketing`           | `@ordre/core`, `@ordre/ui`                          |
-| `apps/docs`                          | `@ordre/core` (the error-code page is generated from its catalog and its copy) |
-| `apps/storybook`                     | `@ordre/ui`                                         |
-| `@ordre/db` · `@ordre/services` · `@ordre/ui` · `@ordre/email` | `@ordre/core`      |
-| `@ordre/core` · `monitoring`         | nothing but `@ordre/config`                         |
-| `@ordre/config`                      | nothing at all                                      |
+| Workspace                                                      | Depends on                                                                     |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `apps/api`                                                     | `@ordre/core`, `@ordre/db`, `@ordre/email`, `@ordre/monitoring`                |
+| `apps/dashboard`                                               | `@ordre/core`, `@ordre/services`, `@ordre/ui`                                  |
+| `apps/board` · `marketing`                                     | `@ordre/core`, `@ordre/ui`                                                     |
+| `apps/docs`                                                    | `@ordre/core` (the error-code page is generated from its catalog and its copy) |
+| `apps/storybook`                                               | `@ordre/ui`                                                                    |
+| `@ordre/db` · `@ordre/services` · `@ordre/ui` · `@ordre/email` | `@ordre/core`                                                                  |
+| `@ordre/core` · `monitoring`                                   | nothing but `@ordre/config`                                                    |
+| `@ordre/config`                                                | nothing at all                                                                 |
 
 `apps/storybook` carries no `@ordre/config` because it has no ESLint or TypeScript
 config of its own - it lints through the workspaces it loads stories from.
@@ -136,11 +135,11 @@ Two rules fall out of that shape and are worth stating explicitly:
 - **`@ordre/email` is imported by `apps/api` and nothing else**, for the same reason as `@ordre/db`: it pulls in `react-dom/server`, which has no business in a browser bundle. It is also the only workspace consumed as **built output** rather than raw source, because it is the only one containing JSX - see [The API Runtime](/internal-docs/engineering/runtime).
 
 <Callout>
-  **`@ordre/core` holds every translated string - error copy, validation copy, email copy, and shared product words.
-  That is a deliberate widening: the copy for an error is keyed by the same
-  `ErrorCode` the catalog defines, and splitting the two across packages meant
-  either duplicating strings or resolving them across a boundary that
-  `errorResponse` could not cross. One package, one vocabulary.
+  **`@ordre/core` holds every translated string - error copy, validation copy, email copy, and
+  shared product words. That is a deliberate widening: the copy for an error is keyed by the same
+  `ErrorCode` the catalog defines, and splitting the two across packages meant either duplicating
+  strings or resolving them across a boundary that `errorResponse` could not cross. One package, one
+  vocabulary.
 </Callout>
 
 ---
@@ -155,16 +154,16 @@ Two rules fall out of that shape and are worth stating explicitly:
 
 **Export paths:**
 
-| Path                      | Contents                                                              |
-| ------------------------- | --------------------------------------------------------------------- |
-| `@ordre/core/schemas`     | Zod schemas for request and response validation, plus `z` itself      |
-| `@ordre/core/types`       | TypeScript types inferred from schemas, plus primitives (`ErrorDefinition`, `ErrorMap`, `StatusCodes`) |
-| `@ordre/core/errors`      | Error catalogs, `ERROR_CATALOG`, `ErrorCode`, `ServiceError`, `errorResponse` |
-| `@ordre/core/enums`       | Canonical value lists, several of which back Postgres enums           |
-| `@ordre/core/constants`   | Values identical in every environment - route paths, TTLs, cookie names |
-| `@ordre/core/permissions` | The role/permission matrix and `can()`                                |
-| `@ordre/core/messages`    | Every translated string - `{ app, en, pt }`                           |
-| `@ordre/core/messages/en` · `/pt` | One locale on its own                                         |
+| Path                              | Contents                                                                                               |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `@ordre/core/schemas`             | Zod schemas for request and response validation, plus `z` itself                                       |
+| `@ordre/core/types`               | TypeScript types inferred from schemas, plus primitives (`ErrorDefinition`, `ErrorMap`, `StatusCodes`) |
+| `@ordre/core/errors`              | Error catalogs, `ERROR_CATALOG`, `ErrorCode`, `ServiceError`, `errorResponse`                          |
+| `@ordre/core/enums`               | Canonical value lists, several of which back Postgres enums                                            |
+| `@ordre/core/constants`           | Values identical in every environment - route paths, TTLs, cookie names                                |
+| `@ordre/core/permissions`         | The role/permission matrix and `can()`                                                                 |
+| `@ordre/core/messages`            | Every translated string - `{ app, en, pt }`                                                            |
+| `@ordre/core/messages/en` · `/pt` | One locale on its own                                                                                  |
 
 **Key constraint:** No Drizzle dependency. No React dependency. Importable by any app - API, dashboard, board, or marketing.
 
@@ -173,10 +172,10 @@ Two rules fall out of that shape and are worth stating explicitly:
 Grouped by domain and keyed by a stable identifier. A definition carries **only a status** - the words live in [Messages](#messages), keyed by the same code.
 
 ```ts
-import { VALIDATION_ERRORS, errorMessage } from "@ordre/core/errors";
+import { errorMessage, VALIDATION_ERRORS } from '@ordre/core/errors';
 
 VALIDATION_ERRORS.INVALID_INPUT; // { status: 400 }
-errorMessage("INVALID_INPUT"); // "Some of the information you entered isn't valid."
+errorMessage('INVALID_INPUT'); // "Some of the information you entered isn't valid."
 ```
 
 `ERROR_CATALOG` merges every domain map into one object and `ErrorCode` is its `keyof`. That union is what types the copy as `Record<ErrorCode, string>`, so a code cannot ship without words for it in every locale. `CLIENT_ERRORS` (`NETWORK_ERROR`, `MALFORMED_RESPONSE`, `UNKNOWN_ERROR`) sit in the same catalog even though the server never returns them, so a consumer maps a dropped connection and a `403` through one vocabulary.
@@ -201,9 +200,9 @@ A rule whose generic wording is not good enough passes its own key, and that win
 
 **Nothing ever fails loudly.** An issue the map does not recognise falls back rather than emitting a key with no copy, and there are two fallbacks because Zod classifies on two axes:
 
-| Situation | Falls back to |
-| --- | --- |
-| An issue `code` with no `case` (`invalid_union`, `custom`) | `validation.invalid` |
+| Situation                                                                    | Falls back to              |
+| ---------------------------------------------------------------------------- | -------------------------- |
+| An issue `code` with no `case` (`invalid_union`, `custom`)                   | `validation.invalid`       |
 | `invalid_format` with a `format` not in `KNOWN_FORMATS` (`jwt`, `base64`, …) | `validation.invalidFormat` |
 
 `code` and `format` are separate: `z.email()`, `z.uuid()` and `z.ipv4()` all report `invalid_format` and differ only in `issue.format`, which is why formats are matched by a `Set` inside that one case rather than by their own `case` arms.
@@ -219,7 +218,7 @@ Step 2 is the one that is easy to miss: adding `jwt` to `VALIDATION_KEYS` and th
 **Import `z` from here, not from `zod`.** A consumer building its own schema - a form extending one of core's - takes zod through this package:
 
 ```ts
-import { SignInSchema, z } from "@ordre/core/schemas";
+import { SignInSchema, z } from '@ordre/core/schemas';
 ```
 
 Two copies of zod are two module instances, and the error map is installed on one of them. The second would emit English sentences where the first emits keys - identical types, no compiler complaint, and the only symptom is untranslated text in a UI. One import specifier makes that impossible.
@@ -252,23 +251,25 @@ packages/core/src/messages/
 **Per-locale exports matter.** `errorResponse` imports only `messages/en`, because the wire message is always English; nothing that ships the API pulls in Portuguese to do it. Apps import the barrel and pick a locale at runtime.
 
 ```ts
-import { app, en, pt } from "@ordre/core/messages";
-import { errors } from "@ordre/core/messages/en"; // one locale, on its own
+import { app, en, pt } from '@ordre/core/messages';
+import { errors } from '@ordre/core/messages/en';
+
+// one locale, on its own
 
 // In an app, keys are absolute across namespaces:
-t("errors.INVALID_EMAIL_OR_PASSWORD");
-t("validation.email");
+t('errors.INVALID_EMAIL_OR_PASSWORD');
+t('validation.email');
 ```
 
 #### Routes
 
 `API_ROUTES` holds every path the API serves, absolute and version-free, in `:param` form. It lives here rather than in `apps/api` because three consumers need three spellings of the same path, and no layer inside the API may import from another - the OpenAPI registrations sit in `controllers/` and the routers in `adapters/express/`, so neither can own the shared table.
 
-| Consumer                                   | Spelling         | How                                     |
-| ------------------------------------------ | ---------------- | --------------------------------------- |
-| Express router (`adapters/express/routes/`) | `/workspace/:id` | `API_ROUTES.workspace.byId` as-is       |
-| OpenAPI document (`controllers/*.openapi.ts`) | `/workspace/{id}` | `toOpenApiPath(...)`                    |
-| HTTP client (`@ordre/services`)            | `/workspace/8f0e…` | `buildPath(..., { id })`               |
+| Consumer                                      | Spelling           | How                               |
+| --------------------------------------------- | ------------------ | --------------------------------- |
+| Express router (`adapters/express/routes/`)   | `/workspace/:id`   | `API_ROUTES.workspace.byId` as-is |
+| OpenAPI document (`controllers/*.openapi.ts`) | `/workspace/{id}`  | `toOpenApiPath(...)`              |
+| HTTP client (`@ordre/services`)               | `/workspace/8f0e…` | `buildPath(..., { id })`          |
 
 `API_BASE_PATH` (`/v1`) is joined on at the two edges that own it - the Express mount in `server.ts` and the `servers` list in the OpenAPI document - so the table itself never carries a version.
 
@@ -302,7 +303,7 @@ The alternative - the package reading `process.env` itself - cannot work: the Ne
 
 **What the client owns:** joining `API_BASE_PATH` and the origin, `credentials: 'include'` (the session is a cross-origin cookie, and without it every later call is unauthenticated), a JSON content type, and turning any failure - a `403`, an unparseable body, a dropped connection - into a `ServiceError` carrying a catalog `code`.
 
-**Key constraint:** never imported by `apps/api` - the API is the thing it calls. Requests and responses are typed with `@ordre/core/schemas` and addressed with `API_ROUTES` from `@ordre/core/constants`, so both halves of the contract are shared rather than restated. `ServiceError` lives in `@ordre/core` rather than here, so the code that *reads* it - the form layer in `@ordre/ui`, the error copy beside the catalog - never has to import a transport.
+**Key constraint:** never imported by `apps/api` - the API is the thing it calls. Requests and responses are typed with `@ordre/core/schemas` and addressed with `API_ROUTES` from `@ordre/core/constants`, so both halves of the contract are shared rather than restated. `ServiceError` lives in `@ordre/core` rather than here, so the code that _reads_ it - the form layer in `@ordre/ui`, the error copy beside the catalog - never has to import a transport.
 
 ---
 
@@ -339,10 +340,10 @@ packages/db/
 
 **Export paths:**
 
-| Path                   | Contents                                                              |
-| ---------------------- | -------------------------------------------------------------------- |
+| Path                   | Contents                                                                                                                                                         |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `@ordre/db/connection` | `createPool(url)` (a node-postgres `pg.Pool`) + `createDb(pool)` (wraps a pool in Drizzle). The API composes these into one shared pool/`db` it owns - see below |
-| `@ordre/db/schemas`    | Drizzle table definitions and relations (the schema namespace)       |
+| `@ordre/db/schemas`    | Drizzle table definitions and relations (the schema namespace)                                                                                                   |
 
 **Key constraint:** Only imported by `apps/api`. Never imported by frontend apps or `@ordre/core`.
 
@@ -459,7 +460,7 @@ through the error mapping.
 ```tsx
 const { field, onSubmit, rootError, isBusy } = useAppForm({ schema, t, onSubmit: send });
 
-<TextField {...field("email")} label={t("Login.email.label")} />;
+<TextField {...field('email')} label={t('Login.email.label')} />;
 ```
 
 **Why `t` is a parameter and not a hook call.** The apps do not share an i18n runtime -
@@ -474,8 +475,10 @@ barrel and filing it in Storybook is one decision, not two.
 **Usage in apps:**
 
 ```ts
-import { Button } from "@ordre/ui/components";
-import "@ordre/ui/styles/main"; // imported once in root layout
+import { Button } from '@ordre/ui/components';
+import '@ordre/ui/styles/main';
+
+// imported once in root layout
 ```
 
 **Package exports:** `./components`, `./config/postcss`, `./styles/*`, `./fonts/*`, `./icons`, `./helpers/*`, `./hooks/*`.
@@ -520,11 +523,11 @@ packages/config/
 
 **What each ESLint preset carries.** All three are flat configs targeting ESLint 9.
 
-| Preset | Adds |
-| ------ | ---- |
-| `eslint/base.ts` | `@eslint/js` recommended, `typescript-eslint` recommended, `eslint-plugin-turbo` (warns on undeclared env vars), `eslint-config-prettier`, and `curly: ["error", "all"]`. Ignores `dist/**` and `build/**` |
-| `eslint/next.ts` | Base, plus `eslint-plugin-react` flat recommended, `@next/eslint-plugin-next` (`recommended` and `core-web-vitals`), and `eslint-plugin-react-hooks`. Ignores `.next/**`, `out/**`, `build/**`, `next-env.d.ts`, and disables `react/react-in-jsx-scope` for the new JSX transform |
-| `eslint/react.ts` | Base, plus the same React and React Hooks rules without the Next-specific plugins. Targets browser and service worker globals |
+| Preset            | Adds                                                                                                                                                                                                                                                                               |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `eslint/base.ts`  | `@eslint/js` recommended, `typescript-eslint` recommended, `eslint-plugin-turbo` (warns on undeclared env vars), `eslint-config-prettier`, and `curly: ["error", "all"]`. Ignores `dist/**` and `build/**`                                                                         |
+| `eslint/next.ts`  | Base, plus `eslint-plugin-react` flat recommended, `@next/eslint-plugin-next` (`recommended` and `core-web-vitals`), and `eslint-plugin-react-hooks`. Ignores `.next/**`, `out/**`, `build/**`, `next-env.d.ts`, and disables `react/react-in-jsx-scope` for the new JSX transform |
+| `eslint/react.ts` | Base, plus the same React and React Hooks rules without the Next-specific plugins. Targets browser and service worker globals                                                                                                                                                      |
 
 **Which TypeScript preset to extend:** `nextjs.json` for the Next apps,
 `react-library.json` for a React library such as `@ordre/ui`,
@@ -534,7 +537,8 @@ packages/config/
 
 ```js
 // apps/dashboard/eslint.config.ts
-import { nextJsConfig } from "@ordre/config/eslint/next";
+import { nextJsConfig } from '@ordre/config/eslint/next';
+
 export default nextJsConfig;
 ```
 
@@ -545,7 +549,7 @@ export default nextJsConfig;
 
 ```ts
 // apps/dashboard/prettier.config.ts
-export { default } from "@ordre/config/prettier";
+export { default } from '@ordre/config/prettier';
 ```
 
 **Prettier rules:** `printWidth: 100`, `tabWidth: 2`, `semi: true`,
@@ -626,9 +630,9 @@ apps/api/src/
 
 Two folders sit outside the request path and are worth calling out:
 
-| Folder      | Contents                                                                                     |
-| ----------- | -------------------------------------------------------------------------------------------- |
-| `services/` | Integrations with a third party. One module per provider, throwing on failure so the caller decides what to do about it. |
+| Folder      | Contents                                                                                                                                                                    |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `services/` | Integrations with a third party. One module per provider, throwing on failure so the caller decides what to do about it.                                                    |
 | `workers/`  | Long-running background loops owned by the process. Started from `adapters/express/index.ts` - never from `server.ts`, so importing the app in a test doesn't start a loop. |
 
 The [outbox worker](/internal-docs/engineering/outbox) is the current example of both: producers queue a row inside the request transaction, and the worker delivers it through `services/email.ts` afterwards.
@@ -637,14 +641,14 @@ The [outbox worker](/internal-docs/engineering/outbox) is the current example of
 
 Every controller folder is a self-contained feature unit that owns the business logic, OpenAPI contract, tests, and internal helpers. Co-locating the OpenAPI registration with the controller (instead of with the Express route) keeps the contract independent of the HTTP adapter - swapping Express for Lambda or Vercel Functions only touches `adapters/`.
 
-| File              | Responsibility                                                                                                       |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `index.ts`        | Barrel. Re-exports public surface only (`*.controller.ts` and `*.openapi.ts`). Helpers and local types stay private. |
-| `*.controller.ts` | Controller function(s). No Express dependency. Imports from `@ordre/core/schemas` and `@ordre/db`.                   |
-| `*.openapi.ts`    | OpenAPI registration for the feature. One per folder, not one per controller.                                        |
-| `*.schemas.ts`    | Local Zod schemas. Use only when controller-internal; otherwise put the schema in `@ordre/core/schemas`.             |
+| File              | Responsibility                                                                                                                    |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `index.ts`        | Barrel. Re-exports public surface only (`*.controller.ts` and `*.openapi.ts`). Helpers and local types stay private.              |
+| `*.controller.ts` | Controller function(s). No Express dependency. Imports from `@ordre/core/schemas` and `@ordre/db`.                                |
+| `*.openapi.ts`    | OpenAPI registration for the feature. One per folder, not one per controller.                                                     |
+| `*.schemas.ts`    | Local Zod schemas. Use only when controller-internal; otherwise put the schema in `@ordre/core/schemas`.                          |
 | `*.test.ts`       | Co-located unit tests for fault injection (mocked DB). Full-path coverage lives in `*.routes.test.ts` - see [Testing](./testing). |
-| `helpers/`        | Folder for 2+ internal helpers. For a single helper, use a flat `*.helpers.ts` file instead.                         |
+| `helpers/`        | Folder for 2+ internal helpers. For a single helper, use a flat `*.helpers.ts` file instead.                                      |
 
 **Naming:** `<feature>.<role>.ts` (e.g. `get-boards.controller.ts`, `boards.openapi.ts`). The `.controller.ts` suffix disambiguates controllers from helpers and schemas as the folder grows.
 
@@ -665,7 +669,7 @@ The API uses Node's `imports` field to expose each controller folder as a single
 
 ```ts
 // adapters/express/routes/boards/boards.routes.ts
-import { getBoards, createBoard, boardsOpenApi } from "#controllers/boards";
+import { boardsOpenApi, createBoard, getBoards } from '#controllers/boards';
 ```
 
 #### Responsibility split
@@ -836,11 +840,11 @@ apps/dashboard/
 answered before a render is scheduled.
 
 **The route gate.** `proxy.ts` decides which shell a visitor lands in, and nothing
-else - it is explicitly *not* a security boundary, since every piece of data still
+else - it is explicitly _not_ a security boundary, since every piece of data still
 crosses the API, which authenticates each request and enforces row-level security.
 No session cookie on a protected path goes to `/login?next=<destination>`; a live
 session on an auth screen goes on to that destination. `/invite/:token` is the one
-public route a session is welcome on, because whether *this* account is the invited
+public route a session is welcome on, because whether _this_ account is the invited
 one is a question only the page can answer.
 
 > Planned: `(authenticated)/team/` will be named `(authenticated)/members/` to align with the `Member` entity in `@ordre/core`.
@@ -913,10 +917,10 @@ apps/board/
 
 ```ts
 export default [
-  index("pages/home/home.tsx"),
-  ...prefix("br", [index("pages/home/home.tsx", { id: "home-br" })]),
-  route("api/locales/:lng/:ns", "api/locales.ts"),
-  route("*", "pages/not-found/not-found.tsx"),
+  index('pages/home/home.tsx'),
+  ...prefix('br', [index('pages/home/home.tsx', { id: 'home-br' })]),
+  route('api/locales/:lng/:ns', 'api/locales.ts'),
+  route('*', 'pages/not-found/not-found.tsx'),
 ] satisfies RouteConfig;
 ```
 
@@ -971,10 +975,10 @@ served at `/internal-docs/<path>`, and `index.mdx` at `/internal-docs`.
 
 Two pages are **generated, never written by hand**, and carry a banner saying so:
 
-| Page | Generated from | Command |
-| ---- | -------------- | ------- |
-| `reference/error-codes.mdx` | `packages/core/src/errors` | `pnpm docs:errors` |
-| `content/api-docs/**` | `public/openapi.json` | `pnpm docs:openapi` |
+| Page                        | Generated from             | Command             |
+| --------------------------- | -------------------------- | ------------------- |
+| `reference/error-codes.mdx` | `packages/core/src/errors` | `pnpm docs:errors`  |
+| `content/api-docs/**`       | `public/openapi.json`      | `pnpm docs:openapi` |
 
 `content/api-docs` is gitignored and rebuilt on `postinstall`, `build`, and
 `check-types`. `public/openapi.json` is regenerated by lint-staged whenever
@@ -1025,11 +1029,11 @@ via Vercel. See [Infrastructure](/internal-docs/engineering/infrastructure).
 
 Each folder inside `src/` has a single, non-overlapping responsibility.
 
-| Folder    | Responsibility                                                                                                                                                                                            |
-| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `app/`    | Route definitions, layouts, and framework-level concerns (middleware, entry files, API routes). Re-exports views. No business logic. All apps use `app/` - the Board app nests routes under `app/pages/`. |
+| Folder    | Responsibility                                                                                                                                                                                                |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `app/`    | Route definitions, layouts, and framework-level concerns (middleware, entry files, API routes). Re-exports views. No business logic. All apps use `app/` - the Board app nests routes under `app/pages/`.     |
 | `views/`  | Page UI components, page-level logic, tests, and Storybook stories. A view with any logic splits into `ui/` (JSX) and `model/` (hooks, form schemas), so a screen's behaviour can be read without its markup. |
-| `shared/` | Cross-cutting code reused across multiple views: hooks, utils, types, i18n.                                                                                                                               |
+| `shared/` | Cross-cutting code reused across multiple views: hooks, utils, types, i18n.                                                                                                                                   |
 
 **Flow example (Board app):**
 
@@ -1053,7 +1057,7 @@ test('renders board timeline', () => { ... });
 
 **Initial languages:** English (`en`) and Portuguese (`pt`).
 
-**Shared strings** (app constants, status labels, error and validation copy, common UI words) live in [`@ordre/core/messages`](#messages) and are merged with app-specific strings at runtime. This section covers how each app *consumes* them; what they contain and why they live in core is documented there.
+**Shared strings** (app constants, status labels, error and validation copy, common UI words) live in [`@ordre/core/messages`](#messages) and are merged with app-specific strings at runtime. This section covers how each app _consumes_ them; what they contain and why they live in core is documented there.
 
 **Libraries per app:**
 

@@ -9,12 +9,12 @@ framework-agnostic (no Express) so controllers can call them directly, and each
 one is unit-testable in isolation. This page is the index - reach for a helper
 here before writing another one.
 
-| Utility                                | Purpose                                                        |
-| -------------------------------------- | -------------------------------------------------------------- |
-| [`db-error`](#db-error)                | Classify raw Postgres driver errors (unique violation, etc.)   |
-| [`outbox`](#outbox)                    | Queue a transactional message in the caller's transaction      |
+| Utility                                   | Purpose                                                      |
+| ----------------------------------------- | ------------------------------------------------------------ |
+| [`db-error`](#db-error)                   | Classify raw Postgres driver errors (unique violation, etc.) |
+| [`outbox`](#outbox)                       | Queue a transactional message in the caller's transaction    |
 | [`slug-restrictions`](#slug-restrictions) | Block reserved, brand-protected, and profane workspace slugs |
-| [`validation`](#validation)            | Parse request bodies and normalize validation errors           |
+| [`validation`](#validation)               | Parse request bodies and normalize validation errors         |
 
 ---
 
@@ -34,13 +34,13 @@ the domain mapping (which constraint means which business error).
 
 **Exports:**
 
-| Export                             | Kind      | Description                                                              |
-| ---------------------------------- | --------- | ----------------------------------------------------------------------- |
-| `PG_ERROR_CODES`                   | const     | SQLSTATE codes: `UNIQUE_VIOLATION`, `FOREIGN_KEY_VIOLATION`, `NOT_NULL_VIOLATION`, `CHECK_VIOLATION` |
-| `PgErrorCode`                      | type      | Union of the values in `PG_ERROR_CODES`                                  |
-| `PgError`                          | interface | Narrowed driver error shape: `code`, `constraint?`, `detail?`, `table?` |
-| `getPgError(error)`                | function  | Unwraps a caught error into a `PgError`, or `null` if it isn't one       |
-| `isUniqueViolation(error, constraint?)` | function | `true` when the error is a unique-constraint violation; pass `constraint` to match a specific index |
+| Export                                  | Kind      | Description                                                                                          |
+| --------------------------------------- | --------- | ---------------------------------------------------------------------------------------------------- |
+| `PG_ERROR_CODES`                        | const     | SQLSTATE codes: `UNIQUE_VIOLATION`, `FOREIGN_KEY_VIOLATION`, `NOT_NULL_VIOLATION`, `CHECK_VIOLATION` |
+| `PgErrorCode`                           | type      | Union of the values in `PG_ERROR_CODES`                                                              |
+| `PgError`                               | interface | Narrowed driver error shape: `code`, `constraint?`, `detail?`, `table?`                              |
+| `getPgError(error)`                     | function  | Unwraps a caught error into a `PgError`, or `null` if it isn't one                                   |
+| `isUniqueViolation(error, constraint?)` | function  | `true` when the error is a unique-constraint violation; pass `constraint` to match a specific index  |
 
 **Usage** - the unique index is the real guard against a duplicate slug, so a
 concurrent insert that slips past the pre-check is caught here:
@@ -78,9 +78,9 @@ design - worker, retries, dead-lettering, adding a topic - is on its own page:
 
 **Exports:**
 
-| Export                                | Kind     | Description                                                        |
-| ------------------------------------- | -------- | ------------------------------------------------------------------ |
-| `pushToOutbox(transaction, input)`    | function | Inserts an outbox row and registers the worker wake-up via `afterCommit` |
+| Export                             | Kind     | Description                                                              |
+| ---------------------------------- | -------- | ------------------------------------------------------------------------ |
+| `pushToOutbox(transaction, input)` | function | Inserts an outbox row and registers the worker wake-up via `afterCommit` |
 
 `input` is `{ channel, topic, to, variables }`. `variables` is type-checked against
 `<channel>:<topic>` minus the defaults `pushToOutbox` fills in, so a missing or
@@ -119,11 +119,11 @@ Guards workspace slug creation against names that must never be granted. It runs
 
 Checks run in priority order:
 
-| Restriction | What it covers                                                                 |
-| ----------- | ------------------------------------------------------------------------------ |
+| Restriction | What it covers                                                                                                      |
+| ----------- | ------------------------------------------------------------------------------------------------------------------- |
 | `RESERVED`  | Platform / system names needed for routes, subdomains, and auth (`api`, `admin`, `settings`, ...). Never grantable. |
-| `PROTECTED` | Well-known brands / trademarks (`apple`, `nike`, `stripe`, ...). Grantable only to a verified owner. |
-| `BANNED`    | Profanity and slurs, matched after normalization.                              |
+| `PROTECTED` | Well-known brands / trademarks (`apple`, `nike`, `stripe`, ...). Grantable only to a verified owner.                |
+| `BANNED`    | Profanity and slurs, matched after normalization.                                                                   |
 
 **Profanity matching** is deliberately careful about false positives:
 
@@ -137,9 +137,9 @@ Checks run in priority order:
 
 **Exports:**
 
-| Export                     | Kind     | Description                                                        |
-| -------------------------- | -------- | ----------------------------------------------------------------- |
-| `SlugRestriction`          | type     | `'RESERVED' \| 'PROTECTED' \| 'BANNED'`                            |
+| Export                     | Kind     | Description                                                         |
+| -------------------------- | -------- | ------------------------------------------------------------------- |
+| `SlugRestriction`          | type     | `'RESERVED' \| 'PROTECTED' \| 'BANNED'`                             |
 | `getSlugRestriction(slug)` | function | Returns the matched restriction, or `null` when the slug is allowed |
 
 **Usage** - the returned value maps straight onto the matching `WORKSPACE_SLUG_*` error:
@@ -170,10 +170,10 @@ body with a per-field `details` map.
 
 **Exports:**
 
-| Export                                     | Kind     | Description                                                                 |
-| ------------------------------------------ | -------- | -------------------------------------------------------------------------- |
-| `validateRequestBody(schema, payload)`     | function | Parses a payload against a Zod schema; returns parsed data or a ready-to-send error body |
-| `parseBetterAuthValidationDetails(message)`| function | Splits Better Auth's flattened `[path] message` string into a `{ field: message }` map |
+| Export                                      | Kind     | Description                                                                              |
+| ------------------------------------------- | -------- | ---------------------------------------------------------------------------------------- |
+| `validateRequestBody(schema, payload)`      | function | Parses a payload against a Zod schema; returns parsed data or a ready-to-send error body |
+| `parseBetterAuthValidationDetails(message)` | function | Splits Better Auth's flattened `[path] message` string into a `{ field: message }` map   |
 
 ### `validateRequestBody`
 

@@ -10,11 +10,11 @@ These settings took the service from ~350 MB of idle memory to ~83 MB (measured 
 
 ## The service settings
 
-| Setting        | Value                                                 |
-| -------------- | ----------------------------------------------------- |
-| Root directory | repo root (not `apps/api`)                            |
-| Build command  | `pnpm --filter @ordre/email email:build`              |
-| Start command  | `node apps/api/src/adapters/express/index.ts`         |
+| Setting        | Value                                                             |
+| -------------- | ----------------------------------------------------------------- |
+| Root directory | repo root (not `apps/api`)                                        |
+| Build command  | `pnpm --filter @ordre/email email:build`                          |
+| Start command  | `node apps/api/src/adapters/express/index.ts`                     |
 | Variables      | `APP_STAGE`, `NODE_OPTIONS` (see below) + the API's own variables |
 
 `NODE_OPTIONS` is set to:
@@ -53,15 +53,15 @@ Running with the repo root as the working directory is safe: the `#env` / `#cont
 This is the big one. Profiling the API showed it **retains only ~36 MB of live objects** after GC, yet idles at ~310 MB RSS with default flags. The gap is V8 behaviour, not a leak:
 
 - Importing the module graph (drizzle-orm, Better Auth, the full drizzle schema) allocates heavily at startup - building the schema alone churns through ~85 MB of temporary objects.
-- V8 sizes its heap from the memory the machine *appears* to have. A Railway container reports the host's memory, so V8 grabs pages for the startup spike and never returns them to the OS.
+- V8 sizes its heap from the memory the machine _appears_ to have. A Railway container reports the host's memory, so V8 grabs pages for the startup spike and never returns them to the OS.
 
 Capping the old space at 192 MB keeps the heap close to the actual retained set. Measured RSS by configuration:
 
-| Configuration                              | Idle RSS |
-| ------------------------------------------ | -------- |
-| `pnpm api:start`, default flags            | ~350 MB  |
-| direct `node`, default flags               | ~260 MB  |
-| direct `node`, capped heap                 | ~83 MB   |
+| Configuration                   | Idle RSS |
+| ------------------------------- | -------- |
+| `pnpm api:start`, default flags | ~350 MB  |
+| direct `node`, default flags    | ~260 MB  |
+| direct `node`, capped heap      | ~83 MB   |
 
 The trade-off is marginally more GC work, irrelevant at current traffic. If the process is ever OOM-killed or shows GC-related latency, raise the cap - the 192 MB value is headroom over a ~36 MB retained heap, not a hard requirement.
 
@@ -79,19 +79,18 @@ node --max-old-space-size=192 --max-semi-space-size=16 apps/api/src/adapters/exp
 </Callout>
 
 <Callout type="warn">
-  For the same reason, never widen the build command to anything that compiles a
-  **frontend app** while `NODE_OPTIONS` carries the heap cap - 192 MB is far too
-  small for a Next.js build, and `NODE_ENV=production` additionally prunes the
-  devDependencies its tooling lives in. The `@ordre/email` build is fine on both
-  counts, as above. If this service ever needs more than that, scope the flags to
-  the start command first.
+  For the same reason, never widen the build command to anything that compiles a **frontend app**
+  while `NODE_OPTIONS` carries the heap cap - 192 MB is far too small for a Next.js build, and
+  `NODE_ENV=production` additionally prunes the devDependencies its tooling lives in. The
+  `@ordre/email` build is fine on both counts, as above. If this service ever needs more than that,
+  scope the flags to the start command first.
 </Callout>
 
 ## What "healthy" looks like
 
 Idle around 83 MB, climbing somewhat under sustained traffic as the heap fills toward the cap before GC runs, and settling back down. Anything under ~200 MB is normal; the number to react to is not a higher flat line but an OOM kill or GC latency, both of which mean the cap needs raising.
 
-The memory profile is dominated by module *code*, not data: node itself (~40 MB), then drizzle-orm, the drizzle schema, and Better Auth account for most of the rest, with the retained application heap at ~36 MB. There is no per-request state worth chasing - the pool holds 10 connections, the outbox worker is a single timer, and there are no in-process caches.
+The memory profile is dominated by module _code_, not data: node itself (~40 MB), then drizzle-orm, the drizzle schema, and Better Auth account for most of the rest, with the retained application heap at ~36 MB. There is no per-request state worth chasing - the pool holds 10 connections, the outbox worker is a single timer, and there are no in-process caches.
 
 ## Staging
 

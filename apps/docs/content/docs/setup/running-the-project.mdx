@@ -43,15 +43,15 @@ Each app keeps its own raw dev server (`*:dev:app`); portless is a thin HTTPS pr
 
 `pnpm dev` (from the root) starts the frontend apps together. The API, docs, and Storybook have their own root scripts:
 
-| App       | Command          | Dev URL                             |
-| --------- | ---------------- | ----------------------------------- |
-| Marketing | `pnpm dev`       | `https://ordre.localhost`           |
-| Dashboard | `pnpm dev`       | `https://dashboard.ordre.localhost` |
-| Board     | `pnpm dev`       | `https://board.ordre.localhost`     |
-| API       | `pnpm api:dev`   | `https://api.ordre.localhost`       |
-| Docs      | `pnpm docs:dev`  | `https://docs.ordre.localhost`      |
-| Storybook | `pnpm storybook` | `https://storybook.ordre.localhost` |
-| Email previews | `pnpm email:dev` | `https://email.ordre.localhost`      |
+| App            | Command          | Dev URL                             |
+| -------------- | ---------------- | ----------------------------------- |
+| Marketing      | `pnpm dev`       | `https://ordre.localhost`           |
+| Dashboard      | `pnpm dev`       | `https://dashboard.ordre.localhost` |
+| Board          | `pnpm dev`       | `https://board.ordre.localhost`     |
+| API            | `pnpm api:dev`   | `https://api.ordre.localhost`       |
+| Docs           | `pnpm docs:dev`  | `https://docs.ordre.localhost`      |
+| Storybook      | `pnpm storybook` | `https://storybook.ordre.localhost` |
+| Email previews | `pnpm email:dev` | `https://email.ordre.localhost`     |
 
 ## Running one app at a time
 
@@ -65,29 +65,29 @@ cd apps/dashboard && pnpm dev
 
 To bypass the HTTPS proxy and run a raw dev server on its default port, use the matching `*:dev:app` script:
 
-| App       | Raw dev script         | Default port            |
-| --------- | ---------------------- | ----------------------- |
-| Marketing | `pnpm dev:app`         | `http://localhost:3000` |
-| Dashboard | `pnpm dev:app`         | `http://localhost:3000` |
-| Board     | `pnpm dev:app`         | `http://localhost:5173` |
-| API       | `pnpm api:dev:app`     | `http://localhost:3000` |
-| Docs      | `pnpm docs:dev:app`    | (OpenAPI watcher + `next dev`) |
-| Storybook | `pnpm storybook:app`   | `http://localhost:6006` |
-| Email previews | `pnpm email:dev:preview` | `http://localhost:3000` |
+| App            | Raw dev script           | Default port                   |
+| -------------- | ------------------------ | ------------------------------ |
+| Marketing      | `pnpm dev:app`           | `http://localhost:3000`        |
+| Dashboard      | `pnpm dev:app`           | `http://localhost:3000`        |
+| Board          | `pnpm dev:app`           | `http://localhost:5173`        |
+| API            | `pnpm api:dev:app`       | `http://localhost:3000`        |
+| Docs           | `pnpm docs:dev:app`      | (OpenAPI watcher + `next dev`) |
+| Storybook      | `pnpm storybook:app`     | `http://localhost:6006`        |
+| Email previews | `pnpm email:dev:preview` | `http://localhost:3000`        |
 
 ## Common root scripts
 
-| Command             | Description                                |
-| ------------------- | ------------------------------------------ |
-| `pnpm dev`          | Start every frontend app in watch mode     |
-| `pnpm build`        | Build every app and package for production |
-| `pnpm lint`         | Run ESLint across the monorepo             |
-| `pnpm check-types`  | Run TypeScript type-checking               |
-| `pnpm format`       | Format everything with Prettier            |
-| `pnpm test:unit`    | Run unit tests with coverage               |
-| `pnpm db:migrate`   | Apply pending database migrations          |
-| `pnpm email:build`  | Compile `@ordre/email` for the API to import |
-| `pnpm email:dev`    | Preview every email template, in both locales |
+| Command            | Description                                   |
+| ------------------ | --------------------------------------------- |
+| `pnpm dev`         | Start every frontend app in watch mode        |
+| `pnpm build`       | Build every app and package for production    |
+| `pnpm lint`        | Run ESLint across the monorepo                |
+| `pnpm check-types` | Run TypeScript type-checking                  |
+| `pnpm format`      | Format everything with Prettier               |
+| `pnpm test:unit`   | Run unit tests with coverage                  |
+| `pnpm db:migrate`  | Apply pending database migrations             |
+| `pnpm email:build` | Compile `@ordre/email` for the API to import  |
+| `pnpm email:dev`   | Preview every email template, in both locales |
 
 Each app README lists its own app-specific scripts.
 

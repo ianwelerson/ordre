@@ -8,10 +8,10 @@ The API is tested at two tiers, and they are deliberately **not** redundant. Eac
 
 ## 🧭 The two tiers
 
-| Tier            | File suffix        | Runs against       | Owns                                                                    |
-| --------------- | ------------------ | ------------------ | ----------------------------------------------------------------------- |
-| **Integration** | `*.routes.test.ts` | The real test DB   | The full request path: middleware, RBAC guards, validation, happy paths |
-| **Unit**        | `*.test.ts`        | Mocks (no DB)      | Branches that need fault injection - errors, races, impossible DB states |
+| Tier            | File suffix        | Runs against     | Owns                                                                     |
+| --------------- | ------------------ | ---------------- | ------------------------------------------------------------------------ |
+| **Integration** | `*.routes.test.ts` | The real test DB | The full request path: middleware, RBAC guards, validation, happy paths  |
+| **Unit**        | `*.test.ts`        | Mocks (no DB)    | Branches that need fault injection - errors, races, impossible DB states |
 
 These map one-to-one onto the two Vitest projects in [`vitest.config.ts`](../../../../apps/api/vitest.config.ts): the `integration` project globs `*.routes.test.ts` and boots a database; the `unit` project globs every other `*.test.ts` and explicitly excludes `*.routes.test.ts`, so it never needs one.
 
@@ -51,11 +51,11 @@ The trap to avoid: adding a happy-path or plain-validation case to the controlle
 
 ## 🏃 Running the tests
 
-| Command                          | Runs                                          |
-| -------------------------------- | --------------------------------------------- |
-| `pnpm test:unit`                 | Both projects, watch mode, with coverage      |
-| `pnpm test:unit:ci`              | Both projects, single run (CI)                |
-| `pnpm test:unit:integration`     | The `integration` project only (needs the DB) |
-| `pnpm test:unit:unit`            | The `unit` project only (no DB)               |
+| Command                      | Runs                                          |
+| ---------------------------- | --------------------------------------------- |
+| `pnpm test:unit`             | Both projects, watch mode, with coverage      |
+| `pnpm test:unit:ci`          | Both projects, single run (CI)                |
+| `pnpm test:unit:integration` | The `integration` project only (needs the DB) |
+| `pnpm test:unit:unit`        | The `unit` project only (no DB)               |
 
 All scripts set `APP_STAGE=test`. See the [API README](../../../../apps/api/README.md) for the rest of the app's scripts.

@@ -15,11 +15,11 @@ of living in one machine's local settings.
 
 ## The three kinds of file
 
-| Kind | Lives in | Applied |
-| ---- | -------- | ------- |
-| Instructions | [`CLAUDE.md`](https://github.com/ianwelerson/ordre/blob/main/CLAUDE.md) | Read every session, followed by judgment |
-| Skill | [`.claude/skills/<name>/SKILL.md`](https://github.com/ianwelerson/ordre/blob/main/.claude/skills) | Name and description always, body only when the skill runs |
-| Hook | [`.claude/settings.json`](https://github.com/ianwelerson/ordre/blob/main/.claude/settings.json) | Executed by Claude Code on a matching event, every time |
+| Kind         | Lives in                                                                                          | Applied                                                    |
+| ------------ | ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Instructions | [`CLAUDE.md`](https://github.com/ianwelerson/ordre/blob/main/CLAUDE.md)                           | Read every session, followed by judgment                   |
+| Skill        | [`.claude/skills/<name>/SKILL.md`](https://github.com/ianwelerson/ordre/blob/main/.claude/skills) | Name and description always, body only when the skill runs |
+| Hook         | [`.claude/settings.json`](https://github.com/ianwelerson/ordre/blob/main/.claude/settings.json)   | Executed by Claude Code on a matching event, every time    |
 
 The instructions-versus-skill split is by nature, not by topic. `CLAUDE.md` is injected into every session, so
 every line it holds is a permanent cost paid by conversations that will never need
@@ -30,9 +30,8 @@ points at loads only when that particular review needs it.
 you walk through occasionally goes in a skill.
 
 <Callout>
-  This is why the OWASP checklist and the WCAG criteria list are not in
-  `CLAUDE.md`. Together they are around 300 lines that would otherwise be
-  re-read at the top of every unrelated conversation.
+  This is why the OWASP checklist and the WCAG criteria list are not in `CLAUDE.md`. Together they
+  are around 300 lines that would otherwise be re-read at the top of every unrelated conversation.
 </Callout>
 
 ## What `CLAUDE.md` governs
@@ -82,9 +81,9 @@ compliance does not depend on the model's attention.
 Sort every rule by that test. Mechanically checkable goes in a hook; needs
 judgment stays an instruction. Two `PostToolUse` hooks run on every write:
 
-| Hook | What it does |
-| ---- | ------------ |
-| Prettier | Formats the edited file |
+| Hook          | What it does                                                                      |
+| ------------- | --------------------------------------------------------------------------------- |
+| Prettier      | Formats the edited file                                                           |
 | Em dash guard | Blocks the edit and reports the offending lines when the file contains an em dash |
 
 The formatter finds the owning workspace by walking up to the nearest
@@ -108,11 +107,11 @@ Three skills, invoked as `/name` or triggered by asking for the review in plain
 words. Each one reads and reports; none of them edits files unless asked, and each
 declares a read-only tool set so that stays structurally true.
 
-| Skill | Reviews | Grounded in |
-| ----- | ------- | ----------- |
-| `/review-architecture` | Boundaries, design shape, contracts, correctness, error handling, naming, tests | [Architecture](/internal-docs/engineering/architecture), [Testing](/internal-docs/engineering/testing) |
-| `/review-security` | Threat model, then OWASP Top 10 mapped onto this stack | [RBAC](/internal-docs/engineering/authorization/rbac), [Row-Level Security](/internal-docs/engineering/authorization/row-level-security), [Transactional Outbox](/internal-docs/engineering/outbox) |
-| `/review-interface` | Semantics, keyboard and focus, WCAG 2.2 AA, responsive behaviour, motion, forms, design-token fidelity | [Brand](/internal-docs/design/brand), the token files in `packages/ui/src/styles/tokens/` |
+| Skill                  | Reviews                                                                                                | Grounded in                                                                                                                                                                                         |
+| ---------------------- | ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/review-architecture` | Boundaries, design shape, contracts, correctness, error handling, naming, tests                        | [Architecture](/internal-docs/engineering/architecture), [Testing](/internal-docs/engineering/testing)                                                                                              |
+| `/review-security`     | Threat model, then OWASP Top 10 mapped onto this stack                                                 | [RBAC](/internal-docs/engineering/authorization/rbac), [Row-Level Security](/internal-docs/engineering/authorization/row-level-security), [Transactional Outbox](/internal-docs/engineering/outbox) |
+| `/review-interface`    | Semantics, keyboard and focus, WCAG 2.2 AA, responsive behaviour, motion, forms, design-token fidelity | [Brand](/internal-docs/design/brand), the token files in `packages/ui/src/styles/tokens/`                                                                                                           |
 
 Each takes an optional target and falls back to the working tree, then the branch
 against `develop`:
@@ -139,7 +138,7 @@ Every review runs the same five steps, and the second one is the one that matter
 5. **Write it up**, citing `file.ts:line` and naming the principle behind each
    finding.
 
-The last part is the point. These skills exist to make the code better *and* to
+The last part is the point. These skills exist to make the code better _and_ to
 explain why it is better, which is what a study project needs from a reviewer.
 
 ### What `/review-security` is and is not
@@ -158,10 +157,10 @@ for the trust that a reported finding is real.
 A task skill encodes a procedure that spans several files, where forgetting a step
 is silent.
 
-| Skill | Covers |
-| ----- | ------ |
-| `/new-component` | The four edits a `@ordre/ui` component needs: the component with its variants, the behaviour test, the Storybook story, and the explicit line in `components/index.ts` |
-| `/new-dashboard-route` | The path constant in `@ordre/core`, the route file, the view split into `ui/` and `model/`, copy in both locales, and the proxy gate |
+| Skill                  | Covers                                                                                                                                                                 |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/new-component`       | The four edits a `@ordre/ui` component needs: the component with its variants, the behaviour test, the Storybook story, and the explicit line in `components/index.ts` |
+| `/new-dashboard-route` | The path constant in `@ordre/core`, the route file, the view split into `ui/` and `model/`, copy in both locales, and the proxy gate                                   |
 
 The test for whether something deserves a skill: does it span several files in a
 specific order, and would a missed step go unnoticed? Adding an error code fails

@@ -6,10 +6,10 @@ description: How Ordre decides who can do what - two independent layers, RBAC in
 
 Ordre authorizes every request through **two independent layers**. They answer different questions, live in different places, and fail independently - which is the point.
 
-| Layer                                     | Question                    | Where it lives                          | Enforced by                                                       |
-| ----------------------------------------- | --------------------------- | --------------------------------------- | ----------------------------------------------------------------- |
-| **[RBAC](/internal-docs/engineering/authorization/rbac)** | _What actions_ can a role take? | Express middleware (app)                | `requireWorkspaceAccess` / `requireWorkspacePermission`, `can()`  |
-| **[RLS](/internal-docs/engineering/authorization/row-level-security)** | _Which rows_ can it touch at all? | Postgres policies (database)            | Row-Level Security on every tenant table                          |
+| Layer                                                                  | Question                          | Where it lives               | Enforced by                                                      |
+| ---------------------------------------------------------------------- | --------------------------------- | ---------------------------- | ---------------------------------------------------------------- |
+| **[RBAC](/internal-docs/engineering/authorization/rbac)**              | _What actions_ can a role take?   | Express middleware (app)     | `requireWorkspaceAccess` / `requireWorkspacePermission`, `can()` |
+| **[RLS](/internal-docs/engineering/authorization/row-level-security)** | _Which rows_ can it touch at all? | Postgres policies (database) | Row-Level Security on every tenant table                         |
 
 **RBAC is the primary gate; RLS is the backstop.** RBAC decides whether the action is allowed and returns clean `403`/`404` responses. RLS is the safety net underneath: even if a controller forgets a `WHERE workspace_id = ?`, or a permission check is wired wrong, the database physically refuses to return another tenant's rows. You have to defeat both to leak data.
 
@@ -21,14 +21,14 @@ For an authenticated workspace route, middleware runs in this order:
 authenticate → rlsContext → requireWorkspaceAccess → requireWorkspacePermission → [requireWorkspaceQuota] → controller
 ```
 
-| Stage                        | Responsibility                                              | Failure |
-| ---------------------------- | ---------------------------------------------------------- | ------- |
-| `authenticate`               | Resolve the session, set `req.user`                        | `401 UNAUTHORIZED` |
-| `rlsContext`                 | Open the RLS transaction, pin `app.user_id` (RLS layer)    | -       |
-| `requireWorkspaceAccess`     | Resolve the workspace, load the caller's **active** membership, set `req.workspace` + `req.member` | `404 WORKSPACE_NOT_FOUND` / `403 MEMBER_SELF_SUSPENDED` |
-| `requireWorkspacePermission` | Check the role holds the required permission               | `403 FORBIDDEN` |
-| `requireWorkspaceQuota`      | Only on routes that consume a metered resource: check the plan has room | `402 PLAN_SEAT_LIMIT_REACHED` / `402 PLAN_LOCATION_LIMIT_REACHED` |
-| controller                   | Do the work; shape the payload by role (`scopeRelations`)  | -       |
+| Stage                        | Responsibility                                                                                     | Failure                                                           |
+| ---------------------------- | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `authenticate`               | Resolve the session, set `req.user`                                                                | `401 UNAUTHORIZED`                                                |
+| `rlsContext`                 | Open the RLS transaction, pin `app.user_id` (RLS layer)                                            | -                                                                 |
+| `requireWorkspaceAccess`     | Resolve the workspace, load the caller's **active** membership, set `req.workspace` + `req.member` | `404 WORKSPACE_NOT_FOUND` / `403 MEMBER_SELF_SUSPENDED`           |
+| `requireWorkspacePermission` | Check the role holds the required permission                                                       | `403 FORBIDDEN`                                                   |
+| `requireWorkspaceQuota`      | Only on routes that consume a metered resource: check the plan has room                            | `402 PLAN_SEAT_LIMIT_REACHED` / `402 PLAN_LOCATION_LIMIT_REACHED` |
+| controller                   | Do the work; shape the payload by role (`scopeRelations`)                                          | -                                                                 |
 
 So the two layers interleave: `rlsContext` (RLS) sets identity before the RBAC guards run, so the guards' own membership lookup already runs under RLS too.
 
@@ -41,9 +41,9 @@ So the two layers interleave: `rlsContext` (RLS) sets identity before the RBAC g
 The limits themselves come from `plan.entitlements` (see [Data Model](/internal-docs/engineering/data-model)). A plan that doesn't cap a limit passes through without a count query; a plan whose entitlements fail validation is refused (`500 PLAN_ENTITLEMENTS_INVALID`) rather than treated as uncapped.
 
 <Callout type="info">
-  Quotas gate **creation only**. A workspace that downgrades below its current
-  usage keeps everything it has - existing locations and members are grandfathered,
-  and only new ones are blocked until it is back within the plan's limits.
+  Quotas gate **creation only**. A workspace that downgrades below its current usage keeps
+  everything it has - existing locations and members are grandfathered, and only new ones are
+  blocked until it is back within the plan's limits.
 </Callout>
 
 ## Why both, not one

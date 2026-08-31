@@ -14,12 +14,12 @@ history readable.
 [lint-staged](https://github.com/lint-staged/lint-staged) decides what runs based
 on which files are staged.
 
-| Staged files | What runs | Tools |
-| ------------ | --------- | ----- |
-| `*.{js,ts,tsx}` | `pnpm lint` and `pnpm format:check` | ESLint, Prettier |
-| `*.{ts,tsx}` | `pnpm check-types` | TypeScript |
-| `package.json` | `pnpm packages:lint` | Syncpack |
-| `apps/api/**` | `pnpm api:docs:generate`, then stages the result | The OpenAPI generator |
+| Staged files    | What runs                                        | Tools                 |
+| --------------- | ------------------------------------------------ | --------------------- |
+| `*.{js,ts,tsx}` | `pnpm lint` and `pnpm format:check`              | ESLint, Prettier      |
+| `*.{ts,tsx}`    | `pnpm check-types`                               | TypeScript            |
+| `package.json`  | `pnpm packages:lint`                             | Syncpack              |
+| `apps/api/**`   | `pnpm api:docs:generate`, then stages the result | The OpenAPI generator |
 
 The commands are deliberately **repo-wide** rather than scoped to the staged files.
 Turborepo caches them, so the second run is nearly free, and a change in one
@@ -31,9 +31,8 @@ The last row is the one worth knowing about: touching the API regenerates
 API reference can never describe a contract that is not in the tree.
 
 <Callout>
-  The `commit-msg` hook runs commitlint against the message described below. It
-  rejects the commit rather than rewriting it, so a malformed message costs a
-  retry, not a lost change.
+  The `commit-msg` hook runs commitlint against the message described below. It rejects the commit
+  rather than rewriting it, so a malformed message costs a retry, not a lost change.
 </Callout>
 
 ## Commit messages
@@ -46,20 +45,20 @@ type(scope): message
 
 **Types**, enforced by `commitlint.config.ts`:
 
-| Type | For |
-| ---- | --- |
-| `feat` | A new capability |
-| `fix` | A defect repair |
+| Type       | For                                              |
+| ---------- | ------------------------------------------------ |
+| `feat`     | A new capability                                 |
+| `fix`      | A defect repair                                  |
 | `refactor` | A change that alters structure but not behaviour |
-| `perf` | A change made for speed or resource use |
-| `test` | Tests only |
-| `docs` | Documentation only |
-| `style` | Formatting only, no code meaning changed |
-| `build` | Build system or dependencies |
-| `ci` | CI configuration |
-| `chore` | Housekeeping that fits nothing above |
-| `setup` | Project scaffolding |
-| `revert` | Undoing an earlier commit |
+| `perf`     | A change made for speed or resource use          |
+| `test`     | Tests only                                       |
+| `docs`     | Documentation only                               |
+| `style`    | Formatting only, no code meaning changed         |
+| `build`    | Build system or dependencies                     |
+| `ci`       | CI configuration                                 |
+| `chore`    | Housekeeping that fits nothing above             |
+| `setup`    | Project scaffolding                              |
+| `revert`   | Undoing an earlier commit                        |
 
 The **scope** is the workspace the change lands in: `dashboard`, `api`, `ui`,
 `core`, `db`, and so on.
@@ -71,10 +70,9 @@ chore: update dependencies
 ```
 
 <Callout type="warn">
-  **The subject line is the whole message.** No body, no description, no bullet
-  list underneath. The subject says what the commit does and the diff says how,
-  so a body only restates one or the other. A subject that cannot describe the
-  change on its own is a sign the commit is doing too much.
+  **The subject line is the whole message.** No body, no description, no bullet list underneath. The
+  subject says what the commit does and the diff says how, so a body only restates one or the other.
+  A subject that cannot describe the change on its own is a sign the commit is doing too much.
 </Callout>
 
 Reasoning about a change belongs in the discussion around it, and anything that
