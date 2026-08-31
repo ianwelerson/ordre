@@ -71,6 +71,13 @@ const audiencePayload = {
   },
 };
 
+/** Whether the row is still in the table, for the retention cases. */
+const rowExists = async (id: string) => {
+  const { rows } = await db.execute(sql`SELECT 1 FROM outbox WHERE id = ${id}`);
+
+  return rows.length > 0;
+};
+
 const readRow = async (id: string) => {
   const [row] = (
     await db.execute<{
@@ -396,6 +403,53 @@ describe('workers/outbox', () => {
       await drain();
 
       expect(seen).toEqual(['first@example.com', 'second@example.com']);
+    });
+  });
+
+  describe('retention', () => {
+    /** The reaper runs at most once a day, so each case gets a fresh module. */
+    beforeEach(() => {
+      vi.resetModules();
+    });
+
+    const drainFresh = async () => {
+      const worker = await import('./outbox.worker.ts');
+
+      await worker.startOutboxWorker();
+      await worker.stopOutboxWorker();
+    };
+
+    it('removes a delivered row past its retention', async () => {
+      const stale = await insertRow({
+        processedAt: sql`now() - interval '31 days'`,
+        createdAt: sql`now() - interval '31 days'`,
+      });
+      const recent = await insertRow({ processedAt: sql`now() - interval '1 day'` });
+
+      await drainFresh();
+
+      expect(await rowExists(stale)).toBe(false);
+      expect(await rowExists(recent)).toBe(true);
+    });
+
+    /**
+     * A dead-lettered row is the only record that a message never arrived, so it is
+     * kept for longer than one that delivered.
+     */
+    it('keeps an undelivered row past the processed horizon but not the failed one', async () => {
+      const deadLettered = await insertRow({
+        attempts: 5,
+        createdAt: sql`now() - interval '60 days'`,
+      });
+      const ancient = await insertRow({
+        attempts: 5,
+        createdAt: sql`now() - interval '91 days'`,
+      });
+
+      await drainFresh();
+
+      expect(await rowExists(deadLettered)).toBe(true);
+      expect(await rowExists(ancient)).toBe(false);
     });
   });
 

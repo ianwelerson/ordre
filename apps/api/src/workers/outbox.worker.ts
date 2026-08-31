@@ -249,7 +249,58 @@ let wakeRequested = false;
 // producers - and therefore `wakeOutboxWorker` - do run.
 let stopped = true;
 
+/**
+ * How long a delivered row is kept. Long enough to answer "did that go out" from
+ * the table, short enough that a recipient's name and address are not held forever
+ * in a table with no tenant scoping.
+ */
+const PROCESSED_RETENTION = sql`interval '30 days'`;
+
+/**
+ * How long a row that never delivered is kept. Longer than a delivered one,
+ * because a dead-lettered row is the only record that a message never arrived.
+ */
+const FAILED_RETENTION = sql`interval '90 days'`;
+
+/** At most one reap a day, however often a commit wakes the worker. */
+const REAP_INTERVAL_MS = 24 * 60 * 60 * 1000;
+
+let lastReapAt = 0;
+
+/**
+ * Deletes rows past their retention.
+ *
+ * Runs once per sweep rather than per batch: it is bookkeeping, not delivery, and
+ * a burst of wakes must not turn into a burst of full-table deletes.
+ * `outbox_pending_idx` is partial on unprocessed rows, so this scans; the daily
+ * guard is what keeps that acceptable.
+ */
+const reap = async (): Promise<void> => {
+  if (Date.now() - lastReapAt < REAP_INTERVAL_MS) {
+    return;
+  }
+
+  lastReapAt = Date.now();
+
+  const { rowCount } = await db.execute(sql`
+    DELETE FROM outbox
+    WHERE (processed_at IS NOT NULL AND processed_at < now() - ${PROCESSED_RETENTION})
+       OR (processed_at IS NULL AND created_at < now() - ${FAILED_RETENTION})
+  `);
+
+  if (rowCount) {
+    log.info({ deleted: rowCount }, 'outbox rows past retention removed');
+  }
+};
+
 const run = async (): Promise<void> => {
+  // Its own try, so a failed reap never stops delivery.
+  try {
+    await reap();
+  } catch (error) {
+    log.error({ err: error }, 'outbox reap failed');
+  }
+
   do {
     // Cleared before draining, not after, so a wake that lands mid-pass schedules
     // another pass instead of being lost until the next sweep.
