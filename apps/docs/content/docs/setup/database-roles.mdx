@@ -126,7 +126,7 @@ Grants are **per database**, so this runs independently on each one:
 - **Already created it via the dashboard?** Fix the attribute with `ALTER ROLE ordre_app NOBYPASSRLS;`. If Neon blocks that (it can require superuser), drop and recreate via SQL - `DROP ROLE ordre_app;` then the `CREATE ROLE` block above.
 - **Every database needs its own run.** Prod and staging are separate - do both. If they are branches rather than separate projects, a role created _after_ a branch was made does not appear on that branch, so treat each environment independently.
 - **Connection strings for that environment:**
-  - `DATABASE_URL` → `ordre_app` on the **pooled** endpoint (the `-pooler` host), `sslmode=require&channel_binding=require`. If the `pg` driver ever fails with a channel-binding/SASL error, drop `channel_binding=require` (`sslmode=require` still encrypts).
+  - `DATABASE_URL` → `ordre_app` on the **pooled** endpoint (the `-pooler` host), `sslmode=verify-full&channel_binding=require`. Spell out `verify-full` rather than `require`: on `pg` 8 the two behave identically, but `pg` 9 gives `require` libpq semantics, which encrypt the connection without validating the server certificate. If the `pg` driver ever fails with a channel-binding/SASL error, drop `channel_binding=require`.
   - `DATABASE_OWNER_URL` → `neondb_owner`, ideally the **direct** (non-`-pooler`) host, used by migrations in that environment's deploy pipeline.
 
 ## Verify
