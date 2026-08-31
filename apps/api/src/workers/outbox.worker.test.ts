@@ -365,6 +365,38 @@ describe('workers/outbox', () => {
       expect(row.processed_at).not.toBeNull();
       expect(row.last_error).toBeNull();
     });
+
+    /**
+     * The audience channel carries desired state, so the last row applied wins. Two
+     * syncs for the same contact in one batch have to reach the provider in the
+     * order they were queued, or Resend keeps the earlier snapshot.
+     */
+    it('delivers a batch oldest first', async () => {
+      const seen: string[] = [];
+
+      syncAudienceContact.mockImplementation((_topic: string, row: { to: string }) => {
+        seen.push(row.to);
+
+        return Promise.resolve(undefined);
+      });
+
+      await insertRow({
+        channel: 'audience',
+        topic: 'contact:sync',
+        rowPayload: { ...audiencePayload, to: 'first@example.com' },
+        createdAt: sql`now() - interval '2 minutes'`,
+      });
+      await insertRow({
+        channel: 'audience',
+        topic: 'contact:sync',
+        rowPayload: { ...audiencePayload, to: 'second@example.com' },
+        createdAt: sql`now() - interval '1 minute'`,
+      });
+
+      await drain();
+
+      expect(seen).toEqual(['first@example.com', 'second@example.com']);
+    });
   });
 
   describe('lifecycle', () => {

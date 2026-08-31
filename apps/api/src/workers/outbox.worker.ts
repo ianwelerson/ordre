@@ -168,6 +168,10 @@ export const drain = async (): Promise<number> => {
   //    ... LIMIT n)` this plans as a semi-join that re-runs the subquery per
   //    candidate row, so every execution locks another n and the batch cap is
   //    silently ignored. Materializing runs the selection exactly once.
+  //  * the UPDATE is a CTE with a SELECT around it, so the batch comes back
+  //    ordered. RETURNING on its own has no order, and the audience channel
+  //    carries desired state: two contact syncs for one person have to be applied
+  //    oldest first, or Resend is left holding the earlier snapshot.
   const startedAt = Date.now();
 
   const claimed = await db.execute<ClaimedRow>(sql`
@@ -181,11 +185,15 @@ export const drain = async (): Promise<number> => {
       ORDER BY next_attempt_at
       FOR UPDATE SKIP LOCKED
       LIMIT ${BATCH}
+    ),
+    claimed AS (
+      UPDATE outbox SET claimed_at = now(), attempts = attempts + 1, updated_at = now()
+      FROM due
+      WHERE outbox.id = due.id
+      RETURNING outbox.id, outbox.channel, outbox.topic, outbox.payload, outbox.attempts,
+                outbox.created_at
     )
-    UPDATE outbox SET claimed_at = now(), attempts = attempts + 1, updated_at = now()
-    FROM due
-    WHERE outbox.id = due.id
-    RETURNING outbox.id, outbox.channel, outbox.topic, outbox.payload, outbox.attempts
+    SELECT id, channel, topic, payload, attempts FROM claimed ORDER BY created_at
   `);
 
   if (claimed.rows.length === 0) {
