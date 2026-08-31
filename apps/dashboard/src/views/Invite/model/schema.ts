@@ -5,6 +5,6 @@ import { SignUpSchema, z } from '@ordre/core/schemas';
  * already fixes the address, and `app_invite_accept` refuses any account whose
  * email differs from the invite's.
  */
-export const SignUpFormSchema = SignUpSchema.omit({ email: true });
+export const SignUpFormSchema = SignUpSchema.omit({ email: true, name: true });
 
 export type SignUpFormValues = z.infer<typeof SignUpFormSchema>;

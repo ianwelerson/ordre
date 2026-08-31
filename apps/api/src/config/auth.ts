@@ -10,8 +10,10 @@ import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { APIError, createAuthMiddleware, isAPIError } from 'better-auth/api';
 import { openAPI } from 'better-auth/plugins';
+import { z } from 'zod';
 
 import { API_BASE_PATH, API_ROUTES, SESSION_COOKIE_PREFIX } from '@ordre/core/constants';
+import type { AudienceTopic } from '@ordre/core/enums';
 import { AUTH_ERRORS, BASE_ERRORS, errorMessage, VALIDATION_ERRORS } from '@ordre/core/errors';
 import type { ErrorMap } from '@ordre/core/types';
 import * as schema from '@ordre/db/schemas';
@@ -114,6 +116,38 @@ export const defaultPasswordResetRedirect = (ctx: PasswordResetContext): void =>
   ctx.body.redirectTo = urls.setPassword;
 };
 
+/**
+ * Joins the two name parts into the single `name` column Better Auth stores.
+ *
+ * @returns Both parts separated by a space, or whichever one is set.
+ */
+export const composeName = (firstName: string, lastName: string): string => {
+  return [firstName, lastName].filter(Boolean).join(' ');
+};
+
+/**
+ * Reads one of the two name fields off a Better Auth user, as a string.
+ *
+ * The database hooks type the user as the base model, so the fields declared in
+ * `additionalFields` arrive as `unknown` and have to be narrowed before use.
+ */
+const nameField = (user: Record<string, unknown>, field: 'firstName' | 'lastName'): string => {
+  const value = user[field];
+
+  return typeof value === 'string' ? value : '';
+};
+
+/**
+ * The topics a brand new account has opted into.
+ *
+ * Only the checkbox on the sign-up form can produce one. `workspace-updates` is
+ * never written here: it defaults to opt-in in Resend, so a contact is already
+ * subscribed and the preference is theirs to change.
+ */
+const signUpTopics = (user: Record<string, unknown>): AudienceTopic[] => {
+  return user.productNewsOptIn === true ? ['product-news'] : [];
+};
+
 // Better Auth Configuration
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -143,6 +177,15 @@ export const auth = betterAuth({
      */
     ipAddress: {
       ipAddressHeaders: [CLIENT_IP_HEADER],
+    },
+  },
+  user: {
+    additionalFields: {
+      firstName: { type: 'string', required: true, validator: { input: z.string().min(1) } },
+      lastName: { type: 'string', required: true, validator: { input: z.string().min(1) } },
+      // The record that the person agreed to product news, kept because consent has
+      // to be provable later, not only acted on once.
+      productNewsOptIn: { type: 'boolean', required: false, defaultValue: false },
     },
   },
   emailAndPassword: {
@@ -203,6 +246,13 @@ export const auth = betterAuth({
   databaseHooks: {
     user: {
       create: {
+        // `name` is derived rather than supplied: whatever the client sent is
+        // replaced by the two fields the account is actually keyed on.
+        before: async (user) => {
+          const name = composeName(nameField(user, 'firstName'), nameField(user, 'lastName'));
+
+          return { data: { ...user, name: name || user.name } };
+        },
         after: async (user) => {
           try {
             await pushToOutbox(getDb(), {
@@ -219,6 +269,27 @@ export const auth = betterAuth({
             logger.error(
               { err: error, userId: user.id, event: OUTBOX_PUSH_FAILED, topic: 'account:created' },
               'failed to queue account:created email'
+            );
+          }
+
+          try {
+            await pushToOutbox(getDb(), {
+              channel: 'audience',
+              topic: 'contact:sync',
+              to: user.email,
+              variables: {
+                contact_first_name: nameField(user, 'firstName'),
+                contact_last_name: nameField(user, 'lastName'),
+                // A new account belongs to no workspace yet, so the only segment it
+                // can be in is the one every contact belongs to.
+                contact_segments: ['all-accounts'],
+                contact_topics: signUpTopics(user),
+              },
+            });
+          } catch (error) {
+            logger.error(
+              { err: error, userId: user.id, event: OUTBOX_PUSH_FAILED, topic: 'contact:sync' },
+              'failed to queue contact:sync row'
             );
           }
         },

@@ -4,7 +4,9 @@ import type { Locale, WorkspaceMemberRole } from '@ordre/core/enums';
 export interface SessionUser {
   id: string;
   email: string;
-  name: string;
+  fullName: string;
+  firstName: string;
+  lastName: string;
 }
 
 /**

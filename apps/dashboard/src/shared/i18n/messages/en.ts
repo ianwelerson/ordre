@@ -120,14 +120,21 @@ export default {
       submitting: 'Signing out...',
       dashboard: 'Back to the dashboard',
     },
-    name: {
-      label: 'Your name',
-      placeholder: 'e.g. Lucas Marino',
-      helper: 'Shown to teammates only.',
+    firstName: {
+      label: 'First name',
+      placeholder: 'e.g. John',
+    },
+    lastName: {
+      label: 'Last name',
+      placeholder: 'e.g. Doe',
     },
     password: {
       label: 'Create password',
       placeholder: 'At least 8 characters',
+    },
+    productNews: {
+      label: 'Send me product news',
+      description: 'Occasional updates about Ordre. Unsubscribe from any of them.',
     },
     submit: 'Accept invite & continue',
     submitting: 'Joining workspace...',

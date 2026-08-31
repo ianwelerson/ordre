@@ -1,4 +1,5 @@
 import { db } from '#/config/db.ts';
+import type { SessionUser } from '#/types/context.ts';
 import type { NextFunction, Request, Response } from 'express';
 
 import {
@@ -22,6 +23,14 @@ vi.mock('#/config/db.ts', () => ({
 
 const findWorkspace = vi.mocked(db.query.workspace.findFirst);
 const findMember = vi.mocked(db.query.workspaceMember.findFirst);
+
+const USER: SessionUser = {
+  id: 'user-1',
+  email: 'user@example.com',
+  fullName: 'User One',
+  firstName: 'User',
+  lastName: 'One',
+};
 
 const WORKSPACE_ID = '11111111-1111-4111-8111-111111111111';
 const WORKSPACE_NAME = 'My Workspace';
@@ -63,7 +72,7 @@ describe('middleware/requireWorkspaceAccess', () => {
 
   it('responds with invalid input when both id and slug params are invalid', async () => {
     const req = buildRequest({
-      user: { id: 'user-1', email: 'user@example.com', name: 'User One' },
+      user: USER,
       params: { id: '!!!', slug: '!!!' },
     });
     const { res, status, json } = buildResponse();
@@ -83,7 +92,7 @@ describe('middleware/requireWorkspaceAccess', () => {
 
   it('responds with invalid input when the id is invalid and no slug is provided', async () => {
     const req = buildRequest({
-      user: { id: 'user-1', email: 'user@example.com', name: 'User One' },
+      user: USER,
       params: { id: '!!!' },
     });
     const { res, status, json } = buildResponse();
@@ -106,7 +115,7 @@ describe('middleware/requireWorkspaceAccess', () => {
   it('resolves the workspace by slug and returns not found when it does not exist', async () => {
     findWorkspace.mockResolvedValue(undefined);
     const req = buildRequest({
-      user: { id: 'user-1', email: 'user@example.com', name: 'User One' },
+      user: USER,
       params: { slug: 'my-workspace' },
     });
     const { res, status, json } = buildResponse();
@@ -125,7 +134,7 @@ describe('middleware/requireWorkspaceAccess', () => {
     mockWorkspaceFound();
     findMember.mockResolvedValue(undefined);
     const req = buildRequest({
-      user: { id: 'user-1', email: 'user@example.com', name: 'User One' },
+      user: USER,
       params: { id: WORKSPACE_ID },
     });
     const { res, status, json } = buildResponse();
@@ -146,7 +155,7 @@ describe('middleware/requireWorkspaceAccess', () => {
       ReturnType<typeof db.query.workspaceMember.findFirst>
     >);
     const req = buildRequest({
-      user: { id: 'user-1', email: 'user@example.com', name: 'User One' },
+      user: USER,
       params: { id: WORKSPACE_ID },
     });
     const { res, status, json } = buildResponse();
@@ -167,7 +176,7 @@ describe('middleware/requireWorkspaceAccess', () => {
       ReturnType<typeof db.query.workspaceMember.findFirst>
     >);
     const req = buildRequest({
-      user: { id: 'user-1', email: 'user@example.com', name: 'User One' },
+      user: USER,
       params: { id: WORKSPACE_ID },
     });
     const { res, status } = buildResponse();
@@ -186,7 +195,7 @@ describe('middleware/requireWorkspaceAccess', () => {
     mockWorkspaceFound();
     findMember.mockRejectedValue(error);
     const req = buildRequest({
-      user: { id: 'user-1', email: 'user@example.com', name: 'User One' },
+      user: USER,
       params: { id: WORKSPACE_ID },
     });
     const { res, status } = buildResponse();

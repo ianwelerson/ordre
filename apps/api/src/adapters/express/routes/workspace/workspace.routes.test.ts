@@ -146,7 +146,7 @@ describe('Workspace', () => {
       expect(workspace.subscription?.plan.code).toBe('free:founding');
     });
 
-    test('POST queues exactly one self-contained outbox row for the new workspace', async () => {
+    test('POST queues a self-contained email row and a contact sync', async () => {
       mockUserSession();
 
       const slug = `outbox-${Date.now()}`;
@@ -162,26 +162,31 @@ describe('Workspace', () => {
         await ownerDb.execute<{
           channel: string;
           topic: string;
-          payload: { to: string; locale: string; variables: Record<string, string> };
-        }>(sql`SELECT channel, topic, payload FROM outbox`)
+          payload: { to: string; locale: string; variables: Record<string, unknown> };
+        }>(sql`SELECT channel, topic, payload FROM outbox ORDER BY channel::text`)
       ).rows;
 
-      expect(rows).toHaveLength(1);
-      expect(rows[0]).toMatchObject({ channel: 'email', topic: 'workspace:created' });
+      expect(rows).toHaveLength(2);
+      expect(rows[0]).toMatchObject({ channel: 'audience', topic: 'contact:sync' });
+      expect(rows[0]?.payload.variables).toMatchObject({
+        contact_segments: ['all-accounts', 'workspace-owner', 'workspace-member'],
+        contact_topics: [],
+      });
+      expect(rows[1]).toMatchObject({ channel: 'email', topic: 'workspace:created' });
 
       // Self-contained by design: the worker has no user context and cannot read
       // tenant tables, so everything the template renders lives in the payload.
       const member = userFixtures.find((user) => user.id === USER_IDS.member);
 
-      expect(rows[0]?.payload.to).toBe(member?.email);
-      expect(rows[0]?.payload.variables).toMatchObject({
+      expect(rows[1]?.payload.to).toBe(member?.email);
+      expect(rows[1]?.payload.variables).toMatchObject({
         workspace_name: 'Outbox',
         workspace_plan: expect.any(String),
       });
 
       // Frozen at write time, so the worker renders in the language the creator
       // was using rather than negotiating one it has no request for.
-      expect(rows[0]?.payload).toMatchObject({ locale: 'en' });
+      expect(rows[1]?.payload).toMatchObject({ locale: 'en' });
     });
 
     test('POST writes no outbox row when the request fails', async () => {

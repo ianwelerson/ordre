@@ -7,7 +7,7 @@
  * Delivery transports. One row per channel, so a Twilio failure never re-sends an
  * email that already went out.
  */
-export const OUTBOX_CHANNELS = ['email'] as const;
+export const OUTBOX_CHANNELS = ['email', 'audience'] as const;
 export type OutboxChannel = (typeof OUTBOX_CHANNELS)[number];
 
 /**
@@ -21,6 +21,7 @@ export const OUTBOX_TOPICS = [
   'account:reset-password',
   'workspace:created',
   'invite:created',
+  'contact:sync',
 ] as const;
 export type OutboxTopic = (typeof OUTBOX_TOPICS)[number];
 
@@ -57,6 +58,10 @@ export const OUTBOX_VARIABLES = [
   'user_email',
   'verify_url',
   'reset_url',
+  'contact_first_name',
+  'contact_last_name',
+  'contact_segments',
+  'contact_topics',
   ...OUTBOX_DEFAULT_VARIABLES,
 ] as const;
 export type OutboxVariable = (typeof OUTBOX_VARIABLES)[number];

@@ -60,7 +60,13 @@ const validCreatePayload = {
   industry: 'other',
 } as Parameters<typeof workspaceCreate>[1];
 
-const sessionUser = { id: 'user-1', email: 'owner@example.com', name: 'John Doe' };
+const sessionUser = {
+  id: 'user-1',
+  email: 'owner@example.com',
+  fullName: 'John Doe',
+  firstName: 'John',
+  lastName: 'Doe',
+};
 
 describe('controllers/workspace', () => {
   beforeEach(() => {

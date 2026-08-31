@@ -8,6 +8,7 @@
  */
 import { db } from '#/config/db.ts';
 import { logger } from '#/config/logger.ts';
+import { syncAudienceContact } from '#/services/audience.ts';
 import { sendEmail } from '#/services/email.ts';
 import type { OutboxRow } from '#/types/db.ts';
 import { sql } from 'drizzle-orm';
@@ -29,20 +30,23 @@ const BATCH = 10;
 
 /**
  * Attempts before a row is dead-lettered (left unprocessed, never claimed again).
- * Five keeps the whole retry sequence inside Resend's 24h idempotency window, so
- * a redelivery can't turn into a duplicate email.
+ *
+ * Five is the email channel's number: Resend honours an idempotency key for 24h, and
+ * keeping the whole retry sequence inside that window stops a redelivery becoming a
+ * duplicate message. The audience channel inherits it rather than needing it, since a
+ * repeated contact sync is an upsert.
  */
 const MAX_ATTEMPTS = 5;
 
 /**
- * Hard age cap on a claimable row, and the other half of the idempotency
+ * Hard age cap on a claimable row, and the other half of the email idempotency
  * guarantee above.
  *
- * {@link MAX_ATTEMPTS} alone doesn't bound a row's lifetime: the rate-limited path
- * in {@link recordFailure} hands the attempt back, so a persistently throttled row
- * can retry hourly forever. Past Resend's 24h window the idempotency key stops
- * being honoured, and a redelivery of a send that actually succeeded is a duplicate
- * email. Rows older than this stop being claimed and dead-letter instead.
+ * {@link MAX_ATTEMPTS} alone doesn't bound a row's lifetime: the rate-limited path in
+ * {@link recordFailure} hands the attempt back, so a persistently throttled row can
+ * retry hourly forever. Past Resend's 24h window a redelivery of a send that actually
+ * succeeded is a duplicate email. Rows older than this stop being claimed and
+ * dead-letter instead.
  */
 const MAX_AGE = sql`interval '23 hours'`;
 
@@ -60,6 +64,7 @@ type Provider = (topic: OutboxTopic, payload: OutboxPayload, id: string) => Prom
  */
 const providers: Record<OutboxChannel, Provider> = {
   email: sendEmail,
+  audience: syncAudienceContact,
 };
 
 const log = logger.child({ worker: 'outbox' });

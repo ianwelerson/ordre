@@ -5,12 +5,14 @@ import type { OutboxPayload } from '@ordre/core/types';
 
 import { drain, startOutboxWorker, stopOutboxWorker, wakeOutboxWorker } from './outbox.worker.ts';
 
-const { sendEmail, log } = vi.hoisted(() => ({
+const { sendEmail, syncAudienceContact, log } = vi.hoisted(() => ({
   sendEmail: vi.fn(),
+  syncAudienceContact: vi.fn(),
   log: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 
 vi.mock('#/services/email.ts', () => ({ sendEmail }));
+vi.mock('#/services/audience.ts', () => ({ syncAudienceContact }));
 vi.mock('#/config/logger.ts', () => ({ logger: { child: () => log } }));
 
 const loggedWith = (level: 'info' | 'warn' | 'error', message: string) =>
@@ -41,18 +43,32 @@ const insertRow = async (overrides: Record<string, unknown> = {}) => {
     claimedAt = null,
     processedAt = null,
     createdAt = sql`now()`,
+    channel = 'email',
+    topic = 'account:created',
+    rowPayload = payload,
   } = overrides;
 
   const [row] = (
     await db.execute<{ id: string }>(sql`
       INSERT INTO outbox (channel, topic, payload, attempts, next_attempt_at, claimed_at, processed_at, created_at)
-      VALUES ('email', 'account:created', ${JSON.stringify(payload)}::jsonb,
+      VALUES (${channel}, ${topic}, ${JSON.stringify(rowPayload)}::jsonb,
               ${attempts}, ${nextAttemptAt}, ${claimedAt}, ${processedAt}, ${createdAt})
       RETURNING id
     `)
   ).rows;
 
   return row!.id;
+};
+
+const audiencePayload = {
+  to: 'ada@example.com',
+  locale: 'en',
+  variables: {
+    contact_first_name: 'Ada',
+    contact_last_name: 'Lovelace',
+    contact_segments: ['workspace-owner'],
+    contact_topics: [],
+  },
 };
 
 const readRow = async (id: string) => {
@@ -77,6 +93,7 @@ describe('workers/outbox', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     sendEmail.mockResolvedValue({ id: 'resend-email-id' });
+    syncAudienceContact.mockResolvedValue(undefined);
     await db.execute(sql`DELETE FROM outbox`);
   });
 
@@ -291,6 +308,46 @@ describe('workers/outbox', () => {
 
       expect(first + second).toBe(4);
       expect(sendEmail).toHaveBeenCalledTimes(4);
+    });
+  });
+
+  describe('channel routing', () => {
+    const insertAudienceRow = () =>
+      insertRow({ channel: 'audience', topic: 'contact:sync', rowPayload: audiencePayload });
+
+    it('hands a row to the provider its channel names', async () => {
+      await insertAudienceRow();
+
+      await drain();
+
+      expect(syncAudienceContact).toHaveBeenCalledWith(
+        'contact:sync',
+        expect.objectContaining({ to: 'ada@example.com' }),
+        expect.any(String)
+      );
+      expect(sendEmail).not.toHaveBeenCalled();
+    });
+
+    it('drains both channels in one pass', async () => {
+      await insertRow();
+      await insertAudienceRow();
+
+      await drain();
+
+      expect(sendEmail).toHaveBeenCalledTimes(1);
+      expect(syncAudienceContact).toHaveBeenCalledTimes(1);
+    });
+
+    /** One row per channel is the point of the split. */
+    it('leaves the email row delivered when the contact sync fails', async () => {
+      const emailId = await insertRow();
+      const audienceId = await insertAudienceRow();
+      syncAudienceContact.mockRejectedValueOnce(resendError(500));
+
+      await drain();
+
+      expect((await readRow(emailId)).processed_at).not.toBeNull();
+      expect((await readRow(audienceId)).processed_at).toBeNull();
     });
   });
 

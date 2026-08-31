@@ -120,14 +120,21 @@ export default {
       submitting: 'Saindo...',
       dashboard: 'Voltar para o dashboard',
     },
-    name: {
-      label: 'Seu nome',
-      placeholder: 'ex.: Lucas Marino',
-      helper: 'Exibido apenas para colegas.',
+    firstName: {
+      label: 'Nome',
+      placeholder: 'ex.: Lucas',
+    },
+    lastName: {
+      label: 'Sobrenome',
+      placeholder: 'ex.: Marino',
     },
     password: {
       label: 'Criar senha',
       placeholder: 'Pelo menos 8 caracteres',
+    },
+    productNews: {
+      label: 'Quero receber novidades do produto',
+      description: 'Atualizações ocasionais sobre a Ordre. Cancele em qualquer uma delas.',
     },
     submit: 'Aceitar convite e continuar',
     submitting: 'Entrando no workspace...',

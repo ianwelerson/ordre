@@ -63,8 +63,10 @@ const Host = () => {
 
   return (
     <form onSubmit={onSubmit} noValidate>
-      <Field name="name" binding={field('name')} />
+      <Field name="firstName" binding={field('firstName')} />
+      <Field name="lastName" binding={field('lastName')} />
       <Field name="password" binding={field('password')} />
+      <input data-testid="productNewsOptIn" type="checkbox" {...field('productNewsOptIn')} />
       <span data-testid="root-error">{rootError ?? ''}</span>
       <button type="submit">Accept</button>
     </form>
@@ -107,10 +109,11 @@ describe('useInviteSignUp', () => {
     cleanup();
   });
 
-  it('should seed the name field from the invite', () => {
+  it('should seed both name fields by splitting the name on the invite', () => {
     const { getByTestId } = setup();
 
-    expect((getByTestId('name') as HTMLInputElement).value).toBe(INVITE.name);
+    expect((getByTestId('firstName') as HTMLInputElement).value).toBe('Lucas');
+    expect((getByTestId('lastName') as HTMLInputElement).value).toBe('Marino');
   });
 
   /**
@@ -125,9 +128,32 @@ describe('useInviteSignUp', () => {
     await waitFor(() =>
       expect(signUpRequest).toHaveBeenCalledWith({
         name: INVITE.name,
+        firstName: 'Lucas',
+        lastName: 'Marino',
         email: INVITE.email,
         password: PASSWORD,
+        productNewsOptIn: false,
       })
+    );
+  });
+
+  /** Marketing consent is opt-in, so an untouched form must never send `true`. */
+  it('should leave the product news box unticked', () => {
+    const { getByTestId } = setup();
+
+    expect((getByTestId('productNewsOptIn') as HTMLInputElement).checked).toBe(false);
+  });
+
+  it('should sign up with the consent the invitee gave', async () => {
+    const { getByTestId, submit } = setup();
+
+    (getByTestId('productNewsOptIn') as HTMLInputElement).click();
+    await submit();
+
+    await waitFor(() =>
+      expect(signUpRequest).toHaveBeenCalledWith(
+        expect.objectContaining({ productNewsOptIn: true })
+      )
     );
   });
 

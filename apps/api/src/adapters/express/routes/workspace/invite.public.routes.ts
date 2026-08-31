@@ -45,7 +45,7 @@ publicInviteRouter.use(rlsContext);
 // session via RLS, so the controller only needs the token.
 publicInviteRouter.post(
   API_ROUTES.invite.accept,
-  sendAuthResult((req) => workspaceInviteAccept(req.params.token))
+  sendAuthResult((req) => workspaceInviteAccept(req.params.token, req.user))
 );
 
 export default publicInviteRouter;

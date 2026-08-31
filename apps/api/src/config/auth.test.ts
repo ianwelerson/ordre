@@ -3,7 +3,12 @@ import { APIError } from 'better-auth/api';
 
 import { errorMessage } from '@ordre/core/errors';
 
-import { defaultPasswordResetRedirect, defaultSignUpCallbackUrl, remapAuthError } from './auth.ts';
+import {
+  composeName,
+  defaultPasswordResetRedirect,
+  defaultSignUpCallbackUrl,
+  remapAuthError,
+} from './auth.ts';
 
 describe('config/auth', () => {
   describe('remapAuthError', () => {
@@ -122,6 +127,20 @@ describe('config/auth', () => {
 
     it('tolerates an endpoint reached with no body', () => {
       expect(() => defaultPasswordResetRedirect({ path: '/request-password-reset' })).not.toThrow();
+    });
+  });
+
+  describe('composeName', () => {
+    it('joins both parts into the single column Better Auth requires', () => {
+      expect(composeName('Ada', 'Lovelace')).toBe('Ada Lovelace');
+    });
+
+    it('leaves no trailing space when there is no last name', () => {
+      expect(composeName('Ada', '')).toBe('Ada');
+    });
+
+    it('answers an empty string when neither part is set', () => {
+      expect(composeName('', '')).toBe('');
     });
   });
 });

@@ -1,29 +1,32 @@
-import { afterCommit, type getDb } from '#/config/db-context.ts';
+import { afterCommit, type DbHandle } from '#/config/db-context.ts';
 import { getRequestLocale } from '#/config/request-context.ts';
 import { urls } from '#/config/urls.ts';
 import { wakeOutboxWorker } from '#/workers/outbox.worker.ts';
 
-import type { Locale, OutboxChannel, OutboxDefaultVariable, OutboxTopic } from '@ordre/core/enums';
-import type { OutboxPayload, OutboxVariablesFor } from '@ordre/core/types';
+import type { Locale, OutboxChannel, OutboxDefaultVariable } from '@ordre/core/enums';
+import type { OutboxDelivery, OutboxPayload, OutboxVariablesFor } from '@ordre/core/types';
 import * as schema from '@ordre/db/schemas';
 
 /**
- * Either database handle a producer can write through: the request transaction
- * from `getDb()`, or the nested `tx` of a controller that opened one.
+ * The topics one channel actually has a delivery for.
+ *
+ * Distributes over `OutboxDelivery` through the `D` parameter, so the union is
+ * filtered rather than reduced to `never`. A topic no longer implies every
+ * channel, so this is what makes `channel: 'audience'` with an email-only topic a
+ * compile error at the call site.
  */
-type OutboxDb = ReturnType<typeof getDb>;
+type OutboxTopicFor<C extends OutboxChannel, D = OutboxDelivery> = D extends `${C}:${infer T}`
+  ? T
+  : never;
 
 /**
- * The variables every outbox message carries, so producers do not repeat them.
- *
- * They read off `urls` rather than literals, so a message queued in dev or a
- * preview deploy links into that environment. The values are frozen into the row
- * at write time, so a queued row keeps the origins configured when it was
- * produced.
+ * The variables a channel adds to every row it carries, so producers do not repeat
+ * them. The email footer's two links belong to email; a contact operation has no
+ * template and takes none.
  */
-const DEFAULT_VARIABLES: Record<OutboxDefaultVariable, string> = {
-  help_url: urls.help,
-  privacy_url: urls.privacy,
+const DEFAULT_VARIABLES: Record<OutboxChannel, Partial<Record<OutboxDefaultVariable, string>>> = {
+  email: { help_url: urls.help, privacy_url: urls.privacy },
+  audience: {},
 };
 
 /**
@@ -32,11 +35,11 @@ const DEFAULT_VARIABLES: Record<OutboxDefaultVariable, string> = {
  * misspelled one is a compile error at the call site - as is a pair the channel
  * has no delivery for.
  */
-type PushToOutboxInput<C extends OutboxChannel, T extends OutboxTopic> = {
+type PushToOutboxInput<C extends OutboxChannel, T extends OutboxTopicFor<C>> = {
   channel: C;
   topic: T;
   to: string;
-  variables: Omit<OutboxVariablesFor<`${C}:${T}`>, OutboxDefaultVariable>;
+  variables: Omit<OutboxVariablesFor<Extract<`${C}:${T}`, OutboxDelivery>>, OutboxDefaultVariable>;
   /**
    * The language to render the message in. Defaults to the locale negotiated for
    * the in-flight request.
@@ -76,8 +79,8 @@ type PushToOutboxInput<C extends OutboxChannel, T extends OutboxTopic> = {
  * which is strictly stronger than a parse. The channel service re-parses with that
  * same delivery's schema before rendering.
  */
-export const pushToOutbox = async <C extends OutboxChannel, T extends OutboxTopic>(
-  transaction: OutboxDb,
+export const pushToOutbox = async <C extends OutboxChannel, T extends OutboxTopicFor<C>>(
+  transaction: DbHandle,
   { channel, topic, to, variables, locale, sendAfter }: PushToOutboxInput<C, T>
 ) => {
   await transaction.insert(schema.outbox).values({
@@ -89,7 +92,7 @@ export const pushToOutbox = async <C extends OutboxChannel, T extends OutboxTopi
     payload: {
       to,
       locale: locale ?? getRequestLocale(),
-      variables: { ...DEFAULT_VARIABLES, ...variables },
+      variables: { ...DEFAULT_VARIABLES[channel], ...variables },
     } as OutboxPayload,
     // Left to the column default when absent, so an immediate row still reads
     // `now()` from the database's clock rather than this process's.

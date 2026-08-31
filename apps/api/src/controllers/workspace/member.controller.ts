@@ -1,6 +1,8 @@
 import { getDb } from '#/config/db-context.ts';
 import { logger } from '#/config/logger.ts';
-import type { MemberContext, WorkspaceContext } from '#/types/context.ts';
+import type { MemberContext, SessionUser, WorkspaceContext } from '#/types/context.ts';
+import { audienceSegmentsForSelf, audienceStateForMember } from '#/utils/audience.ts';
+import { pushToOutbox } from '#/utils/outbox.ts';
 import { validateField, validateRequestBody } from '#/utils/validation.ts';
 import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
@@ -202,6 +204,35 @@ export const workspaceMemberChangeRole = async (
         )
         .returning();
 
+      if (!updated) {
+        return undefined;
+      }
+
+      // A promotion or demotion moves the contact between segments, so the row is
+      // queued with the role change rather than after it.
+      const audience = await audienceStateForMember(tx, parsedMemberId.data);
+
+      if (!audience) {
+        logger.error(
+          { memberId: parsedMemberId.data },
+          'no audience state for a member whose role changed, contact left unsynced'
+        );
+
+        return updated;
+      }
+
+      await pushToOutbox(tx, {
+        channel: 'audience',
+        topic: 'contact:sync',
+        to: audience.email,
+        variables: {
+          contact_first_name: audience.firstName,
+          contact_last_name: audience.lastName,
+          contact_segments: audience.segments,
+          contact_topics: [],
+        },
+      });
+
       return updated;
     });
 
@@ -272,7 +303,34 @@ export const workspaceMemberRemove = async (
       return errorResponse(MEMBER_ERRORS, 'MEMBER_REMOVE_FORBIDDEN');
     }
 
-    const result = await suspendMember(target);
+    const result = await suspendMember(target, async (tx) => {
+      // Read after the suspension, inside the same transaction, so the segments
+      // reflect the membership that just ended. The actor is not the target here,
+      // so this goes through the function that can see the target's other
+      // workspaces rather than the caller's own rows.
+      const audience = await audienceStateForMember(tx, parsedMemberId.data);
+
+      if (!audience) {
+        logger.error(
+          { memberId: parsedMemberId.data },
+          'no audience state for a removed member, contact left unsynced'
+        );
+
+        return;
+      }
+
+      await pushToOutbox(tx, {
+        channel: 'audience',
+        topic: 'contact:sync',
+        to: audience.email,
+        variables: {
+          contact_first_name: audience.firstName,
+          contact_last_name: audience.lastName,
+          contact_segments: audience.segments,
+          contact_topics: [],
+        },
+      });
+    });
 
     if (result === 'LAST_OWNER') {
       return errorResponse(MEMBER_ERRORS, 'MEMBER_LAST_OWNER');
@@ -304,7 +362,8 @@ export const workspaceMemberRemove = async (
  */
 export const workspaceMemberLeave = async (
   workspace: WorkspaceContext,
-  member: MemberContext
+  member: MemberContext,
+  user: SessionUser
 ): Promise<NoContentResponse> => {
   try {
     const self = await findMember(workspace.id, member.id);
@@ -313,7 +372,19 @@ export const workspaceMemberLeave = async (
       return errorResponse(MEMBER_ERRORS, 'MEMBER_NOT_FOUND');
     }
 
-    const result = await suspendMember(self);
+    const result = await suspendMember(self, async (tx) => {
+      await pushToOutbox(tx, {
+        channel: 'audience',
+        topic: 'contact:sync',
+        to: user.email,
+        variables: {
+          contact_first_name: user.firstName,
+          contact_last_name: user.lastName,
+          contact_segments: await audienceSegmentsForSelf(tx, user.id),
+          contact_topics: [],
+        },
+      });
+    });
 
     if (result === 'LAST_OWNER') {
       return errorResponse(MEMBER_ERRORS, 'MEMBER_LAST_OWNER');

@@ -1410,6 +1410,16 @@
           "updatedAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "productNewsOptIn": {
+            "type": "boolean",
+            "default": false
           }
         },
         "required": [
@@ -1418,7 +1428,9 @@
           "email",
           "emailVerified",
           "createdAt",
-          "updatedAt"
+          "updatedAt",
+          "firstName",
+          "lastName"
         ]
       },
       "Session": {
@@ -4839,12 +4851,24 @@
                   "rememberMe": {
                     "type": "boolean",
                     "description": "If this is false, the session will not be remembered. Default is `true`."
+                  },
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "lastName": {
+                    "type": "string"
+                  },
+                  "productNewsOptIn": {
+                    "type": "boolean",
+                    "default": false
                   }
                 },
                 "required": [
                   "name",
                   "email",
-                  "password"
+                  "password",
+                  "firstName",
+                  "lastName"
                 ]
               }
             }
@@ -6365,6 +6389,16 @@
                     "type": "string",
                     "description": "The image of the user",
                     "nullable": true
+                  },
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "lastName": {
+                    "type": "string"
+                  },
+                  "productNewsOptIn": {
+                    "type": "boolean",
+                    "default": false
                   }
                 }
               }

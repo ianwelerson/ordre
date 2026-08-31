@@ -6,10 +6,19 @@ export const SignInSchema = z.object({
   rememberMe: z.boolean().optional(),
 });
 
+/**
+ * The sign-up body. `name` is in it because Better Auth's endpoint requires the
+ * field, but the value is recomputed from the two parts server-side, so a client
+ * cannot store a name that disagrees with them.
+ */
 export const SignUpSchema = z.object({
-  name: z.string(),
   email: z.email(),
+  name: z.string(),
+  firstName: z.string().min(1),
+  lastName: z.string().min(1),
   password: z.string().min(8),
+  /** Marketing consent. Nothing else opts an account into the product-news topic. */
+  productNewsOptIn: z.boolean(),
 });
 
 /** `/sign-out` answers `{ success }`, unlike every other route's `{ status }`. */
@@ -38,6 +47,11 @@ export const SessionUserSchema = z.object({
   id: z.uuid(),
   email: z.email(),
   name: z.string(),
+  firstName: z.string(),
+  lastName: z.string(),
+  // Nullable in the database: the column was added with a default rather than a
+  // backfill, so a session predating it carries no value.
+  productNewsOptIn: z.boolean().nullish(),
   emailVerified: z.boolean(),
   image: z.url().nullish(),
   createdAt: z.iso.datetime(),

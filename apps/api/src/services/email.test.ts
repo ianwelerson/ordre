@@ -144,6 +144,19 @@ describe('services/email', () => {
     expect(send).not.toHaveBeenCalled();
   });
 
+  /**
+   * A topic is no longer carried by every channel, and the worker routes on the
+   * `channel` column alone, so this is the guard against a row reaching the wrong
+   * provider.
+   */
+  it('rejects a topic the email channel has no delivery for', async () => {
+    await expect(sendEmail('contact:sync', payload, ROW_ID)).rejects.toThrow(
+      `Outbox row ${ROW_ID} has no email delivery for topic contact:sync`
+    );
+    expect(renderEmail).not.toHaveBeenCalled();
+    expect(send).not.toHaveBeenCalled();
+  });
+
   describe('DISABLE_OUTBOX_EMAIL', () => {
     beforeEach(() => {
       envMock.DISABLE_OUTBOX_EMAIL = true;

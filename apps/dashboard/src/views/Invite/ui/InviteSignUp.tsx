@@ -2,7 +2,7 @@ import { useTranslations } from 'next-intl';
 
 import { MARKETING_ROUTES } from '@ordre/core/constants';
 import { WorkspaceInvitePreview } from '@ordre/core/types';
-import { Alert, PasswordField, TextField, TextLink } from '@ordre/ui/components';
+import { Alert, Checkbox, PasswordField, TextField, TextLink } from '@ordre/ui/components';
 
 import { AuthAction, AuthFootnote, AuthHeading } from '@/shared/components';
 
@@ -36,14 +36,21 @@ export const InviteSignUp = ({ token, invite }: InviteSignUpProps) => {
       <form className="flex flex-col gap-4.5" onSubmit={onSubmit} noValidate>
         {rootError && <Alert>{rootError}</Alert>}
         <TextField
-          {...field('name')}
+          {...field('firstName')}
           type="text"
           size="lg"
-          label={t('name.label')}
-          placeholder={t('name.placeholder')}
-          helper={t('name.helper')}
-          autoComplete="name"
+          label={t('firstName.label')}
+          placeholder={t('firstName.placeholder')}
+          autoComplete="given-name"
           autoFocus
+        />
+        <TextField
+          {...field('lastName')}
+          type="text"
+          size="lg"
+          label={t('lastName.label')}
+          placeholder={t('lastName.placeholder')}
+          autoComplete="family-name"
         />
         <PasswordField
           {...field('password')}
@@ -51,6 +58,11 @@ export const InviteSignUp = ({ token, invite }: InviteSignUpProps) => {
           label={t('password.label')}
           placeholder={t('password.placeholder')}
           autoComplete="new-password"
+        />
+        <Checkbox
+          {...field('productNewsOptIn')}
+          label={t('productNews.label')}
+          description={t('productNews.description')}
         />
         <AuthAction type="submit" loading={isBusy} disabled={isBusy} loadingLabel={t('submitting')}>
           {t('submit')}

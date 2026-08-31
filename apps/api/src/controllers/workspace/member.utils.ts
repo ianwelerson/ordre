@@ -1,4 +1,4 @@
-import { getDb } from '#/config/db-context.ts';
+import { type DbHandle, getDb } from '#/config/db-context.ts';
 import type { Schema, WorkspaceMemberRow } from '#/types/db.ts';
 import { and, type BuildQueryResult, desc, eq } from 'drizzle-orm';
 import type { PgTransaction } from 'drizzle-orm/pg-core';
@@ -73,10 +73,14 @@ export type SuspendMemberResult = WorkspaceMemberRow | 'LAST_OWNER' | undefined;
  * another member" and "leave the workspace" flows.
  *
  * @param target - The member to suspend; supplies the id, workspace scope, and current role/status.
+ * @param onSuspended - Runs inside the same transaction once a row was updated, so
+ *   work that has to commit with the suspension (an outbox row, say) can be queued
+ *   against the handle that wrote it.
  * @returns The updated row, `'LAST_OWNER'` if it would remove the last active owner, or `undefined` if no row matched.
  */
 export const suspendMember = (
-  target: Pick<WorkspaceMemberRow, 'id' | 'workspaceId' | 'role' | 'status'>
+  target: Pick<WorkspaceMemberRow, 'id' | 'workspaceId' | 'role' | 'status'>,
+  onSuspended?: (tx: DbHandle, suspended: WorkspaceMemberRow) => Promise<void>
 ): Promise<SuspendMemberResult> =>
   getDb().transaction(async (tx) => {
     if (target.role === 'owner' && target.status === 'active') {
@@ -97,6 +101,10 @@ export const suspendMember = (
         )
       )
       .returning();
+
+    if (updated && onSuspended) {
+      await onSuspended(tx, updated);
+    }
 
     return updated;
   });

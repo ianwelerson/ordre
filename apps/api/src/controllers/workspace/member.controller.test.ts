@@ -1,4 +1,4 @@
-import type { MemberContext, WorkspaceContext } from '#/types/context.ts';
+import type { MemberContext, SessionUser, WorkspaceContext } from '#/types/context.ts';
 
 import {
   workspaceMemberChangeRole,
@@ -21,8 +21,14 @@ const { mockDb } = vi.hoisted(() => ({
   },
 }));
 
-vi.mock('#/config/db-context.ts', () => ({ getDb: () => mockDb }));
-vi.mock('#/config/logger.ts', () => ({ logger: { error: vi.fn() } }));
+vi.mock('#/config/db-context.ts', () => ({
+  getDb: () => mockDb,
+  afterCommit: (fn: () => void) => fn(),
+}));
+
+vi.mock('#/config/logger.ts', () => ({
+  logger: { error: vi.fn(), child: () => ({ info: vi.fn(), error: vi.fn() }) },
+}));
 
 /**
  * Runs `db.transaction(cb)` against a `tx` double so the controller's in-transaction
@@ -32,19 +38,41 @@ vi.mock('#/config/logger.ts', () => ({ logger: { error: vi.fn() } }));
  * @param updated - Rows returned by the `update(...).returning()`.
  */
 let capturedSet: Record<string, unknown> | undefined;
+let capturedOutbox: Record<string, unknown>[] = [];
+
+/** What `app_member_audience_state` returns for the member being acted on. */
+const AUDIENCE_STATE = {
+  email: 'target@ordre.app',
+  first_name: 'Target',
+  last_name: 'User',
+  is_owner: false,
+  is_member: true,
+};
 
 const mockTransaction = (owners: unknown[], updated: unknown[]) => {
   capturedSet = undefined;
+  capturedOutbox = [];
   mockDb.transaction.mockImplementation((cb: (tx: unknown) => unknown) =>
     cb({
       select: () => ({
-        from: () => ({ where: () => ({ for: () => Promise.resolve(owners) }) }),
+        from: () => ({
+          where: () =>
+            Object.assign(Promise.resolve(owners), { for: () => Promise.resolve(owners) }),
+        }),
       }),
       update: () => ({
         set: (values: Record<string, unknown>) => {
           capturedSet = values;
 
           return { where: () => ({ returning: () => Promise.resolve(updated) }) };
+        },
+      }),
+      execute: () => Promise.resolve({ rows: [AUDIENCE_STATE] }),
+      insert: () => ({
+        values: (row: Record<string, unknown>) => {
+          capturedOutbox.push(row);
+
+          return Promise.resolve(undefined);
         },
       }),
     })
@@ -57,6 +85,13 @@ const TARGET_ID = '33333333-3333-4333-8333-333333333333';
 
 const workspace: WorkspaceContext = { id: WORKSPACE_ID, name: 'Workspace' };
 const owner: MemberContext = { id: CALLER_ID, role: 'owner', locale: 'en' };
+const user: SessionUser = {
+  id: 'user-1',
+  email: 'owner@ordre.app',
+  fullName: 'Owner User',
+  firstName: 'Owner',
+  lastName: 'User',
+};
 const admin: MemberContext = { id: CALLER_ID, role: 'admin', locale: 'en' };
 
 /** A workspace_member row, as Drizzle returns it (Date timestamps). */
@@ -445,7 +480,7 @@ describe('controllers/workspace/member', () => {
     it('returns MEMBER_NOT_FOUND when the caller has no active membership', async () => {
       mockDb.query.workspaceMember.findFirst.mockResolvedValueOnce(undefined);
 
-      const result = await workspaceMemberLeave(workspace, owner);
+      const result = await workspaceMemberLeave(workspace, owner, user);
 
       expect(result.status).toBe(404);
       expect(mockDb.transaction).not.toHaveBeenCalled();
@@ -454,7 +489,7 @@ describe('controllers/workspace/member', () => {
     it('returns MEMBER_NOT_FOUND when the caller is already suspended', async () => {
       mockDb.query.workspaceMember.findFirst.mockResolvedValueOnce(self({ status: 'suspended' }));
 
-      const result = await workspaceMemberLeave(workspace, owner);
+      const result = await workspaceMemberLeave(workspace, owner, user);
 
       expect(result.status).toBe(404);
       expect(mockDb.transaction).not.toHaveBeenCalled();
@@ -464,7 +499,7 @@ describe('controllers/workspace/member', () => {
       mockDb.query.workspaceMember.findFirst.mockResolvedValueOnce(self({ role: 'member' }));
       mockTransaction([], [self({ status: 'suspended' })]);
 
-      const result = await workspaceMemberLeave(workspace, { ...owner, role: 'member' });
+      const result = await workspaceMemberLeave(workspace, { ...owner, role: 'member' }, user);
 
       expect(result.status).toBe(204);
       expect(result.body).toBeNull();
@@ -477,7 +512,7 @@ describe('controllers/workspace/member', () => {
       );
       mockTransaction(ownerIds(1), []);
 
-      const result = await workspaceMemberLeave(workspace, owner);
+      const result = await workspaceMemberLeave(workspace, owner, user);
 
       expect(result.status).toBe(409);
       expect(result.body).toMatchObject({ code: 'MEMBER_LAST_OWNER' });
@@ -489,7 +524,7 @@ describe('controllers/workspace/member', () => {
       );
       mockTransaction(ownerIds(2), [self({ status: 'suspended' })]);
 
-      const result = await workspaceMemberLeave(workspace, owner);
+      const result = await workspaceMemberLeave(workspace, owner, user);
 
       expect(result.status).toBe(204);
       expect(result.body).toBeNull();
@@ -498,7 +533,7 @@ describe('controllers/workspace/member', () => {
     it('returns INTERNAL_ERROR on an unexpected error', async () => {
       mockDb.query.workspaceMember.findFirst.mockRejectedValueOnce(new Error('db down'));
 
-      const result = await workspaceMemberLeave(workspace, owner);
+      const result = await workspaceMemberLeave(workspace, owner, user);
 
       expect(result.status).toBe(500);
     });

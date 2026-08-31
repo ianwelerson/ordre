@@ -27,6 +27,19 @@ const isExistingAccount = (error: unknown): boolean => {
 };
 
 /**
+ * Splits the name on the invite into the two fields the form collects, so an
+ * invitee starts with both filled rather than their whole name in one.
+ *
+ * The first whitespace-separated token is the first name and the rest is the last
+ * name, so a single-word invite name leaves the last name empty.
+ */
+const splitName = (name: string): { firstName: string; lastName: string } => {
+  const [firstName = '', ...rest] = name.trim().split(/\s+/);
+
+  return { firstName, lastName: rest.join(' ') };
+};
+
+/**
  * Creates the account the invite was addressed to, then accepts the invite with
  * it. The email comes from the invite rather than from a field, which is what
  * `SignUpFormSchema` encodes by omitting it.
@@ -53,11 +66,18 @@ export const useInviteSignUp = (
   return useAppForm<SignUpFormValues>({
     schema: SignUpFormSchema,
     t,
-    defaultValues: { name: invite.name, password: '' },
-    onSubmit: async ({ name, password }) => {
+    defaultValues: { ...splitName(invite.name), password: '', productNewsOptIn: false },
+    onSubmit: async ({ firstName, lastName, password, productNewsOptIn }) => {
       if (!signedUp) {
         try {
-          await services.auth.signUp({ name, email: invite.email, password });
+          await services.auth.signUp({
+            name: [firstName, lastName].filter(Boolean).join(' '),
+            firstName,
+            lastName,
+            email: invite.email,
+            password,
+            productNewsOptIn,
+          });
 
           setSignedUp(true);
         } catch (error) {

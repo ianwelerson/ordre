@@ -3,6 +3,7 @@ import { logger } from '#/config/logger.ts';
 import { getRequestLocale } from '#/config/request-context.ts';
 import { urls } from '#/config/urls.ts';
 import type { MemberContext, SessionUser, WorkspaceContext } from '#/types/context.ts';
+import { audienceSegmentsForSelf } from '#/utils/audience.ts';
 import { isUniqueViolation } from '#/utils/db-error.ts';
 import { pushToOutbox } from '#/utils/outbox.ts';
 import { validateField, validateRequestBody } from '#/utils/validation.ts';
@@ -148,6 +149,7 @@ export const workspaceCreate = async (
           role: 'owner',
           status: 'active',
           locale: getRequestLocale(),
+          displayName: user.firstName,
         })
         .returning();
 
@@ -192,6 +194,20 @@ export const workspaceCreate = async (
           workspace_plan: freePlan.title,
           owner_email: user.email,
           dashboard_url: urls.dashboard,
+        },
+      });
+
+      // The owner row above makes the caller a `workspace-owner`, so their contact
+      // is resynced in the same transaction that created it.
+      await pushToOutbox(tx, {
+        channel: 'audience',
+        topic: 'contact:sync',
+        to: user.email,
+        variables: {
+          contact_first_name: user.firstName,
+          contact_last_name: user.lastName,
+          contact_segments: await audienceSegmentsForSelf(tx, user.id),
+          contact_topics: [],
         },
       });
 

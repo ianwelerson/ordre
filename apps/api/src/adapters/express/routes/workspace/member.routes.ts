@@ -45,7 +45,7 @@ memberRouter.patch(
 memberRouter.post(
   API_ROUTES.workspace.member.leave,
   requireWorkspaceAccess,
-  sendMemberResult((req) => workspaceMemberLeave(req.workspace, req.member))
+  sendMemberResult((req) => workspaceMemberLeave(req.workspace, req.member, req.user))
 );
 
 memberRouter.get(

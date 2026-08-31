@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { AUDIENCE_SEGMENTS, AUDIENCE_TOPICS } from '../enums/audience.ts';
 import { DEFAULT_LOCALE, LOCALES } from '../enums/locale.ts';
 import {
   OUTBOX_VARIABLES,
@@ -25,6 +26,8 @@ const URL_SCHEMA = z.url({ protocol: /^https?$/ });
 const EMAIL_SCHEMA = z.email();
 const ROLE_SCHEMA = z.enum(WORKSPACE_MEMBER_ROLES);
 const TEXT_SCHEMA = z.string().min(1);
+const SEGMENTS_SCHEMA = z.array(z.enum(AUDIENCE_SEGMENTS));
+const TOPICS_SCHEMA = z.array(z.enum(AUDIENCE_TOPICS));
 
 const schemaFor = (variable: OutboxVariable) => {
   if (variable.endsWith('_url')) {
@@ -37,6 +40,14 @@ const schemaFor = (variable: OutboxVariable) => {
 
   if (variable.endsWith('_role')) {
     return ROLE_SCHEMA;
+  }
+
+  if (variable.endsWith('_segments')) {
+    return SEGMENTS_SCHEMA;
+  }
+
+  if (variable.endsWith('_topics')) {
+    return TOPICS_SCHEMA;
   }
 
   return TEXT_SCHEMA;
@@ -52,7 +63,11 @@ type SchemaFor<K extends OutboxVariable> = K extends `${string}_url`
     ? typeof EMAIL_SCHEMA
     : K extends `${string}_role`
       ? typeof ROLE_SCHEMA
-      : typeof TEXT_SCHEMA;
+      : K extends `${string}_segments`
+        ? typeof SEGMENTS_SCHEMA
+        : K extends `${string}_topics`
+          ? typeof TOPICS_SCHEMA
+          : typeof TEXT_SCHEMA;
 
 /**
  * The whole variable vocabulary as a schema, so each template can `.pick` the
@@ -163,6 +178,19 @@ export const OUTBOX_PAYLOAD_SCHEMAS = {
       invite_url: true,
       help_url: true,
       privacy_url: true,
+    }),
+  }),
+  'audience:contact:sync': z.object({
+    to: z.email(),
+    locale: OutboxLocaleSchema,
+    variables: OutboxVariablesSchema.pick({
+      contact_first_name: true,
+      contact_segments: true,
+      contact_topics: true,
+    }).extend({
+      // Backfilled rows whose name was one word carry an empty last name, so
+      // this one variable allows what the rest of the vocabulary rejects.
+      contact_last_name: z.string(),
     }),
   }),
 } as const satisfies Partial<Record<`${OutboxChannel}:${OutboxTopic}`, z.ZodType>>;

@@ -15,7 +15,9 @@ describe('createServices', () => {
     const user = {
       id: '8f0e2f6a-8b31-4f2e-9c11-2d1f0a9b7c65',
       email: 'a@ordre.app',
-      name: 'A',
+      name: 'A Tester',
+      firstName: 'A',
+      lastName: 'Tester',
       emailVerified: true,
       image: null,
       createdAt: '2026-08-18T12:00:00.000Z',

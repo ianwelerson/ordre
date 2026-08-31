@@ -76,7 +76,13 @@ const USER_ID = '55555555-5555-4555-8555-555555555555';
 
 const workspace: WorkspaceContext = { id: WORKSPACE_ID, name: 'Workspace' };
 const member: MemberContext = { id: MEMBER_ID, role: 'owner', locale: 'en' };
-const user: SessionUser = { id: USER_ID, email: 'owner@ordre.app', name: 'Owner' };
+const user: SessionUser = {
+  id: USER_ID,
+  email: 'owner@ordre.app',
+  fullName: 'Owner User',
+  firstName: 'Owner',
+  lastName: 'User',
+};
 
 /** A workspace_invite row, as Drizzle returns it (Date timestamps). */
 const inviteRow = (overrides: Record<string, unknown> = {}) => ({
@@ -321,13 +327,18 @@ describe('controllers/workspace/invite', () => {
   });
 
   describe('workspaceInviteAccept', () => {
-    const mockAccept = (status: string) =>
+    const mockAccept = (status: string) => {
       mockDb.execute.mockResolvedValueOnce({ rows: [{ app_invite_accept: status }] });
+      // Only a first-time join queues a contact sync, which reads the caller's
+      // memberships and writes an outbox row. The other statuses leave these unused.
+      mockDb.select.mockReturnValueOnce({ from: () => ({ where: () => Promise.resolve([]) }) });
+      mockDb.insert.mockReturnValueOnce({ values: () => Promise.resolve(undefined) });
+    };
 
     it('returns 204 on ACCEPTED', async () => {
       mockAccept('ACCEPTED');
 
-      const result = await workspaceInviteAccept('tok_abc');
+      const result = await workspaceInviteAccept('tok_abc', user);
 
       expect(result.status).toBe(204);
       expect(result.body).toBeNull();
@@ -336,13 +347,13 @@ describe('controllers/workspace/invite', () => {
     it('returns 204 on ALREADY_MEMBER (idempotent)', async () => {
       mockAccept('ALREADY_MEMBER');
 
-      expect((await workspaceInviteAccept('tok_abc')).status).toBe(204);
+      expect((await workspaceInviteAccept('tok_abc', user)).status).toBe(204);
     });
 
     it('returns INVITE_EMAIL_MISMATCH (403)', async () => {
       mockAccept('INVITE_EMAIL_MISMATCH');
 
-      const result = await workspaceInviteAccept('tok_abc');
+      const result = await workspaceInviteAccept('tok_abc', user);
 
       expect(result.status).toBe(403);
       expect(result.body).toMatchObject({ code: 'INVITE_EMAIL_MISMATCH' });
@@ -351,7 +362,7 @@ describe('controllers/workspace/invite', () => {
     it('returns UNAUTHORIZED (401)', async () => {
       mockAccept('UNAUTHORIZED');
 
-      const result = await workspaceInviteAccept('tok_abc');
+      const result = await workspaceInviteAccept('tok_abc', user);
 
       expect(result.status).toBe(401);
       expect(result.body).toMatchObject({ code: 'UNAUTHORIZED' });
@@ -360,7 +371,7 @@ describe('controllers/workspace/invite', () => {
     it('returns INVITE_NOT_FOUND for any other status', async () => {
       mockAccept('WORKSPACE_NOT_FOUND');
 
-      const result = await workspaceInviteAccept('tok_abc');
+      const result = await workspaceInviteAccept('tok_abc', user);
 
       expect(result.status).toBe(404);
       expect(result.body).toMatchObject({ code: 'INVITE_NOT_FOUND' });

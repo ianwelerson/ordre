@@ -143,4 +143,40 @@ describe('utils/outbox', () => {
       expect(afterCommit).toHaveBeenCalledWith(wakeOutboxWorker);
     });
   });
+
+  describe('channel defaults', () => {
+    const syncContact = () =>
+      pushToOutbox(transaction, {
+        channel: 'audience',
+        topic: 'contact:sync',
+        to: 'ada@example.com',
+        variables: {
+          contact_first_name: 'Ada',
+          contact_last_name: 'Lovelace',
+          contact_segments: ['workspace-owner'],
+          contact_topics: [],
+        },
+      });
+
+    /**
+     * `help_url` and `privacy_url` are the two links every email template renders
+     * in its footer. A contact operation has no template and takes neither.
+     */
+    it('leaves the footer links off a row on a channel that renders nothing', async () => {
+      await syncContact();
+
+      const [row] = values.mock.calls[0] as [{ payload: { variables: Record<string, unknown> } }];
+
+      expect(row.payload.variables).not.toHaveProperty('help_url');
+      expect(row.payload.variables).not.toHaveProperty('privacy_url');
+    });
+
+    it('carries a list-valued variable through to the payload', async () => {
+      await syncContact();
+
+      const [row] = values.mock.calls[0] as [{ payload: { variables: Record<string, unknown> } }];
+
+      expect(row.payload.variables.contact_segments).toEqual(['workspace-owner']);
+    });
+  });
 });

@@ -3,8 +3,13 @@ import { describe, expect, it } from 'vitest';
 import { SignUpFormSchema } from './schema';
 
 describe('schema.ts', () => {
-  it('should accept a name and a password with no email', () => {
-    const result = SignUpFormSchema.safeParse({ name: 'Lucas Marino', password: 'a-good-secret' });
+  it('should accept both name parts and a password with no email', () => {
+    const result = SignUpFormSchema.safeParse({
+      firstName: 'Lucas',
+      lastName: 'Marino',
+      password: 'a-good-secret',
+      productNewsOptIn: false,
+    });
 
     expect(result.success).toBe(true);
   });
@@ -15,8 +20,10 @@ describe('schema.ts', () => {
    */
   it('should drop an email it was handed', () => {
     const result = SignUpFormSchema.parse({
-      name: 'Lucas Marino',
+      firstName: 'Lucas',
+      lastName: 'Marino',
       password: 'a-good-secret',
+      productNewsOptIn: false,
       email: 'someone@else.app',
     });
 
@@ -24,7 +31,12 @@ describe('schema.ts', () => {
   });
 
   it('should keep the password rule it inherited', () => {
-    const result = SignUpFormSchema.safeParse({ name: 'Lucas Marino', password: 'short' });
+    const result = SignUpFormSchema.safeParse({
+      firstName: 'Lucas',
+      lastName: 'Marino',
+      password: 'short',
+      productNewsOptIn: false,
+    });
 
     expect(result.success).toBe(false);
   });

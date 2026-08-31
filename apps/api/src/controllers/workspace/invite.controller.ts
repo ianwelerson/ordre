@@ -3,6 +3,7 @@ import { logger } from '#/config/logger.ts';
 import { getRequestLocale } from '#/config/request-context.ts';
 import { urls } from '#/config/urls.ts';
 import type { MemberContext, SessionUser, WorkspaceContext } from '#/types/context.ts';
+import { audienceSegmentsForSelf } from '#/utils/audience.ts';
 import { isUniqueViolation } from '#/utils/db-error.ts';
 import { pushToOutbox } from '#/utils/outbox.ts';
 import { validateField, validateRequestBody } from '#/utils/validation.ts';
@@ -123,7 +124,7 @@ export const workspaceInviteCreate = async (
         locale: member.locale,
         variables: {
           workspace_name: workspace.name,
-          inviter_name: user.name,
+          inviter_name: user.firstName,
           invitee_email: parsedPayload.data.email,
           invited_role: parsedPayload.data.role,
           invite_url: urls.invite(inviteData.token),
@@ -339,7 +340,10 @@ export const workspaceInvitePreviewByToken = async (
  *   `INVITE_EMAIL_MISMATCH` (403), `UNAUTHORIZED` (401), `INVITE_NOT_FOUND` (404),
  *   or an error response.
  */
-export const workspaceInviteAccept = async (token: unknown): Promise<NoContentResponse> => {
+export const workspaceInviteAccept = async (
+  token: unknown,
+  user: SessionUser
+): Promise<NoContentResponse> => {
   try {
     const parsedToken = validateField(z.string(), token, 'token');
 
@@ -361,6 +365,22 @@ export const workspaceInviteAccept = async (token: unknown): Promise<NoContentRe
 
     if (status === 'UNAUTHORIZED') {
       return errorResponse(BASE_ERRORS, 'UNAUTHORIZED');
+    }
+
+    if (status === 'ACCEPTED') {
+      await pushToOutbox(getDb(), {
+        channel: 'audience',
+        topic: 'contact:sync',
+        to: user.email,
+        variables: {
+          contact_first_name: user.firstName,
+          contact_last_name: user.lastName,
+          // `getDb()` is the request transaction the accept function ran in, so the
+          // membership it created is visible and the row commits with it.
+          contact_segments: await audienceSegmentsForSelf(getDb(), user.id),
+          contact_topics: [],
+        },
+      });
     }
 
     // Idempotent: re-accepting an already-joined invite is a success.
