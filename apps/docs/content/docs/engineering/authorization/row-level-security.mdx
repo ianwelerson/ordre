@@ -40,10 +40,9 @@ Two files do the work:
 So each authenticated request runs inside one transaction that carries `app.user_id`. A public/unauthenticated request gets no context - `app.user_id` is unset and policies match nobody (fail-closed).
 
 <Callout>
-  Because the transaction spans the request, keep requests **DB-only** - never
-  `await` a slow third-party call (email, SMS) while it is open, or you pin a pooled
-  connection for the duration. That is what the
-  [Transactional Outbox](/internal-docs/engineering/outbox) is for.
+  Because the transaction spans the request, keep requests **DB-only** - never `await` a slow
+  third-party call (email, SMS) while it is open, or you pin a pooled connection for the duration.
+  That is what the [Transactional Outbox](/internal-docs/engineering/outbox) is for.
 </Callout>
 
 ### Reacting after the commit
@@ -53,7 +52,7 @@ request transaction commits - or runs it immediately when there is no request
 transaction (a script, or a Better Auth hook, where the caller's write was its own
 autocommitted statement).
 
-Anything that reacts to a write from *outside* the transaction needs this. Waking
+Anything that reacts to a write from _outside_ the transaction needs this. Waking
 the outbox worker is the live example: run it any earlier and the worker is on a
 different pooled connection that cannot see the uncommitted row. On rollback the
 callbacks are dropped along with the writes they were reacting to.
@@ -67,6 +66,32 @@ Defined in [`0001_row_level_security.sql`](https://github.com/ianwelerson/ordre/
 - `app_current_user_id()` - reads the `app.user_id` GUC, returns `NULL` when unset.
 - `app_is_member(ws)` - is the caller a member of workspace `ws`? Declared `SECURITY DEFINER` so it runs with the owner's privileges and **bypasses RLS internally**. Without that, a policy on `workspace_member` that calls this function would recurse into itself forever. Hardened with `SET search_path = public, pg_temp` so it can't be tricked into reading an attacker-planted table.
 - `app_workspace_has_members(ws)`, `app_can_access_member(member)`, `app_slug_exists(slug)` - narrower `SECURITY DEFINER` helpers for the bootstrap, the join table, and the public slug check.
+- `app_member_audience_state(member)` - the contact details and cross-workspace segment membership for one member, defined in [`0002_functions.sql`](https://github.com/ianwelerson/ordre/blob/main/packages/db/src/migrations/0002_functions.sql).
+
+### Reading across workspaces on purpose
+
+`app_member_audience_state` exists because RLS gives the right answer to the wrong
+question. The `member_select` policy is `user_id = app_current_user_id() OR app_is_member(workspace_id)`,
+so a caller reads their own memberships everywhere and other people's only inside a
+shared workspace. When an **admin removes a member**, the sync has to know whether
+that person still owns or belongs to a workspace the admin has no relationship with
+
+- and under RLS the admin sees only their own, so the sync would strip a segment the
+  member still qualifies for.
+
+The function bypasses RLS and then re-checks the caller itself, which is the part
+that matters: it returns nothing unless the caller is the member, or an **active
+owner or admin of that member's workspace**. Without that check it would hand any
+user's email to anyone who could supply an id. Its `is_owner` / `is_member`
+booleans are computed across every workspace and are for the outbox payload only;
+no route returns them.
+
+A producer where the actor **is** the contact does not use it. Sign-up, workspace
+creation, invite accept and leave read the caller's own rows with an ordinary query,
+which the policy's self clause already allows. See
+[Transactional Outbox](/internal-docs/engineering/outbox#reading-the-state).
+
+**Privileges:** [`0003_grants.sql`](https://github.com/ianwelerson/ordre/blob/main/packages/db/src/migrations/0003_grants.sql) revokes PUBLIC's default `EXECUTE` on every `app_*` function and grants it to `ordre_app` alone. These are all `SECURITY DEFINER`, so the default would offer the owner's privileges to any role that can connect. See [Function privileges](/internal-docs/setup/database-roles#function-privileges).
 
 **Coverage:** `ENABLE` + `FORCE ROW LEVEL SECURITY` on the five tenant tables (`workspace`, `workspace_member`, `workspace_location`, `workspace_invite`, `workspace_member_location`). Two sets of tables are **deliberately excluded**: the Better Auth tables (`user`, `session`, `account`, `verification`), because Better Auth reads them before we know who the caller is and RLS there would block login; and `outbox`, because its worker has no `app.user_id` at all (see [Operational notes](#operational-notes)).
 
@@ -87,24 +112,22 @@ The **owner membership must be inserted second**. A transaction sees its own unc
 Enabling RLS broke six tests, and each failure was a real design flaw it caught before production:
 
 <Callout type="warn">
-  **`INSERT ... RETURNING` also applies the `SELECT` policy.** Drizzle's
-  `.returning()` reads the row back, and during create you are not a member yet, so
-  the read-back is denied. Fix: generate the id with `randomUUID()` up front and
-  drop `.returning()` on the workspace insert.
+  **`INSERT ... RETURNING` also applies the `SELECT` policy.** Drizzle's `.returning()` reads the
+  row back, and during create you are not a member yet, so the read-back is denied. Fix: generate
+  the id with `randomUUID()` up front and drop `.returning()` on the workspace insert.
 </Callout>
 
 <Callout type="warn">
-  **A statement cannot see its own inserted row.** So `app_is_member()` is still
-  false while the first membership row is being inserted - making your very first
-  membership unreadable. Fix: `member_select` also allows
-  `user_id = app_current_user_id()`, so you can always see your **own** membership rows.
+  **A statement cannot see its own inserted row.** So `app_is_member()` is still false while the
+  first membership row is being inserted - making your very first membership unreadable. Fix:
+  `member_select` also allows `user_id = app_current_user_id()`, so you can always see your **own**
+  membership rows.
 </Callout>
 
 <Callout type="warn">
-  **RLS silently breaks unauthenticated reads.** The public slug-availability check
-  has no `app.user_id`, so RLS hid every workspace and it always reported
-  "available". Fix: `app_slug_exists()`, a `SECURITY DEFINER` helper that discloses
-  a boolean, never a row.
+  **RLS silently breaks unauthenticated reads.** The public slug-availability check has no
+  `app.user_id`, so RLS hid every workspace and it always reported "available". Fix:
+  `app_slug_exists()`, a `SECURITY DEFINER` helper that discloses a boolean, never a row.
 </Callout>
 
 ## Error handling

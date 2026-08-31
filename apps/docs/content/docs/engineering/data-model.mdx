@@ -29,8 +29,8 @@ Two modelling decisions are baked in:
 is the only source of truth for what the database holds. Every section below is
 marked against it:
 
-| Marker        | Meaning                                                                                                                           |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Marker         | Meaning                                                                                                                           |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | ✅ **Built**   | The table is in the schema and has a migration. The fields, enums, and indexes listed match it.                                   |
 | 📋 **Planned** | Designed here, not created yet. Names, types, and enums are proposals, and get checked against reality when the table is written. |
 
@@ -50,9 +50,9 @@ blocked on them; see [Launch Scope](/internal-docs/product/roadmap/launch) for
 the order they arrive in.
 
 <Callout type="warn">
-  A planned section is a proposal, not a promise. Do not write code against a
-  table marked 📋, and when one is finally created, update its section here in
-  the same change so the marker flips with the migration.
+  A planned section is a proposal, not a promise. Do not write code against a table marked 📋, and
+  when one is finally created, update its section here in the same change so the marker flips with
+  the migration.
 </Callout>
 
 ### Notation
@@ -96,15 +96,23 @@ patched: they buy nothing and add divergence to maintain.
 
 ### `user`
 
-| Field           | Type           | Notes      |
-| --------------- | -------------- | ---------- |
-| `id`            | uuid           |            |
-| `name`          | text           |            |
-| `email`         | text, unique   |            |
-| `emailVerified` | boolean        |            |
-| `image`         | text, nullable | Avatar URL |
-| `createdAt`     | timestamp      |            |
-| `updatedAt`     | timestamp      |            |
+| Field              | Type                     | Notes                                                                                                                                                          |
+| ------------------ | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`               | uuid                     |                                                                                                                                                                |
+| `name`             | text                     | Derived, never supplied: `firstName` and `lastName` joined                                                                                                     |
+| `firstName`        | text                     | Declared through Better Auth's `additionalFields`, required                                                                                                    |
+| `lastName`         | text                     | Required. Seeds `workspaceMember.displayName` on the first join                                                                                                |
+| `productNewsOptIn` | boolean, default `false` | Marketing consent, from the sign-up checkbox. Drives the `product-news` topic opt-in, and is kept because consent has to be provable rather than only acted on |
+| `email`            | text, unique             |                                                                                                                                                                |
+| `emailVerified`    | boolean                  |                                                                                                                                                                |
+| `image`            | text, nullable           | Avatar URL                                                                                                                                                     |
+| `createdAt`        | timestamp                |                                                                                                                                                                |
+| `updatedAt`        | timestamp                |                                                                                                                                                                |
+
+`firstName` and `lastName` are declared in `auth.ts` and reach the table through
+`auth:generate`, not by hand-editing `better-auth.ts`. A `databaseHooks.user.create.before`
+hook recomputes `name` from them, so a client cannot store a name that disagrees
+with the two parts the audience channel sends to Resend.
 
 ### `session`
 
@@ -195,22 +203,22 @@ Better Auth org plugin.
 English and another in Portuguese. It is seeded from the request's
 `Accept-Language` when the membership is created - on workspace creation, and
 inside `app_invite_accept` on a first-time join - and the invite email is rendered
-in the *inviter's* locale, since its recipient has no membership yet. See
+in the _inviter's_ locale, since its recipient has no membership yet. See
 [Transactional Outbox](/internal-docs/engineering/outbox#copy-and-locale).
 
-| Field         | Type                            | Notes                                                    |
-| ------------- | ------------------------------- | -------------------------------------------------------- |
-| `id`          | uuid                            |                                                          |
-| `userId`      | fk → user                       | `on delete cascade`                                      |
-| `workspaceId` | fk → workspace                  | `on delete cascade`                                      |
-| `displayName` | text, nullable                  | Name shown to clients on boards (first name works well)  |
-| `title`       | text, nullable                  | Role label under the name on the client board            |
-| `role`        | enum `owner \| admin \| member` |                                                          |
-| `status`      | enum `active \| suspended`      | Suspended = soft-removed; the row is kept, access is not |
-| `phone`       | text, nullable                  | Personal account contact (Register step 4, Profile)      |
-| `locale`      | enum `en \| pt`, default `en`    | The language this member reads the product and its email in |
-| `createdAt`   | timestamp                       |                                                          |
-| `updatedAt`   | timestamp                       |                                                          |
+| Field         | Type                            | Notes                                                       |
+| ------------- | ------------------------------- | ----------------------------------------------------------- |
+| `id`          | uuid                            |                                                             |
+| `userId`      | fk → user                       | `on delete cascade`                                         |
+| `workspaceId` | fk → workspace                  | `on delete cascade`                                         |
+| `displayName` | text, nullable                  | Name shown to clients on boards (first name works well)     |
+| `title`       | text, nullable                  | Role label under the name on the client board               |
+| `role`        | enum `owner \| admin \| member` |                                                             |
+| `status`      | enum `active \| suspended`      | Suspended = soft-removed; the row is kept, access is not    |
+| `phone`       | text, nullable                  | Personal account contact (Register step 4, Profile)         |
+| `locale`      | enum `en \| pt`, default `en`   | The language this member reads the product and its email in |
+| `createdAt`   | timestamp                       |                                                             |
+| `updatedAt`   | timestamp                       |                                                             |
 
 Unique: (`userId`, `workspaceId`), as `workspace_member_user_workspace_unique`.
 Index: `workspace_member_workspace_id_idx` on (`workspaceId`); `userId` lookups
@@ -785,7 +793,7 @@ and `null` - or the key being absent - means unlimited:
 { "limits": { "seat": 20, "location": 3 } } // paid:founding
 ```
 
-A **seat** is held by an active member *or* a pending invite, the workspace owner
+A **seat** is held by an active member _or_ a pending invite, the workspace owner
 included - so it counts people the workspace has committed to, not members it
 currently has. `requireWorkspaceQuota` enforces both limits at the routes that
 consume one (see [Authorization](/internal-docs/engineering/authorization)).
@@ -838,10 +846,9 @@ therefore filter to the active row rather than assuming a single row per workspa
 `[derived]`: seats used, active boards, messages this month.
 
 <Callout type="info">
-  Stripe columns (`stripeCustomerId`, `stripeSubscriptionId`) and the `trial` /
-  `past_due` statuses are **not implemented yet** - they arrive with the payment
-  integration. Today a subscription is created directly, only ever `active` or
-  `cancelled`.
+  Stripe columns (`stripeCustomerId`, `stripeSubscriptionId`) and the `trial` / `past_due` statuses
+  are **not implemented yet** - they arrive with the payment integration. Today a subscription is
+  created directly, only ever `active` or `cancelled`.
 </Callout>
 
 ### `workspace_subscription_addon`
@@ -872,29 +879,30 @@ business data that produced it. The delivery worker claims rows and sends them
 after that transaction commits. See [Transactional Outbox](/internal-docs/engineering/outbox)
 for the claim protocol, retry schedule, and how to add a topic.
 
-| Field           | Type                | Notes                                                                                                                                         |
-| --------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`            | uuid                | Also the provider's idempotency key - never reuse or regenerate it                                                                            |
-| `channel`       | enum `email`        | Routes the row to a provider. Postgres enum - a new value is a migration                                                                      |
-| `topic`         | enum                | The business event: `account:created`, `account:verify-email`, `account:reset-password`, `workspace:created`, `invite:created`. Postgres enum |
-| `payload`       | jsonb               | `{ to, variables }` only. The template is resolved from `channel:topic` at send time, never stored                                            |
-| `attempts`      | int                 | Incremented at **claim** time, so a crash mid-send still counts                                                                               |
-| `nextAttemptAt` | timestamp           | When the row becomes claimable again; backoff is written here                                                                                 |
-| `claimedAt`     | timestamp, nullable | Set on claim; a row stuck here >5 min is re-claimed as orphaned                                                                               |
-| `processedAt`   | timestamp, nullable | Non-null = delivered. The only terminal success state                                                                                         |
-| `lastError`     | text, nullable      | Flattened error from the last failed attempt                                                                                                  |
-| `createdAt`     | timestamp           | Also the age cap - rows older than 23h stop being claimed                                                                                     |
-| `updatedAt`     | timestamp           |                                                                                                                                               |
+| Field           | Type                | Notes                                                                                                                                     |
+| --------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`            | uuid                | Also the provider's idempotency key - never reuse or regenerate it                                                                        |
+| `channel`       | enum                | `email` or `audience`. Routes the row to a provider. Postgres enum - a new value is a migration                                           |
+| `topic`         | enum                | `account:created`, `account:verify-email`, `account:reset-password`, `workspace:created`, `invite:created`, `contact:sync`. Postgres enum |
+| `payload`       | jsonb               | `{ to, locale, variables }` only. The delivery is resolved from `channel:topic` at send time, never stored                                |
+| `attempts`      | int                 | Incremented at **claim** time, so a crash mid-send still counts                                                                           |
+| `nextAttemptAt` | timestamp           | When the row becomes claimable again; backoff is written here                                                                             |
+| `claimedAt`     | timestamp, nullable | Set on claim; a row stuck here >5 min is re-claimed as orphaned                                                                           |
+| `processedAt`   | timestamp, nullable | Non-null = delivered. The only terminal success state                                                                                     |
+| `lastError`     | text, nullable      | Flattened error from the last failed attempt; cleared when a row finally delivers                                                         |
+| `createdAt`     | timestamp           | Also the age cap - rows older than 23h stop being claimed                                                                                 |
+| `updatedAt`     | timestamp           |                                                                                                                                           |
 
 Partial index `outbox_pending_idx` on (`nextAttemptAt`) **where `processedAt IS NULL`**,
 so claims stay cheap no matter how many delivered rows have accumulated.
 
 <Callout type="warn">
-  **Deliberately not under RLS.** The worker connects as `ordre_app` with no
-  `app.user_id` set, so any policy would evaluate against a NULL user, return zero
-  rows, and the queue would look permanently empty while silently sending nothing.
-  The table holds no tenant rows to leak - only a recipient address and the
-  variables for one message.
+  **Deliberately not under RLS.** The worker connects as `ordre_app` with no `app.user_id` set, so
+  any policy would evaluate against a NULL user, return zero rows, and the queue would look
+  permanently empty while silently sending nothing. The table holds no tenant rows to leak, and
+  nothing in the request path reads it. It does hold personal data: a recipient address, and on the
+  `audience` channel a name and which segments the person belonged to. The worker reaps delivered
+  rows after 30 days and undelivered ones after 90.
 </Callout>
 
 There is no `status` column. State is derived: unprocessed and due, unprocessed and

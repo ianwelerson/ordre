@@ -141,17 +141,20 @@ The registration flow creates a new user account and a workspace. The person reg
 2. **Select provider type** - describes the workspace's setup:
    - Individual (solo operator, no registered business)
    - Business (registered entity, any size)
-3. **Enter person name** - the name of the person creating the account (always required)
+3. **Enter first and last name** - two separate required fields. The account stores both, and the full name is composed from them rather than entered on its own
 4. **Enter business name** _(optional)_ - if left blank, the person name is used as the workspace display name
 5. **Enter contact info** - email (required) and phone number (optional). This is the user's personal contact info; workspace-level contact info can be configured later in settings.
 6. **Create password** - the account password is chosen here, in the flow, and confirmed in a second field
-7. **Review and submit**
+7. **Marketing consent** _(optional)_ - an unticked checkbox for product news. Nothing else subscribes an account, and leaving it alone is a complete answer
+8. **Review and submit**
 
 ---
 
 ### Rules
 
 - Email is the primary user account identifier and must be unique
+- Marketing email is **opt-in**. The checkbox starts unticked, an account that never ticks it joins no marketing segment, and a consent once given is only withdrawable by the person who gave it - no later change to their workspaces can revoke or re-assert it
+- First and last name are both required, and neither may be blank. They are what the workspace member's display name is seeded from on a first join, and what the Resend contact carries, so a single free-text name field would not do
 - Industry selection is used for template recommendations only - it does not lock the workspace into a category; any template can be used regardless of selected industry
 - Provider type (Individual / Business) is stored for future use (invoicing, branding) but does not affect available features at this stage
 - The password is set during registration, so the account is usable as soon as the form is submitted - a forgotten password is recovered through the reset link on the login page

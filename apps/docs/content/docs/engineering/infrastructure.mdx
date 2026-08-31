@@ -110,7 +110,8 @@ The service's exact configuration (skipped build, direct `node` start command, V
 
 ---
 
-## 🔐 Authentication -  Better Auth
+## 🔐 Authentication - Better Auth
+
 **Status:** Chosen
 
 **Why:**
@@ -154,35 +155,53 @@ The service's exact configuration (skipped build, direct `node` start command, V
 
 ---
 
-## ✉️ Email - Resend
+## ✉️ Email and audience - Resend
 
 **Status:** Live - integrated and delivering
 
 **Why:**
 
 - Developer-first email API built by the team behind React Email - natural fit for the React/Next.js stack
-- Clean REST API and official Node.js SDK; templates are authored and versioned in the Resend dashboard and referenced by id
+- Clean REST API and official Node.js SDK. Templates are ours, written with React Email in `packages/email` and rendered on each send, so a message is versioned with the code that sends it
 - Free tier covers development and early production
 - Handles both transactional email (account and workspace lifecycle, invitations, board notifications) and marketing email (member onboarding sequences, product updates)
 
-**How it's wired:** the API never calls Resend from a request. A producer writes a row to the `outbox` table inside the same transaction as the business data, and a background worker claims and delivers it. That is what keeps a request DB-only and makes a Resend outage a retry rather than a failed sign-up. See **[Transactional Outbox](/internal-docs/engineering/outbox)** for the full design.
+**How it's wired:** the API never calls Resend from a request. A producer writes a row to the `outbox` table inside the same transaction as the business data, and a background worker claims and delivers it. That is what keeps a request DB-only and makes a Resend outage a retry rather than a failed sign-up. Two channels share that queue: `email` sends a rendered message, `audience` keeps the contact record and its segments in step with workspace membership. See **[Transactional Outbox](/internal-docs/engineering/outbox)** for the full design.
 
 **Delivering today:**
 
-| Topic                | Recipient       | Trigger                                    |
-| -------------------- | --------------- | ------------------------------------------ |
-| `account:created`    | New user        | A Better Auth user row is created          |
-| `workspace:created`  | Workspace owner | A workspace is created                     |
-| `invite:created`     | Invited person  | An admin creates a workspace invite        |
+| Topic               | Recipient       | Trigger                             |
+| ------------------- | --------------- | ----------------------------------- |
+| `account:created`   | New user        | A Better Auth user row is created   |
+| `workspace:created` | Workspace owner | A workspace is created              |
+| `invite:created`    | Invited person  | An admin creates a workspace invite |
+
+**Syncing today** (the `audience` channel, one delivery):
+
+| Topic          | Contact           | Trigger                                                                 |
+| -------------- | ----------------- | ----------------------------------------------------------------------- |
+| `contact:sync` | The account owner | Sign-up, workspace creation, invite accept, role change, removal, leave |
+
+Segments are ours - `all-accounts`, `workspace-owner`, `workspace-member` - and each
+row carries the complete set, so the provider reconciles against what Resend holds.
+Topics are the contact's: `product-news` and `workspace-updates`, opted into and
+never opted out of by us. Ids are per environment and come from `RESEND_SEGMENT_*` /
+`RESEND_TOPIC_*`; a row names them, never their ids.
 
 **Planned:** board notifications (new update, photo, approval request) and client verification tokens land as new outbox topics once boards exist, and reuse the same worker.
 
 <Callout type="warn">
-  **Free-plan rate limits are load-bearing.** The plan caps daily sends, so the
-  worker treats a Resend `429` as "not this message's fault": the attempt is handed
-  back and the row waits an hour instead of burning a retry. Confirm the current cap
-  against the [Resend pricing page](https://resend.com/pricing) before assuming
-  headroom for a bulk send.
+  **Free-plan rate limits are load-bearing.** The plan caps daily sends, so the worker treats a
+  Resend `429` as "not this message's fault": the attempt is handed back and the row waits an hour
+  instead of burning a retry. Confirm the current cap against the [Resend pricing
+  page](https://resend.com/pricing) before assuming headroom for a bulk send.
+</Callout>
+
+<Callout type="warn">
+  **One API key serves every environment today**, and `DISABLE_OUTBOX_EMAIL` skips email only. A
+  local sign-up therefore writes a real contact into the account's audience. Point a local `.env` at
+  throwaway segment ids until the keys diverge: a broadcast targets a segment, so a contact in a
+  dev-only segment can never be reached by one.
 </Callout>
 
 **Sending domain:** `ordre.app`, verified with Resend. The from-address is a constant rather than an env-derived origin - there is no `@ordre.localhost` to send from - so dev, staging, and production all send as the same verified sender. The **links inside** the email are environment-specific and come from `config/urls.ts`.

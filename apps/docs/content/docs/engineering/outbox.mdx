@@ -1,12 +1,18 @@
 ---
 title: Transactional Outbox
 icon: Send
-description: How the API sends email - the outbox table, the delivery worker, the retry and dead-letter rules, and how to add a new message.
+description: How the API reaches an external provider - the outbox table, the delivery worker, the two channels, the retry and dead-letter rules, and how to add a new message.
 ---
 
-The API never calls an email provider from inside a request. A producer writes a
-row to the **`outbox`** table in the same transaction as the business data, and a
+The API never calls an external provider from inside a request. A producer writes
+a row to the **`outbox`** table in the same transaction as the business data, and a
 background **worker** claims that row and delivers it afterwards.
+
+Two channels ride the same table. **`email`** sends a rendered message through
+Resend. **`audience`** keeps the contact behind an account in step with the Resend
+segments a broadcast targets. They share the queue, the claim, and the retry rules,
+and nothing else: a row belongs to exactly one channel, so a failure on one never
+re-sends the other.
 
 ```
 controller / auth hook          worker (background)
@@ -36,14 +42,17 @@ fighting it: every send passes the row id as the provider's idempotency key.
 
 ## The pieces
 
-| Piece | Location | Role |
-| ----- | -------- | ---- |
-| `outbox` table | [`packages/db/src/schemas/outbox.ts`](https://github.com/ianwelerson/ordre/blob/main/packages/db/src/schemas/outbox.ts) | The queue. One row per delivery - see [Data Model](/internal-docs/engineering/data-model) |
-| `pushToOutbox` | [`apps/api/src/utils/outbox.ts`](https://github.com/ianwelerson/ordre/blob/main/apps/api/src/utils/outbox.ts) | The producer API. Queues a row and wakes the worker after commit |
-| Delivery worker | [`apps/api/src/workers/outbox.worker.ts`](https://github.com/ianwelerson/ordre/blob/main/apps/api/src/workers/outbox.worker.ts) | Claims due rows, routes them by `channel`, retries and dead-letters |
-| `sendEmail` | [`apps/api/src/services/email.ts`](https://github.com/ianwelerson/ordre/blob/main/apps/api/src/services/email.ts) | The `email` channel provider - renders the message and sends it |
-| Templates | [`packages/email`](https://github.com/ianwelerson/ordre/blob/main/packages/email) | The React Email templates, the copy registry, and `renderEmail` |
-| Payload registry | [`packages/core/src/schemas/outbox.ts`](https://github.com/ianwelerson/ordre/blob/main/packages/core/src/schemas/outbox.ts) | Declares every delivery and the variables it renders |
+| Piece                 | Location                                                                                                                        | Role                                                                                      |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `outbox` table        | [`packages/db/src/schemas/outbox.ts`](https://github.com/ianwelerson/ordre/blob/main/packages/db/src/schemas/outbox.ts)         | The queue. One row per delivery - see [Data Model](/internal-docs/engineering/data-model) |
+| `pushToOutbox`        | [`apps/api/src/utils/outbox.ts`](https://github.com/ianwelerson/ordre/blob/main/apps/api/src/utils/outbox.ts)                   | The producer API. Queues a row and wakes the worker after commit                          |
+| Delivery worker       | [`apps/api/src/workers/outbox.worker.ts`](https://github.com/ianwelerson/ordre/blob/main/apps/api/src/workers/outbox.worker.ts) | Claims due rows, routes them by `channel`, retries and dead-letters                       |
+| `sendEmail`           | [`apps/api/src/services/email.ts`](https://github.com/ianwelerson/ordre/blob/main/apps/api/src/services/email.ts)               | The `email` channel provider - renders the message and sends it                           |
+| `syncAudienceContact` | [`apps/api/src/services/audience.ts`](https://github.com/ianwelerson/ordre/blob/main/apps/api/src/services/audience.ts)         | The `audience` channel provider - upserts the contact and reconciles its segments         |
+| `parseOutboxPayload`  | [`apps/api/src/utils/outbox-payload.ts`](https://github.com/ianwelerson/ordre/blob/main/apps/api/src/utils/outbox-payload.ts)   | Re-parses a row against its delivery's schema, naming the row and field on a mismatch     |
+| Segment ids           | [`apps/api/src/config/audience.ts`](https://github.com/ianwelerson/ordre/blob/main/apps/api/src/config/audience.ts)             | Resolves a segment or topic **name** to the Resend id for this environment                |
+| Templates             | [`packages/email`](https://github.com/ianwelerson/ordre/blob/main/packages/email)                                               | The React Email templates, the copy registry, and `renderEmail`                           |
+| Payload registry      | [`packages/core/src/schemas/outbox.ts`](https://github.com/ianwelerson/ordre/blob/main/packages/core/src/schemas/outbox.ts)     | Declares every delivery and the variables it renders                                      |
 
 ## Producing a row
 
@@ -87,14 +96,27 @@ service re-parses it against the same schema before rendering.
 
 ### Default variables
 
-`help_url` and `privacy_url` are filled in by `pushToOutbox` from
+Defaults are **per channel**, not global. `DEFAULT_VARIABLES` in `utils/outbox.ts`
+is keyed by channel, and `pushToOutbox` merges only the entry for the channel the
+row is on:
+
+```ts
+const DEFAULT_VARIABLES: Record<OutboxChannel, Partial<Record<OutboxDefaultVariable, string>>> = {
+  email: { help_url: urls.help, privacy_url: urls.privacy },
+  audience: {},
+};
+```
+
+`help_url` and `privacy_url` come from
 [`config/urls.ts`](https://github.com/ianwelerson/ordre/blob/main/apps/api/src/config/urls.ts) -
-producers never pass them. They are the two links every template renders in its
-footer, which is what makes them defaults; a link only some messages point at,
-`dashboard_url` among them, is an ordinary variable the delivery opts into. They are read from `urls` rather than hardcoded because
-they were once literals pointing at production, which meant every email sent from
-dev linked users into the live app. They are **frozen into the row at write time**,
-so a queued row keeps the origins configured when it was produced.
+producers never pass them. They are the two links every email template renders in
+its footer, which is what makes them defaults on that channel; a link only some
+messages point at, `dashboard_url` among them, is an ordinary variable the delivery
+opts into. The audience channel renders no template, so it takes neither, and a
+contact payload carrying a footer link would fail its own schema. They are read
+from `urls` rather than hardcoded so a row queued in dev links into dev, and they
+are **frozen into the row at write time**, so a queued row keeps the origins
+configured when it was produced.
 
 ### Waking the worker
 
@@ -104,7 +126,7 @@ only correct moment to fire it.
 ```ts
 // config/db-context.ts
 afterCommit(fn); // queued until the request transaction COMMITs, or run inline
-                 // when there is no request transaction (script, Better Auth hook)
+// when there is no request transaction (script, Better Auth hook)
 ```
 
 Waking any earlier runs the claim on a different pooled connection, which cannot
@@ -134,13 +156,17 @@ WITH due AS MATERIALIZED (
   ORDER BY next_attempt_at
   FOR UPDATE SKIP LOCKED
   LIMIT 10
+),
+claimed AS (
+  UPDATE outbox SET claimed_at = now(), attempts = attempts + 1, updated_at = now()
+  FROM due WHERE outbox.id = due.id
+  RETURNING outbox.id, outbox.channel, outbox.topic, outbox.payload, outbox.attempts,
+            outbox.created_at
 )
-UPDATE outbox SET claimed_at = now(), attempts = attempts + 1, updated_at = now()
-FROM due WHERE outbox.id = due.id
-RETURNING ...
+SELECT id, channel, topic, payload, attempts FROM claimed ORDER BY created_at
 ```
 
-Four details are load-bearing:
+Five details are load-bearing:
 
 - **`FOR UPDATE SKIP LOCKED`** - concurrent workers take different rows instead of
   blocking. This is what makes multiple API replicas safe with no coordination.
@@ -151,14 +177,25 @@ Four details are load-bearing:
 - **`AS MATERIALIZED`** is not decoration. Written as `WHERE id IN (SELECT ... LIMIT n)`
   this plans as a semi-join that re-runs the subquery per candidate row, so every
   execution locks another _n_ and the batch cap is silently ignored.
+- **The `UPDATE` is a CTE with a `SELECT` around it**, which is what makes the batch
+  come back in order. `RETURNING` on its own has none: it yields rows in whatever
+  order the join produced, and the `ORDER BY` inside `due` sorts the CTE rather than
+  the update's output. Wrapping it lets a final `SELECT ... ORDER BY created_at` do
+  the sorting in the database.
+
+Ordering is invisible on the email channel, where rows are independent, and
+load-bearing on the audience channel, where each row is a whole snapshot: applying
+two syncs for one contact in the wrong order leaves Resend holding the earlier one.
+It sorts on `created_at` rather than `next_attempt_at`, because the question is
+which snapshot is newest, not which became due first.
 
 ### Scheduling
 
-| Knob | Value | Why |
-| ---- | ----- | --- |
-| Wake | on commit | Where delivery latency actually comes from |
-| Sweep | 30 min | Safety net only. Neon's free plan suspends after five idle minutes and bills for being awake, so a faster sweep keeps compute up 24/7 against an empty table |
-| Batch | 10 | A full batch means there may be more; the loop keeps draining until one comes back short |
+| Knob  | Value     | Why                                                                                                                                                          |
+| ----- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Wake  | on commit | Where delivery latency actually comes from                                                                                                                   |
+| Sweep | 30 min    | Safety net only. Neon's free plan suspends after five idle minutes and bills for being awake, so a faster sweep keeps compute up 24/7 against an empty table |
+| Batch | 10        | A full batch means there may be more; the loop keeps draining until one comes back short                                                                     |
 
 The loop is a recursive `setTimeout`, not `setInterval` - `setInterval` does not
 await an async callback, so a slow tick would overlap the next and a throw would
@@ -168,28 +205,48 @@ drain finishes so shutdown can await it before `pool.end()`.
 
 ### Retry and dead-letter
 
-| Outcome | `attempts` | Next attempt |
-| ------- | ---------- | ------------ |
-| Rate limited (`429`) | handed **back** | +1 hour |
-| Any other failure | consumed | `power(4, attempts)` seconds - 4 / 16 / 64 / 256 |
-| 5 attempts consumed | - | Never claimed again (dead-lettered) |
-| Older than 23 hours | - | Never claimed again (dead-lettered) |
+| Outcome              | `attempts`      | Next attempt                                     |
+| -------------------- | --------------- | ------------------------------------------------ |
+| Rate limited (`429`) | handed **back** | +1 hour                                          |
+| Any other failure    | consumed        | `power(4, attempts)` seconds - 4 / 16 / 64 / 256 |
+| 5 attempts consumed  | -               | Never claimed again (dead-lettered)              |
+| Older than 23 hours  | -               | Never claimed again (dead-lettered)              |
 
 A `429` is the account being throttled, not this message's fault, so the attempt is
 returned - a valid email must never dead-letter because of a busy afternoon.
 
 <Callout type="warn">
-  **Both caps exist because of the idempotency window.** Resend honours an
-  idempotency key for 24h. Five attempts keeps the whole retry sequence inside it,
-  and the 23-hour age cap bounds a row's lifetime that `MAX_ATTEMPTS` alone cannot -
-  the rate-limited path hands the attempt back, so a persistently throttled row
-  could otherwise retry hourly forever. Past the window a redelivery of a send that
-  actually succeeded becomes a duplicate email.
+  **Both caps exist because of the idempotency window.** Resend honours an idempotency key for 24h.
+  Five attempts keeps the whole retry sequence inside it, and the 23-hour age cap bounds a row's
+  lifetime that `MAX_ATTEMPTS` alone cannot - the rate-limited path hands the attempt back, so a
+  persistently throttled row could otherwise retry hourly forever. Past the window a redelivery of a
+  send that actually succeeded becomes a duplicate email. Both numbers belong to the email channel;
+  the audience channel inherits them rather than needing them, since a repeated contact sync is an
+  upsert.
 </Callout>
 
 A dead-lettered row is logged at `error` with `outboxId` and `topic`, because
-nothing else will ever mention it - it is an email that silently never arrives.
-There is no automatic reaper: the rows stay for inspection.
+nothing else will ever mention it - it is a delivery that silently never happens.
+
+`last_error` is cleared when a row finally delivers, so a row that failed once and
+then succeeded does not sit there processed while still reading as broken. A
+dead-lettered row keeps its error, which is the whole point of the column.
+
+### Retention
+
+The worker reaps on each sweep, at most once a day:
+
+| Row                                    | Kept for |
+| -------------------------------------- | -------- |
+| Delivered (`processed_at IS NOT NULL`) | 30 days  |
+| Never delivered                        | 90 days  |
+
+An undelivered row is kept longer because it is the only record that a message
+never arrived. The horizon exists at all because the payload is deliberately
+self-contained: it holds a recipient's address, their name, and - on the audience
+channel - which segments they belonged to, in a table with no tenant scoping.
+`outbox_pending_idx` is partial on unprocessed rows, so the delete scans; the daily
+guard is what keeps that acceptable at this volume.
 
 ## Rendering
 
@@ -198,9 +255,21 @@ from the payload, and the language from the row's own `locale`. Nothing about
 which message this is, or what language it is in, is decided at send time:
 
 ```ts
-const delivery = `email:${topic}` satisfies OutboxDelivery;
-const { subject, html, text } = await renderEmail(delivery, parsedPayload.data);
+const delivery = `email:${topic}`;
+
+if (!isEmailDelivery(delivery)) {
+  throw new Error(`Outbox row ${id} has no email delivery for topic ${topic}`);
+}
+
+const parsedPayload = parseOutboxPayload(delivery, payload, id);
+const { subject, html, text } = await renderEmail(delivery, parsedPayload);
 ```
+
+A topic no longer implies every channel - `contact:sync` is a real topic with no
+template behind it - so the pair has to be narrowed rather than asserted.
+`EmailDelivery` extracts the `email:` half of the delivery union, and
+`isEmailDelivery` checks both halves: that the pair is declared, and that it is on
+this channel.
 
 The templates live in [`packages/email`](https://github.com/ianwelerson/ordre/blob/main/packages/email),
 written with [React Email](https://react.email) and rendered to HTML and plain text
@@ -211,14 +280,14 @@ with the code that sends it, and a rollback rolls the emails back too.
 `renderEmail` picks the component out of the registry:
 
 ```ts
-export const TEMPLATES: { [D in OutboxDelivery]: EmailTemplate<D> } = {
+export const TEMPLATES: { [D in EmailDelivery]: EmailTemplate<D> } = {
   'email:account:created': { copyKey: 'accountCreated', Component: AccountCreatedEmail },
   'email:invite:created': { copyKey: 'inviteCreated', Component: InviteCreatedEmail },
 };
 ```
 
-`{ [D in OutboxDelivery]: ... }` makes a new delivery a compile error until it has a
-template, and `Component`'s props are that delivery's own variables - so a template
+`{ [D in EmailDelivery]: ... }` makes a new email delivery a compile error until it
+has a template, and `Component`'s props are that delivery's own variables - so a template
 reading a variable the schema does not declare will not compile either. `copyKey` is
 typed `EmailCopyKeyFor<D>`, so a template cannot be paired with another message's
 words, and the translator it receives only accepts keys of its own copy block.
@@ -251,10 +320,160 @@ transitively, so either at module scope would put that cost - or that failure - 
 the boot path of a process that may never send anything.
 
 <Callout>
-  `sendEmail` **throws on failure and never returns the error.** The worker marks a
-  row processed whenever the provider call resolves, so a swallowed error silently
-  drops the email. Resend's error object is rethrown as-is because it carries the
-  `statusCode` the worker classifies on.
+  `sendEmail` **throws on failure and never returns the error.** The worker marks a row processed
+  whenever the provider call resolves, so a swallowed error silently drops the email. Resend's error
+  object is rethrown as-is because it carries the `statusCode` the worker classifies on.
+</Callout>
+
+## The audience channel
+
+`audience` carries one delivery, `audience:contact:sync`, and its job is to make
+the Resend contact behind an account match what our tables say. That is what lets a
+broadcast target "every workspace owner" without the API ever calling Resend from a
+request.
+
+### Desired state, not instructions
+
+An email row is an event: _this happened, send it_. A contact row is a **snapshot**:
+_this is who they are and which segments they belong to right now_. The payload
+carries the whole answer, never a delta:
+
+```ts
+await pushToOutbox(tx, {
+  channel: 'audience',
+  topic: 'contact:sync',
+  to: audience.email,
+  variables: {
+    contact_first_name: audience.firstName,
+    contact_last_name: audience.lastName,
+    // The complete list, computed after the write, inside the same transaction.
+    contact_segments: audience.segments,
+    // Empty on every producer but sign-up. See below.
+    contact_topics: [],
+  },
+});
+```
+
+The provider then reconciles: it reads the contact's current segments from Resend
+and sends only the differences. Resend rejects a removal for a segment the contact
+is not in, so a sync that changes nothing sends nothing.
+
+<Callout>
+  **This converges rather than being strictly correct.** Two syncs applied out of order leave the
+  earlier snapshot in place, which is why the worker sorts a batch by `created_at`, and why a
+  periodic sync job recomputing every contact is the intended backstop rather than an optimisation.
+  An add/remove design would have been strictly ordered and far more fragile: a dropped row would
+  leave a contact permanently wrong with nothing able to repair it.
+</Callout>
+
+### Segments and topics are different things
+
+Resend draws a line that this channel has to draw too, and getting it wrong is what
+makes an unsubscribe leak.
+
+|                    | What it is                                                                               | Who owns it |
+| ------------------ | ---------------------------------------------------------------------------------------- | ----------- |
+| **Segment**        | Internal grouping, for us to organise sending. A broadcast **must** name one             | Us          |
+| **Topic**          | A kind of email, and the recipient's preference for it. A broadcast may be scoped to one | The contact |
+| **`unsubscribed`** | A global switch. False and they receive nothing, whatever their topics say               | The contact |
+
+So the two halves of a row mean different things.
+`contact_segments` is **desired state**, reconciled in full: `all-accounts` for every
+contact, plus `workspace-owner` and `workspace-member` computed from active
+memberships. Each is a fact about our own tables, so the sync owns all of them and
+removes a membership that ended.
+
+`contact_topics` is **add-only**. The sync may record an opt-in and may never take
+one away:
+
+```ts
+// Opt-ins only, and only the sign-up producer ever sends any. Every other row
+// carries an empty list, because a topic is the contact's own preference: writing
+// it on a membership change would re-assert a subscription they may since have
+// turned off in Resend.
+if (variables.contact_topics.length > 0) {
+  unwrap(
+    await getResend().contacts.topics.update({
+      email: to,
+      topics: variables.contact_topics.map((name) => ({
+        id: topicId(name),
+        subscription: 'opt_in' as const,
+      })),
+    })
+  );
+}
+```
+
+The consent itself comes from a checkbox on sign-up, stored on the account as
+`user.productNewsOptIn` and read back by the `create.after` hook. Storing it matters
+independently of Resend: consent has to be provable later, not only acted on once.
+
+<Callout type="warn">
+  **A topic's default is fixed when it is created, and Resend does not let you change it
+  afterwards.** `product-news` was created **opt-out**, so it means nothing until the sign-up
+  checkbox writes an opt-in - that is what makes it consent. `workspace-updates` was created
+  **opt-in**, because it carries information about a workspace the person already belongs to, so
+  nothing in the code ever writes it and the contact unsubscribes for themselves.
+</Callout>
+
+<Callout>
+  **`upsertContact` writes no subscription state at all**, including `unsubscribed`. That field is
+  the contact's own global switch, so setting it on a sign-up would resurrect somebody who had
+  turned every broadcast off.
+</Callout>
+
+### What a broadcast targets
+
+`segment_id` is required and `topic_id` is optional, so every send names a group and
+may narrow it to a preference:
+
+| Broadcast                 | Segment            | Topic               |
+| ------------------------- | ------------------ | ------------------- |
+| Platform updates and news | `all-accounts`     | `product-news`      |
+| General info for owners   | `workspace-owner`  | `workspace-updates` |
+| General info for members  | `workspace-member` | `workspace-updates` |
+
+`all-accounts` exists because of that first column: a broadcast cannot reach
+everybody without a segment that holds everybody.
+
+<Callout type="warn">
+  **Scope every marketing broadcast to a topic.** A segment is only a list of people and carries no
+  preference. A send that names a segment and no topic reaches everyone in it, including contacts
+  who unsubscribed from the very thing being sent.
+</Callout>
+
+### Names, never ids
+
+A row references a segment or a topic by **name**. Ids live in
+[`config/audience.ts`](https://github.com/ianwelerson/ordre/blob/main/apps/api/src/config/audience.ts),
+resolved from `RESEND_SEGMENT_*` and `RESEND_TOPIC_*` at delivery time, so one
+recreated in Resend keeps every queued row deliverable, and one API key per
+environment can point at different ids. A missing id **throws**, which makes it
+a delivery failure the outbox records and retries rather than a boot failure.
+
+### Reading the state
+
+Two helpers in [`utils/audience.ts`](https://github.com/ianwelerson/ordre/blob/main/apps/api/src/utils/audience.ts),
+and which one a producer uses is an authorization question:
+
+- `audienceSegmentsForSelf` is a plain query. It works because the `member_select`
+  policy has a `user_id = app_current_user_id()` clause, so a caller can read their
+  own memberships across every workspace. Used by sign-up, workspace creation, and
+  invite accept - every path where the actor _is_ the contact.
+- `audienceStateForMember` goes through `app_member_audience_state`, a
+  `SECURITY DEFINER` function, because an admin removing a member cannot see the
+  workspaces that member belongs to elsewhere. RLS would return a partial list and
+  the sync would strip segments the member still qualifies for. See
+  [Row-Level Security](/internal-docs/engineering/authorization/row-level-security).
+
+Both take the handle **explicitly** and must be passed the transaction that wrote
+the membership change, or they read pre-change state.
+
+<Callout type="warn">
+  **One API key serves every environment today.** `DISABLE_OUTBOX_EMAIL` skips email only - it is
+  deliberately not a Resend kill switch - so a local sign-up creates a real contact. Point a local
+  `.env` at throwaway segment ids: a broadcast targets a segment, so a contact sitting only in a dev
+  segment can never receive one.
 </Callout>
 
 ## Adding a message
@@ -263,12 +482,13 @@ the boot path of a process that may never send anything.
    It backs a Postgres enum, so this is **a migration** - generate one.
 2. **Add any new variables** to `OUTBOX_VARIABLES` in the same file, named
    `<subject>_<attribute>` so the suffix picks its schema. Add to
-   `OUTBOX_DEFAULT_VARIABLES` instead only if *every* template renders it, and give
-   it a value in `DEFAULT_VARIABLES` in `utils/outbox.ts`.
+   `OUTBOX_DEFAULT_VARIABLES` instead only if _every_ message on that channel
+   renders it, and give it a value under the channel's key in `DEFAULT_VARIABLES`
+   in `utils/outbox.ts`.
 3. **Declare the delivery** in `OUTBOX_PAYLOAD_SCHEMAS`, keyed `<channel>:<topic>`,
    picking exactly the variables the template renders. Nothing is optional - a
    missing variable is a bug, and the failure mode is an email that delivers
-   *successfully* with a blank link.
+   _successfully_ with a blank link.
 4. **Add the copy block** to `EmailMessages`, map the delivery to it in
    `EmailCopyKeyFor`, then write the words in `@ordre/core/messages/en/emails.ts`
    **and** `pt/emails.ts`.
@@ -279,6 +499,12 @@ the boot path of a process that may never send anything.
    done.
 7. **Call `pushToOutbox`** from the producer, passing the transaction that writes
    the business data.
+
+Steps 4 through 6 are the email channel's. A delivery on another channel skips
+them and writes its provider instead - `syncAudienceContact` is the worked example:
+it refuses a topic its channel has no delivery for, re-parses with
+`parseOutboxPayload`, and throws on every provider error so nothing is swallowed
+into a processed row.
 
 Adding a whole **channel** (SMS, push) additionally means a value in
 `OUTBOX_CHANNELS` (also a migration) and an entry in the worker's `providers`
