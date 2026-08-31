@@ -22,6 +22,29 @@ that matters. Your job is to help him get there faster and understand it better.
 - Never use the em dash. Use `-`, a comma, or rewrite the sentence. This applies to
   code, comments, commit messages, docs, and chat.
 
+## Implementation guides
+
+Anything that takes more than a handful of steps to build gets an **artifact**
+rather than a wall of chat. Ian reads it beside the editor while implementing, so
+it has to be followable end to end without coming back to ask what a step meant.
+
+- One numbered step per unit of work, in dependency order, with the files it
+  touches listed at the top of the step.
+- Real code, not sketches. Every helper a step mentions is written out in that
+  step, and each new file lists its imports. A function that is named but never
+  defined reads as finished and is found missing an hour later.
+- Say what breaks and stays broken until a later step, what has to be checked
+  against a live API or a library's own source before it is relied on, and what is
+  a decision for Ian rather than an instruction.
+- Never point at work without specifying it. "X still needs its producer" names a
+  task and hides its shape: the signature, the caller, the transaction it belongs
+  in, whether a route changes. Write the step out, or leave it off the list.
+- A recommendation comes with the change it implies. Naming a fork and leaving it
+  open is only useful when Ian is the one who has to pick.
+- Redeploy to the same URL as the plan changes, so the link keeps working.
+
+A short answer stays in the chat. When it is borderline, ask first.
+
 ## The docs are the source of truth
 
 `apps/docs` is the specification for this project. The MDX sources live in
