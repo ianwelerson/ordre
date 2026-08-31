@@ -51,7 +51,7 @@ Backend capabilities in [`apps/api`](/internal-docs/engineering/architecture) th
 | Members & invitations   | Member endpoints (list, read, self-service profile/leave, update, remove, role change) plus admin invites (create, list, read, revoke) and the public invite flow (preview, accept, decline) | ✅     |
 | Locations               | Location CRUD, default-location management, and assigning members to locations                                                                                                               | ✅     |
 | Transactional email     | Outbox worker delivering account, workspace, and invite emails through Resend - see [Transactional Outbox](/internal-docs/engineering/outbox)                                                | ✅     |
-| Contact & audience sync | A second outbox channel keeping Resend audience segments in step with workspace membership                                                                                                   | 🚧     |
+| Contact & audience sync | A second outbox channel keeping Resend audience segments in step with workspace membership, with marketing topics kept separate as consent                                                   | ✅     |
 | Billing & subscriptions | Billing data model in place; Stripe integration pending                                                                                                                                      | 🚧     |
 | Boards                  | Board lifecycle, access tokens, and client-facing read model                                                                                                                                 | 📋     |
 | Timeline & updates      | Posting and retrieving timeline entries                                                                                                                                                      | 📋     |
@@ -59,7 +59,7 @@ Backend capabilities in [`apps/api`](/internal-docs/engineering/architecture) th
 | Approvals               | Approve/decline requests tied to a board                                                                                                                                                     | 📋     |
 | Chat / messaging        | Board-scoped messaging between client and members                                                                                                                                            | 📋     |
 | Templates               | Template storage and per-workspace customisation                                                                                                                                             | 📋     |
-| Client verification     | One-time email/SMS token flow for unblurring sensitive fields                                                                                                                                | 📋     |
+| Client verification     | Matches what the client enters against the contact the member registered, unblurring the sensitive fields for that session                                                                   | 📋     |
 | Recurring services      | Recurrence configuration, visit scheduling, and schedule change requests                                                                                                                     | 📋     |
 
 ## Apps
@@ -114,22 +114,22 @@ and the primary action are decided once rather than per screen.
 
 Hosting and third-party services. See [Infrastructure](/internal-docs/engineering/infrastructure) for the reasoning behind each choice.
 
-| Service        | Role                                                             | Status |
-| -------------- | ---------------------------------------------------------------- | ------ |
-| Vercel         | Frontend hosting for all apps                                    | ✅     |
-| Cloudflare DNS | Domain and DNS for `ordre.app`                                   | ✅     |
-| Better Auth    | Workspace member authentication (clients excluded)               | ✅     |
-| pino logging   | Structured logs via `@ordre/monitoring`                          | ✅     |
-| Resend         | Transactional email, delivered through the outbox worker         | ✅     |
-| Railway        | Backend compute; Express as a persistent containerised service   | 🚧     |
-| Neon           | Serverless PostgreSQL database                                   | 🚧     |
-| Sentry         | Error tracking (release tracking in CI; SDK integration pending) | 🚧     |
-| Cloudflare R2  | Image storage (S3-compatible, zero egress)                       | 📋     |
-| Upstash Redis  | Board and workspace caching                                      | 📋     |
-| Twilio         | SMS and WhatsApp delivery                                        | 📋     |
-| Stripe         | Subscription billing with localised pricing                      | 📋     |
-| Umami          | Privacy-first, cookieless analytics                              | 📋     |
-| Better Stack   | Centralised log platform and uptime monitoring                   | 📋     |
+| Service        | Role                                                                      | Status |
+| -------------- | ------------------------------------------------------------------------- | ------ |
+| Vercel         | Frontend hosting for all apps                                             | ✅     |
+| Cloudflare DNS | Domain and DNS for `ordre.app`                                            | ✅     |
+| Better Auth    | Workspace member authentication (clients excluded)                        | ✅     |
+| pino logging   | Structured logs via `@ordre/monitoring`                                   | ✅     |
+| Resend         | Transactional email and audience contacts, both through the outbox worker | ✅     |
+| Railway        | Backend compute; Express as a persistent containerised service            | 🚧     |
+| Neon           | Serverless PostgreSQL database                                            | 🚧     |
+| Sentry         | Error tracking (release tracking in CI; SDK integration pending)          | 🚧     |
+| Cloudflare R2  | Image storage (S3-compatible, zero egress)                                | 📋     |
+| Upstash Redis  | Board and workspace caching                                               | 📋     |
+| Twilio         | SMS and WhatsApp delivery                                                 | 📋     |
+| Stripe         | Subscription billing with localised pricing                               | 📋     |
+| Umami          | Privacy-first, cookieless analytics                                       | 📋     |
+| Better Stack   | Centralised log platform and uptime monitoring                            | 📋     |
 
 ## Pricing & Billing
 

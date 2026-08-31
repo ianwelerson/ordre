@@ -30,7 +30,7 @@ description: Hosting, infrastructure, and tooling decisions across the stack.
 
 - Usage-based billing (per-second) - pay for actual CPU and RAM consumed, not reserved capacity
 - Vertical auto-scaling: the container uses more resources under load and scales back down at idle, automatically
-- Long-running process support - Express + Socket.io runs as a persistent server with WebSocket connections
+- Long-running process support - Express runs as a persistent server, which is what keeps a warm connection pool, an interactive transaction per request, and the outbox worker inside the same process
 - Git-connected deploys from GitHub with preview environments per PR
 - Excellent CLI tooling for local development and deployment
 - Hobby plan ($5/month, includes $5 usage credit) covers development and early production
@@ -94,14 +94,15 @@ The service's exact configuration (skipped build, direct `node` start command, V
 
 ---
 
-## 🔴 Cache & Real-Time - Upstash Redis
+## 🔴 Cache - Upstash Redis
 
 **Status:** Chosen
 
 **Why:**
 
 - Serverless Redis with pay-per-command pricing - no idle instance cost
-- Used for WebSocket pub/sub (real-time board updates via Socket.io) and short-lived board data caching
+- Used for short-lived board and workspace caching, and as the shared store the rate limiter needs once the API runs more than one instance
+- Pushing board changes to an open board is out of launch scope, so nothing here is a pub/sub layer yet - see [Ideas](/internal-docs/product/roadmap/ideas)
 - Free tier (500K commands per month, 256 MB) covers development and early production
 - Low-latency global edge network
 - Simple HTTP-based API alongside standard Redis protocol
