@@ -75,6 +75,11 @@ export const envSchema = z
     // Better Auth Config
     BETTER_AUTH_SECRET: z.string().min(32),
     BETTER_AUTH_URL: originUrl,
+    BETTER_AUTH_API_KEY: z
+      .string()
+      .optional()
+      .transform((value) => (value === '' ? undefined : value))
+      .pipe(z.string().startsWith('ba_').optional()),
     // App URLs
     APP_BASE_URL: originUrl,
     APP_DASHBOARD_URL: originUrl,

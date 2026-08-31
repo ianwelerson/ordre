@@ -94,6 +94,30 @@ left exactly as generated, so its adapter and tooling see the standard schema.
 Cosmetic differences such as index naming and import order are deliberately not
 patched: they buy nothing and add divergence to maintain.
 
+### Relations
+
+The generator also emits Drizzle `relations()` into `better-auth.ts`, but those are
+not the ones the Drizzle client sees. `packages/db/src/schemas/auth.ts` owns the auth
+relations by hand, and `schemas/index.ts` exports the **tables** from the generated
+file and the **relations** from `auth.ts`. That split is what lets a relation the
+generator knows nothing about, such as `user` to its workspaces, survive the next
+`auth:generate`.
+
+<Callout type="warn">
+  These relations are load-bearing, not a convenience. `apps/api/src/config/auth.ts` sets
+  `advanced.database.joins: true`, which makes Better Auth's Drizzle adapter fetch related rows
+  through Drizzle's relational query API - `db.query.session.findFirst({ with: { user: true } })` -
+  rather than issuing a second query for the related row. A session lookup is one round trip instead
+  of two, on the hot path of every authenticated request. Rename or drop one of these relations and
+  the adapter logs `The model "..." was not found in the query object` and falls back to the separate
+  query: correct results, silently slower.
+</Callout>
+
+The relation **names** are part of that contract. The adapter builds its `with` key
+from the model name, singular for a one-to-one and plural for a one-to-many, so
+`session.user`, `user.sessions`, and `user.accounts` have to be spelled exactly that
+way to be found.
+
 ### `user`
 
 | Field              | Type                     | Notes                                                                                                                                                          |

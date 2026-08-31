@@ -128,6 +128,61 @@ The service's exact configuration (skipped build, direct `node` start command, V
 
 **Alternatives considered:** Auth0 (industry standard with strong Canadian market recognition, 25,000 MAU free tier, but user data lives externally and MAU-based pricing at scale), Clerk (polished DX but higher per-MAU cost), AWS Cognito (rougher developer experience).
 
+### Better Auth Dash
+
+**Status:** Trialling
+
+`@better-auth/infra` ships a `dash()` plugin that connects the API to Better Auth's
+hosted dashboard: user administration, session inspection and revocation, and sign-up
+and sign-in history. It reads the `user`, `session`, and `account` tables through the
+same Drizzle adapter the app uses, so the records stay in Neon.
+
+It is mounted only when a key is configured, in `apps/api/src/config/auth.ts`:
+
+```ts
+const dashPlugins = env.BETTER_AUTH_API_KEY ? [dash({ apiKey: env.BETTER_AUTH_API_KEY })] : [];
+```
+
+The key is passed explicitly rather than left to the plugin's own `process.env` read,
+so the value reaching it is the one the Zod schema validated. An environment without
+a key, which includes every test run, mounts nothing.
+
+<Callout type="warn">
+  The plugin sends auth **events** - sign-ups, sign-ins, session lifecycle - to Better Auth's API as
+  they happen. The rows stay in Neon, the activity metadata does not. That is the trade being made
+  for the dashboard, and it is why the plugin is opt-in per environment rather than always on.
+</Callout>
+
+Keeping it conditional is what preserves the "no lock-in" claim above. `dash()` adds no
+columns unless `activityTracking` or `managedDirectorySync` is enabled, and neither is,
+so backing it out is deleting the const and its spread - no migration to unwind.
+
+#### `sentinel` evaluated, not adopted
+
+The same package ships a security plugin covering breached-password rejection,
+disposable-email blocking, bot and geo blocking, velocity limits, impossible-travel
+detection, and device-keyed abuse prevention.
+
+Its device-level checks depend on the Better Auth **client** SDK, which fingerprints
+the browser and posts the record to Better Auth's KV so the server can load it back.
+The dashboard reaches the API through `@ordre/services`' own fetch client instead, so
+no identification record is ever created and the server resolves no visitor id. The
+consequences are not uniform degradation:
+
+| Check                                                  | Without a visitor id                 |
+| ------------------------------------------------------ | ------------------------------------ |
+| `compromisedPassword`, `emailValidation`, `staleUsers` | Work - evaluated server-side         |
+| `credentialStuffing`, `velocity`                       | Fall back to email and IP keying     |
+| `impossibleTravel`, `maxSignupsPerVisitor`             | Silently skipped                     |
+| Any `action: 'challenge'`                              | Degrades to allow                    |
+| `freeTrialAbuse`                                       | **Rejects every sign-up with a 403** |
+
+What still works costs two external round trips on the sign-in path and a deeper
+runtime dependency on the hosted service. Revisit only alongside a decision to adopt
+the Better Auth client. If it is ever enabled, `emailNormalization` must stay off: it
+rewrites addresses past lowercasing, which would break the invite address match in
+`apps/dashboard/src/views/Invite/model/useInviteState.ts`.
+
 ---
 
 ## 📱 SMS & WhatsApp - Twilio

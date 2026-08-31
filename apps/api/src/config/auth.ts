@@ -6,6 +6,7 @@ import { appOrigins, cookieDomain, urls } from '#/config/urls.ts';
 import { pushToOutbox } from '#/utils/outbox.ts';
 import { parseBetterAuthValidationDetails } from '#/utils/validation.ts';
 import { env } from '#env';
+import { dash } from '@better-auth/infra';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { APIError, createAuthMiddleware, isAPIError } from 'better-auth/api';
@@ -148,6 +149,14 @@ const signUpTopics = (user: Record<string, unknown>): AudienceTopic[] => {
   return user.productNewsOptIn === true ? ['product-news'] : [];
 };
 
+/**
+ * The Better Auth dashboard integration, mounted only when an API key is set.
+ *
+ * `dash()` falls back to an empty `apiKey`, so without this guard an environment
+ * with no key still mounts every dashboard endpoint.
+ */
+const dashPlugins = env.BETTER_AUTH_API_KEY ? [dash({ apiKey: env.BETTER_AUTH_API_KEY })] : [];
+
 // Better Auth Configuration
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -156,11 +165,13 @@ export const auth = betterAuth({
   }),
   secret: env.BETTER_AUTH_SECRET,
   baseURL: urls.api,
+  appName: `Ordre - ${env.APP_STAGE}`,
   basePath: `${API_BASE_PATH}${API_ROUTES.auth.base}`,
   trustedOrigins: [...appOrigins],
   advanced: {
     database: {
       generateId: 'uuid', // Set the IDs to be UUID
+      joins: true,
     },
     cookiePrefix: SESSION_COOKIE_PREFIX,
     crossSubDomainCookies: {
@@ -242,6 +253,7 @@ export const auth = betterAuth({
 
   plugins: [
     openAPI({ disableDefaultReference: true }), // We need Better Auth to generate the openAPI specs but not the paths
+    ...dashPlugins,
   ],
   databaseHooks: {
     user: {
