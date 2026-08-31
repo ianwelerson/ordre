@@ -111,6 +111,7 @@ describe('controllers/workspace/member.utils', () => {
         phone: '555-0100',
         createdAt: '2024-01-01T00:00:00.000Z',
         updatedAt: '2024-02-02T00:00:00.000Z',
+        locale: 'en',
       });
     });
 

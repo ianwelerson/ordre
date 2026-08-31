@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import {
+  LOCALES,
   WORKSPACE_INDUSTRIES,
   WORKSPACE_INVITE_STATUSES,
   WORKSPACE_MEMBER_ROLES,
@@ -46,6 +47,7 @@ export const WorkspaceMemberBaseSchema = z.object({
   phone: z.string().nullish(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
+  locale: z.enum(LOCALES),
 });
 
 export const WorkspaceLocationBaseSchema = z.object({

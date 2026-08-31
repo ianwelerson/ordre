@@ -175,6 +175,7 @@ export const toMemberBase = (member: WorkspaceMemberRow): WorkspaceMemberBase =>
   phone: member.phone,
   createdAt: member.createdAt.toISOString(),
   updatedAt: member.updatedAt.toISOString(),
+  locale: member.locale,
 });
 
 /**
