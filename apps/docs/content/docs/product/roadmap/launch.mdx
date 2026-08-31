@@ -17,53 +17,63 @@ and where it's headed.
 
 The features clients and workspace members experience.
 
-| Feature                    | Description                                                                            | Status |
-| -------------------------- | -------------------------------------------------------------------------------------- | ------ |
-| Registration & onboarding  | Industry selection, provider type (Individual / Business), contact info, password set in the flow; creates a user account and workspace. The invite half - accepting into an existing workspace - is built end to end | 🚧 |
-| Board creation and sharing | Unique link per job, shareable via SMS, email, or WhatsApp                              | 📋 |
-| Timeline updates           | Text and photo updates posted by members, visible to the client in real time           | 📋 |
-| Photo documentation        | Before/during/after shots attached to timeline updates                                 | 📋 |
-| Approval requests          | Formal approve/decline flow for scope or price changes                                 | 📋 |
-| Built-in chat              | Direct messaging between client and members inside the board                           | 📋 |
-| Phase tracker              | Template-defined progress stages (Full service type only)                              | 📋 |
-| Templates                  | Pre-built Quick and Full service-type templates; custom template creation              | 📋 |
-| Identity verification      | Sensitive fields blurred until the client verifies via email or phone                  | 📋 |
-| Multiple locations         | Workspaces can manage boards across more than one physical site                        | 📋 |
+| Feature                    | Description                                                                                                                                                                                                           | Status |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| Registration & onboarding  | Industry selection, provider type (Individual / Business), contact info, password set in the flow; creates a user account and workspace. The invite half - accepting into an existing workspace - is built end to end | 🚧     |
+| Board creation and sharing | Unique link per job, shareable via SMS, email, or WhatsApp                                                                                                                                                            | 📋     |
+| Timeline updates           | Text and photo updates posted by members, shown on the client's board                                                                                                                                                 | 📋     |
+| Photo documentation        | Before/during/after shots attached to timeline updates                                                                                                                                                                | 📋     |
+| Approval requests          | Formal approve/decline flow for scope or price changes                                                                                                                                                                | 📋     |
+| Built-in chat              | Direct messaging between client and members inside the board                                                                                                                                                          | 📋     |
+| Phase tracker              | Template-defined progress stages (Full service type only)                                                                                                                                                             | 📋     |
+| Templates                  | Pre-built Quick, Full, and Recurring service-type templates; custom template creation                                                                                                                                 | 📋     |
+| Identity verification      | Sensitive fields blurred until the client verifies via email or phone                                                                                                                                                 | 📋     |
+| Recurring services         | Boards for ongoing service relationships: visits on a schedule, per-visit reports, and reschedule requests in either direction                                                                                        | 📋     |
+| Multiple locations         | Workspaces can manage boards across more than one physical site. Location management is built; assigning a board to a site arrives with boards                                                                        | 🚧     |
+
+<Callout title="Boards update on load, not live">
+  A board reflects its timeline as of the moment it was loaded. Pushing changes to an open board is
+  deliberately out of launch scope; a board changes a handful of times a day, and the infrastructure
+  to fan those changes out is far easier to add to a working product than to carry through one that
+  doesn't exist yet. It's captured in [Ideas](/internal-docs/product/roadmap/ideas).
+</Callout>
 
 ## API
 
 Backend capabilities in [`apps/api`](/internal-docs/engineering/architecture) that power the product. See the [API Reference](/api-docs) for the live contract.
 
-| Capability                  | Description                                                                          | Status |
-| --------------------------- | ------------------------------------------------------------------------------------ | ------ |
-| Health check                | Liveness endpoint for uptime monitoring                                              | ✅ |
-| Authentication              | Better Auth - sign-up, sign-in, sessions, email verification                        | ✅ |
-| Authorization               | RBAC middleware in the app plus Postgres row-level security as the backstop          | ✅ |
-| Workspace management        | Create, read (by id/slug), update, delete, and slug-availability check               | ✅ |
-| Members & invitations       | Member endpoints (list, read, self-service profile/leave, update, remove, role change) plus admin invites (create, list, read, revoke) and the public invite flow (preview, accept, decline) | ✅ |
-| Locations                   | Location CRUD, default-location management, and assigning members to locations       | ✅ |
-| Transactional email         | Outbox worker delivering account, workspace, and invite emails through Resend - see [Transactional Outbox](/internal-docs/engineering/outbox) | ✅ |
-| Billing & subscriptions     | Billing data model in place; Stripe integration pending                             | 🚧 |
-| Boards                      | Board lifecycle, access tokens, and client-facing read model                        | 📋 |
-| Timeline & updates          | Posting and retrieving timeline entries with real-time fan-out                       | 📋 |
-| Photo uploads               | Pre-signed upload URLs and thumbnail generation                                      | 📋 |
-| Approvals                   | Approve/decline requests tied to a board                                             | 📋 |
-| Chat / messaging            | Board-scoped messaging between client and members                                    | 📋 |
-| Templates                   | Template storage and per-workspace customisation                                     | 📋 |
-| Client verification         | One-time email/SMS token flow for unblurring sensitive fields                        | 📋 |
+| Capability              | Description                                                                                                                                                                                  | Status |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| Health check            | Liveness endpoint for uptime monitoring                                                                                                                                                      | ✅     |
+| Authentication          | Better Auth - sign-up, sign-in, sessions, email verification                                                                                                                                 | ✅     |
+| Authorization           | RBAC middleware in the app plus Postgres row-level security as the backstop                                                                                                                  | ✅     |
+| Workspace management    | Create, read (by id/slug), update, delete, and slug-availability check                                                                                                                       | ✅     |
+| Members & invitations   | Member endpoints (list, read, self-service profile/leave, update, remove, role change) plus admin invites (create, list, read, revoke) and the public invite flow (preview, accept, decline) | ✅     |
+| Locations               | Location CRUD, default-location management, and assigning members to locations                                                                                                               | ✅     |
+| Transactional email     | Outbox worker delivering account, workspace, and invite emails through Resend - see [Transactional Outbox](/internal-docs/engineering/outbox)                                                | ✅     |
+| Contact & audience sync | A second outbox channel keeping Resend audience segments in step with workspace membership                                                                                                   | 🚧     |
+| Billing & subscriptions | Billing data model in place; Stripe integration pending                                                                                                                                      | 🚧     |
+| Boards                  | Board lifecycle, access tokens, and client-facing read model                                                                                                                                 | 📋     |
+| Timeline & updates      | Posting and retrieving timeline entries                                                                                                                                                      | 📋     |
+| Photo uploads           | Pre-signed upload URLs and thumbnail generation                                                                                                                                              | 📋     |
+| Approvals               | Approve/decline requests tied to a board                                                                                                                                                     | 📋     |
+| Chat / messaging        | Board-scoped messaging between client and members                                                                                                                                            | 📋     |
+| Templates               | Template storage and per-workspace customisation                                                                                                                                             | 📋     |
+| Client verification     | One-time email/SMS token flow for unblurring sensitive fields                                                                                                                                | 📋     |
+| Recurring services      | Recurrence configuration, visit scheduling, and schedule change requests                                                                                                                     | 📋     |
 
 ## Apps
 
 The runnable surfaces of the product.
 
-| App                                     | Stack                                    | Status |
-| --------------------------------------- | ---------------------------------------- | ------ |
-| API (`api.ordre.app`)                   | Express on Railway                       | 🚧 |
-| Dashboard (`dashboard.ordre.app`)       | Next.js - used by workspace members. Auth screens done, see below | 🚧 |
-| Client board (`go.ordre.app`)           | React Router v8, framework mode (SSR)    | 🚧 |
-| Marketing site (`ordre.app`)            | Next.js                                  | 🚧 |
-| Storybook (`storybook.ordre.app`)       | Component docs for `@ordre/ui`           | ✅ |
-| Docs & API reference (`docs.ordre.app`) | Fumadocs - guides plus the API reference | ✅ |
+| App                                     | Stack                                                             | Status |
+| --------------------------------------- | ----------------------------------------------------------------- | ------ |
+| API (`api.ordre.app`)                   | Express on Railway                                                | 🚧     |
+| Dashboard (`dashboard.ordre.app`)       | Next.js - used by workspace members. Auth screens done, see below | 🚧     |
+| Client board (`go.ordre.app`)           | React Router v8, framework mode (SSR)                             | 🚧     |
+| Marketing site (`ordre.app`)            | Next.js                                                           | 🚧     |
+| Storybook (`storybook.ordre.app`)       | Component docs for `@ordre/ui`                                    | ✅     |
+| Docs & API reference (`docs.ordre.app`) | Fumadocs - guides plus the API reference                          | ✅     |
 
 ### Dashboard screens
 
@@ -71,17 +81,30 @@ The signed-out surface is built; everything behind a session is still to come.
 Each screen is a view under `src/views/`, with its route in `src/app/(auth)/` or
 `src/app/(authenticated)/`.
 
-| Screen                             | Description                                                                                         | Status |
-| ---------------------------------- | --------------------------------------------------------------------------------------------------- | ------ |
-| Route gate (`src/proxy.ts`)        | Picks the auth shell or the app shell per request; carries the intended destination through `?next=` | ✅ |
-| Sign in (`/login`)                 | Email and password, keep-me-signed-in, arrival notices, and the `?next=` round trip                  | ✅ |
-| Forgot password (`/forgot-password`) | Requests the reset mail and swaps itself for the confirmation; reveals nothing about the address    | ✅ |
-| Set password (`/set-password`)     | Serves both the reset and the invite's first password, plus the expired-link dead end               | ✅ |
-| Invite (`/invite/:token`)          | Preview, sign-up-and-join, one-click join for a signed-in invitee, wrong-account, and error states   | ✅ |
-| Decline an invite                  | The API endpoint is live; the dashboard has no "not you?" action yet                                | 📋 |
-| Registration (`/get-started`)      | Placeholder screen. `/register` redirects here from `next.config.ts`; the flow in [Specs](/internal-docs/product/specs) is unbuilt | 🚧 |
-| Sign-in link (magic link)          | Drafted on the login screen and commented out pending the API endpoint                              | 📋 |
-| Workspace home, boards, members, settings | Everything behind the session                                                                 | 📋 |
+| Screen                               | Description                                                                                                                        | Status |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| Route gate (`src/proxy.ts`)          | Picks the auth shell or the app shell per request; carries the intended destination through `?next=`                               | ✅     |
+| Sign in (`/login`)                   | Email and password, keep-me-signed-in, arrival notices, and the `?next=` round trip                                                | ✅     |
+| Forgot password (`/forgot-password`) | Requests the reset mail and swaps itself for the confirmation; reveals nothing about the address                                   | ✅     |
+| Set password (`/set-password`)       | Serves both the reset and the invite's first password, plus the expired-link dead end                                              | ✅     |
+| Invite (`/invite/:token`)            | Preview, sign-up-and-join, one-click join for a signed-in invitee, wrong-account, and error states                                 | ✅     |
+| Decline an invite                    | The API endpoint is live; the dashboard has no "not you?" action yet                                                               | 📋     |
+| Registration (`/get-started`)        | Placeholder screen. `/register` redirects here from `next.config.ts`; the flow in [Specs](/internal-docs/product/specs) is unbuilt | 🚧     |
+| Sign-in link (magic link)            | Drafted on the login screen and commented out pending the API endpoint                                                             | 📋     |
+| Email verification                   | The screen that lets a verified address become a precondition for workspace actions                                                | 📋     |
+
+Behind the session, the shell and the four screens whose APIs are already complete
+come first; the board screens follow the Board API.
+
+| Screen             | Description                                                                                      | Status |
+| ------------------ | ------------------------------------------------------------------------------------------------ | ------ |
+| Shell & navigation | Sidebar, workspace switcher, location switcher, notifications                                    | 📋     |
+| Home               | Workspace activity at a glance; empty until boards exist                                         | 📋     |
+| Team               | Member list, invites, role changes, removal. The API covers every action on this screen          | 📋     |
+| User settings      | Profile and locale. Notification and working-hours preferences need tables that aren't built yet | 📋     |
+| Workspace settings | General, branding, and locations. Services, plan, channels, and templates arrive with their APIs | 📋     |
+| Boards             | List, creation, and the member-side board detail                                                 | 📋     |
+| Clients & messages | Client records and board-scoped conversations                                                    | 📋     |
 
 The five built screens share one anatomy - `AuthCard`, `AuthHeading`, `AuthAction`,
 `AuthFootnote` in `src/shared/components/` - so the card width, the spacing rhythm
@@ -91,32 +114,32 @@ and the primary action are decided once rather than per screen.
 
 Hosting and third-party services. See [Infrastructure](/internal-docs/engineering/infrastructure) for the reasoning behind each choice.
 
-| Service           | Role                                                            | Status |
-| ----------------- | -------------------------------------------------------------- | ------ |
-| Vercel            | Frontend hosting for all apps                                  | ✅ |
-| Cloudflare DNS    | Domain and DNS for `ordre.app`                                 | ✅ |
-| Better Auth       | Workspace member authentication (clients excluded)            | ✅ |
-| pino logging      | Structured logs via `@ordre/monitoring`                       | ✅ |
-| Resend            | Transactional email, delivered through the outbox worker      | ✅ |
-| Railway           | Backend compute; Express as a persistent containerised service | 🚧 |
-| Neon              | Serverless PostgreSQL database                                 | 🚧 |
-| Sentry            | Error tracking (release tracking in CI; SDK integration pending) | 🚧 |
-| Cloudflare R2     | Image storage (S3-compatible, zero egress)                    | 📋 |
-| Upstash Redis     | Real-time pub/sub (Socket.io) and board caching               | 📋 |
-| Twilio            | SMS and WhatsApp delivery                                      | 📋 |
-| Stripe            | Subscription billing with localised pricing                   | 📋 |
-| Umami             | Privacy-first, cookieless analytics                           | 📋 |
-| Better Stack      | Centralised log platform and uptime monitoring                | 📋 |
+| Service        | Role                                                             | Status |
+| -------------- | ---------------------------------------------------------------- | ------ |
+| Vercel         | Frontend hosting for all apps                                    | ✅     |
+| Cloudflare DNS | Domain and DNS for `ordre.app`                                   | ✅     |
+| Better Auth    | Workspace member authentication (clients excluded)               | ✅     |
+| pino logging   | Structured logs via `@ordre/monitoring`                          | ✅     |
+| Resend         | Transactional email, delivered through the outbox worker         | ✅     |
+| Railway        | Backend compute; Express as a persistent containerised service   | 🚧     |
+| Neon           | Serverless PostgreSQL database                                   | 🚧     |
+| Sentry         | Error tracking (release tracking in CI; SDK integration pending) | 🚧     |
+| Cloudflare R2  | Image storage (S3-compatible, zero egress)                       | 📋     |
+| Upstash Redis  | Board and workspace caching                                      | 📋     |
+| Twilio         | SMS and WhatsApp delivery                                        | 📋     |
+| Stripe         | Subscription billing with localised pricing                      | 📋     |
+| Umami          | Privacy-first, cookieless analytics                              | 📋     |
+| Better Stack   | Centralised log platform and uptime monitoring                   | 📋     |
 
 ## Pricing & Billing
 
 The commercial layer. See [Pricing & Billing](/internal-docs/product/pricing) for the full model.
 
-| Item                    | Description                                                              | Status |
-| ----------------------- | ----------------------------------------------------------------------- | ------ |
-| Free tier               | 3 active boards, 1 location, no team members                            | 📋 |
-| Premium tier            | Up to 20 active boards, up to 3 team members, 1 location                | 📋 |
-| Add-ons                 | Unlimited boards, unlimited team members, unlimited locations           | 📋 |
-| Founding member pricing | Reduced rate for early adopters, locked in for the subscription's life  | 📋 |
-| Annual billing          | ~17% discount over monthly, on both normal and founding pricing         | 📋 |
-| Stripe billing          | Localised pricing (USD, CAD, BRL) and full subscription lifecycle       | 📋 |
+| Item                    | Description                                                            | Status |
+| ----------------------- | ---------------------------------------------------------------------- | ------ |
+| Free tier               | 3 active boards, 1 location, no team members                           | 📋     |
+| Premium tier            | Up to 20 active boards, up to 3 team members, 1 location               | 📋     |
+| Add-ons                 | Unlimited boards, unlimited team members, unlimited locations          | 📋     |
+| Founding member pricing | Reduced rate for early adopters, locked in for the subscription's life | 📋     |
+| Annual billing          | ~17% discount over monthly, on both normal and founding pricing        | 📋     |
+| Stripe billing          | Localised pricing (USD, CAD, BRL) and full subscription lifecycle      | 📋     |

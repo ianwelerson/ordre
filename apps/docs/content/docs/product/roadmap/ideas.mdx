@@ -9,27 +9,27 @@ designed - it's a place to capture possibilities and think them through before
 they're worth committing to.
 
 <Callout title="How to use this page">
-  Drop new ideas under the theme that fits best. Give each one a short **What**,
-  a **Why** it might be worth doing, and the **Open questions** or what it would
-  touch. When an idea graduates into committed work, promote it to the
-  [Launch](/internal-docs/product/roadmap/launch) checklist (or a future release scope) and
-  remove it from here.
+  Drop new ideas under the theme that fits best. Give each one a short **What**, a **Why** it might
+  be worth doing, and the **Open questions** or what it would touch. When an idea graduates into
+  committed work, promote it to the [Launch](/internal-docs/product/roadmap/launch) checklist (or a
+  future release scope) and remove it from here.
 </Callout>
 
 ## Product & Features
 
-### Recurring Service Type
+### Real-time Board Updates
 
-**What:** A board model for ongoing service relationships with repeating visits
-on a schedule - snow removal, lawn care, pool maintenance, cleaning.
+**What:** Push timeline entries, phase changes, and visit reports to an open
+board as they happen, rather than showing the state the board was loaded with.
 
-**Why:** Opens Ordre up to a whole category of service businesses the launch
-service types (Quick and Full) don't serve well.
+**Why:** A client watching a job in progress sees changes without reloading, and
+the chat stops needing a refresh to feel like a conversation.
 
-**Open questions:** This is a fundamentally different board model - open-ended
-rather than linear - and needs dedicated design for scheduling, per-visit
-timeline entries, and notification logic. Quick and Full share enough structure
-to ship together; Recurring needs focused work of its own.
+**Open questions:** Needs a pub/sub layer (Socket.io over Upstash Redis) and a
+subscription model that works for a client holding a token rather than a session,
+which is the same access problem the board read path has to solve first. Boards
+are useful without it, and adding it later doesn't invalidate the read model, so
+it waits until there's real usage to shape it.
 
 ### Client Portal (`portal.ordre.app`)
 
