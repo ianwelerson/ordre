@@ -222,6 +222,35 @@ describe('controllers/workspace/invite', () => {
 
       expect(result.status).toBe(500);
     });
+
+    it('returns MEMBER_OWNER_ROLE_FORBIDDEN when a non-owner tries to invite an owner', async () => {
+      const result = await workspaceInviteCreate(
+        workspace,
+        user,
+        { ...member, role: 'admin' },
+        createPayload({ role: 'owner' })
+      );
+
+      expect(result.status).toBe(403);
+      expect(result.body).toMatchObject({ code: 'MEMBER_OWNER_ROLE_FORBIDDEN' });
+    });
+
+    it('returns 201 when an owner invites an owner', async () => {
+      mockExpireStale();
+      mockActiveMember([]);
+      mockDb.query.workspaceInvite.findFirst.mockResolvedValueOnce(undefined);
+      mockInsert([inviteRow({ role: 'owner' })]);
+
+      const result = await workspaceInviteCreate(
+        workspace,
+        user,
+        member,
+        createPayload({ role: 'owner' })
+      );
+
+      expect(result.status).toBe(201);
+      expect(result.body).toMatchObject({ role: 'owner' });
+    });
   });
 
   describe('workspaceInviteDelete', () => {

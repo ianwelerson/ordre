@@ -55,8 +55,9 @@ import { locationInWorkspace } from './location.utils.ts';
  * @param workspace - The workspace the request is scoped to; owns the new invite.
  * @param member - The caller's workspace membership; recorded as the inviter.
  * @param payload - The invite fields to create; validated against `WorkspaceInviteCreateSchema`.
- * @returns The created `WorkspaceInvite` (201), `MEMBER_ALREADY_EXISTS` /
- *   `INVITE_ALREADY_PENDING` (409), `LOCATION_NOT_FOUND` (404), or an error response.
+ * @returns The created `WorkspaceInvite` (201), `MEMBER_OWNER_ROLE_FORBIDDEN` (403),
+ *   `MEMBER_ALREADY_EXISTS` / `INVITE_ALREADY_PENDING` (409), `LOCATION_NOT_FOUND` (404),
+ *   or an error response.
  */
 export const workspaceInviteCreate = async (
   workspace: WorkspaceContext,
@@ -72,6 +73,11 @@ export const workspaceInviteCreate = async (
 
     if (!parsedPayload.success) {
       return parsedPayload.response;
+    }
+
+    // Only an owner may invite an owner.
+    if (member.role !== 'owner' && parsedPayload.data.role === 'owner') {
+      return errorResponse(MEMBER_ERRORS, 'MEMBER_OWNER_ROLE_FORBIDDEN');
     }
 
     // Expire a stale pending invite for this email before the checks below.
