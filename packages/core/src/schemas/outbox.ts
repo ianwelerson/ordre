@@ -8,6 +8,7 @@ import {
   type OutboxVariable,
 } from '../enums/outbox.ts';
 import { WORKSPACE_MEMBER_ROLES } from '../enums/workspace.ts';
+import type { EmailDelivery, OutboxDelivery } from '../types/outbox.ts';
 
 /**
  * The schema one variable is validated with, chosen by the suffix in its name.
@@ -73,6 +74,22 @@ const OutboxVariablesSchema = z.object(
  * service, consuming all five attempts and dead-lettering a deliverable message.
  */
 const OutboxLocaleSchema = z.enum(LOCALES).catch(DEFAULT_LOCALE);
+
+/** Narrows a `<channel>:<topic>` string to a declared delivery. */
+const isOutboxDelivery = (value: string): value is OutboxDelivery => {
+  return value in OUTBOX_PAYLOAD_SCHEMAS;
+};
+
+/**
+ * Narrows a `<channel>:<topic>` string to a delivery the email channel carries.
+ *
+ * The channel half has to be checked as well as the pair being declared, because a
+ * topic no longer implies every channel: `contact:sync` is a real topic with no
+ * email template behind it.
+ */
+export const isEmailDelivery = (value: string): value is EmailDelivery => {
+  return isOutboxDelivery(value) && value.startsWith('email:');
+};
 
 /**
  * Every deliverable thing, keyed `<channel>:<topic>` - the registry that decides

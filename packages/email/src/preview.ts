@@ -1,7 +1,7 @@
 import { createElement, type ReactElement } from 'react';
 
 import type { Locale } from '@ordre/core/enums';
-import type { OutboxDelivery } from '@ordre/core/types';
+import type { EmailDelivery } from '@ordre/core/types';
 
 import { copyFor } from './copy.ts';
 import { TEMPLATES } from './registry.ts';
@@ -17,7 +17,7 @@ import { SAMPLES } from './samples.ts';
  * @example
  * const Preview = () => previewFor('email:invite:created', 'pt');
  */
-export const previewFor = (delivery: OutboxDelivery, locale: Locale): ReactElement => {
+export const previewFor = (delivery: EmailDelivery, locale: Locale): ReactElement => {
   const { copyKey, Component } = TEMPLATES[delivery];
   const props: Record<string, unknown> = {
     locale,

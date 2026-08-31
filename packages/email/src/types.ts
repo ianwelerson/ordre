@@ -1,5 +1,5 @@
 import type { Locale } from '@ordre/core/enums';
-import type { EmailCopyKeyFor, OutboxDelivery, OutboxVariablesFor } from '@ordre/core/types';
+import type { EmailCopyKeyFor, EmailDelivery, OutboxVariablesFor } from '@ordre/core/types';
 
 import type { Copy } from './copy.ts';
 
@@ -11,7 +11,7 @@ import type { Copy } from './copy.ts';
  * makes a template that reads an undeclared variable, or another message's copy,
  * a compile error rather than a test failure.
  */
-export type TemplateProps<D extends OutboxDelivery> = OutboxVariablesFor<D> & {
+export type TemplateProps<D extends EmailDelivery> = OutboxVariablesFor<D> & {
   locale: Locale;
   copy: Copy<EmailCopyKeyFor<D>>;
 };

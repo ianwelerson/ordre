@@ -2,12 +2,12 @@ import { type Locale, LOCALES, WORKSPACE_MEMBER_ROLES } from '@ordre/core/enums'
 import { emails as enCopy } from '@ordre/core/messages/en';
 import { emails as ptCopy } from '@ordre/core/messages/pt';
 import { OUTBOX_PAYLOAD_SCHEMAS } from '@ordre/core/schemas';
-import type { OutboxDelivery, OutboxPayloadFor } from '@ordre/core/types';
+import type { EmailDelivery, OutboxPayloadFor } from '@ordre/core/types';
 
 import { TEMPLATES } from './registry.ts';
 import { renderEmail } from './render.tsx';
 
-const DELIVERIES = Object.keys(OUTBOX_PAYLOAD_SCHEMAS) as OutboxDelivery[];
+const DELIVERIES = Object.keys(TEMPLATES) as EmailDelivery[];
 
 /** Every string in a copy block, including the ones nested inside the step list. */
 const copyStrings = (value: unknown, path = ''): [string, string][] => {
@@ -52,7 +52,7 @@ const sampleValue = (key: string) => {
  * Builds a payload from the delivery's own schema rather than a hand-written
  * fixture, so a variable added to a schema is automatically asserted on here.
  */
-const sampleFor = <D extends OutboxDelivery>(delivery: D, locale: Locale) => {
+const sampleFor = <D extends EmailDelivery>(delivery: D, locale: Locale) => {
   const shape = OUTBOX_PAYLOAD_SCHEMAS[delivery].shape.variables.shape;
   const variables: Record<string, string> = Object.fromEntries(
     Object.keys(shape).map((key) => [key, sampleValue(key)])
@@ -125,7 +125,7 @@ describe('renderEmail', () => {
   describe.each(LOCALES)('copy coverage in %s', (locale) => {
     const bundle = locale === 'en' ? enCopy : ptCopy;
 
-    it.each(Object.keys(TEMPLATES) as OutboxDelivery[])(
+    it.each(Object.keys(TEMPLATES) as EmailDelivery[])(
       '%s renders every string in its own copy block',
       async (delivery) => {
         const { payload } = sampleFor(delivery, locale);

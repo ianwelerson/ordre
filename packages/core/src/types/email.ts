@@ -1,5 +1,5 @@
 import type { WorkspaceMemberRole } from '../enums/workspace.ts';
-import type { OutboxDelivery } from './outbox.ts';
+import type { EmailDelivery } from './outbox.ts';
 
 /**
  * The copy every message renders, on top of the variables its payload carries.
@@ -99,7 +99,7 @@ export type EmailCopyKey = Exclude<keyof EmailMessages, 'shared'>;
  * registry in `@ordre/email` types its `copyKey` as this, so the compiler rejects
  * the pairing rather than a test catching it after the fact.
  */
-export type EmailCopyKeyFor<D extends OutboxDelivery> = {
+export type EmailCopyKeyFor<D extends EmailDelivery> = {
   'email:account:created': 'accountCreated';
   'email:account:verify-email': 'verifyEmail';
   'email:account:reset-password': 'resetPassword';

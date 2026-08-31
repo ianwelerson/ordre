@@ -1,4 +1,4 @@
-import type { OutboxDelivery, OutboxVariablesFor } from '@ordre/core/types';
+import type { EmailDelivery, OutboxVariablesFor } from '@ordre/core/types';
 
 const LINKS = {
   help_url: 'https://ordre.app/help',
@@ -12,7 +12,7 @@ const LINKS = {
  * deliberately findable placeholders. These exist to be looked at, so they read
  * like a real message.
  */
-export const SAMPLES: { [D in OutboxDelivery]: OutboxVariablesFor<D> } = {
+export const SAMPLES: { [D in EmailDelivery]: OutboxVariablesFor<D> } = {
   'email:account:created': {
     user_name: 'Ada Lovelace',
     user_email: 'ada@example.com',

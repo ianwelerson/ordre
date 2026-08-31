@@ -21,3 +21,6 @@ export type OutboxPayload = { [D in OutboxDelivery]: OutboxPayloadFor<D> }[Outbo
  * `<channel>:<topic>` without naming a template.
  */
 export type OutboxVariablesFor<D extends OutboxDelivery> = OutboxPayloadFor<D>['variables'];
+
+/** A delivery the email channel carries, so the template registry covers exactly those. */
+export type EmailDelivery = Extract<OutboxDelivery, `email:${string}`>;

@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 
-import type { EmailCopyKeyFor, OutboxDelivery } from '@ordre/core/types';
+import type { EmailCopyKeyFor, EmailDelivery } from '@ordre/core/types';
 
 import { AccountCreatedEmail } from './templates/account-created.tsx';
 import { InviteCreatedEmail } from './templates/invite-created.tsx';
@@ -10,7 +10,7 @@ import { WorkspaceCreatedEmail } from './templates/workspace-created.tsx';
 import type { TemplateProps } from './types.ts';
 
 /** What one delivery renders with: its copy block and the component that lays it out. */
-export type EmailTemplate<D extends OutboxDelivery> = {
+export type EmailTemplate<D extends EmailDelivery> = {
   copyKey: EmailCopyKeyFor<D>;
   Component: (props: TemplateProps<D>) => ReactElement;
 };
@@ -25,7 +25,7 @@ export type EmailTemplate<D extends OutboxDelivery> = {
  * `Component`'s props are that delivery's own variables, so a template reading a
  * variable its schema does not declare will not compile either.
  */
-export const TEMPLATES: { [D in OutboxDelivery]: EmailTemplate<D> } = {
+export const TEMPLATES: { [D in EmailDelivery]: EmailTemplate<D> } = {
   'email:account:created': { copyKey: 'accountCreated', Component: AccountCreatedEmail },
   'email:account:verify-email': { copyKey: 'verifyEmail', Component: VerifyEmail },
   'email:account:reset-password': { copyKey: 'resetPassword', Component: ResetPasswordEmail },

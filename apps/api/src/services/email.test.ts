@@ -5,6 +5,16 @@ import { sendEmail } from './email.ts';
 const { send } = vi.hoisted(() => ({ send: vi.fn() }));
 const { renderEmail } = vi.hoisted(() => ({ renderEmail: vi.fn() }));
 
+// Mutable rather than a frozen literal: the service reads the flag on every call,
+// so a case can flip it without reloading the module.
+const { envMock, log } = vi.hoisted(() => ({
+  envMock: { RESEND_API_KEY: 'test-key', DISABLE_OUTBOX_EMAIL: false },
+  log: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+}));
+
+vi.mock('#env', () => ({ env: envMock, default: envMock }));
+vi.mock('#/config/logger.ts', () => ({ logger: { child: () => log } }));
+
 // A class, not `vi.fn(() => ...)`: the service calls `new Resend(...)`, and an
 // arrow function is not constructible.
 vi.mock('resend', () => ({
@@ -48,6 +58,7 @@ const invitePayload: OutboxPayload = {
 describe('services/email', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    envMock.DISABLE_OUTBOX_EMAIL = false;
     send.mockResolvedValue({ data: { id: 'resend-id' }, error: null });
     renderEmail.mockResolvedValue({
       subject: 'Welcome to Ordre',
@@ -131,5 +142,37 @@ describe('services/email', () => {
       'Outbox row id "not-a-uuid" is not a uuid'
     );
     expect(send).not.toHaveBeenCalled();
+  });
+
+  describe('DISABLE_OUTBOX_EMAIL', () => {
+    beforeEach(() => {
+      envMock.DISABLE_OUTBOX_EMAIL = true;
+    });
+
+    /** Resolving is what marks the row processed, so a skipped message is dropped. */
+    it('renders and sends nothing when the flag is set', async () => {
+      await expect(sendEmail('account:created', payload, ROW_ID)).resolves.toBeUndefined();
+
+      expect(renderEmail).not.toHaveBeenCalled();
+      expect(send).not.toHaveBeenCalled();
+    });
+
+    it('names the row it skipped, so a missing email is traceable', async () => {
+      await sendEmail('account:created', payload, ROW_ID);
+
+      expect(log.info).toHaveBeenCalledWith(
+        { outboxId: ROW_ID, topic: 'account:created' },
+        expect.stringContaining('DISABLE_OUTBOX_EMAIL')
+      );
+    });
+
+    /**
+     * The check comes before the schema, so a row that would have dead-lettered on
+     * a bad payload is processed instead. That is the cost of the flag, and it is
+     * why it belongs in local development rather than on a deployed stage.
+     */
+    it('returns before the payload is validated', async () => {
+      await expect(sendEmail('workspace:created', payload, ROW_ID)).resolves.toBeUndefined();
+    });
   });
 });

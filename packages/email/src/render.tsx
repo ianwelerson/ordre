@@ -1,6 +1,6 @@
 import { render } from 'react-email';
 
-import type { OutboxDelivery, OutboxPayloadFor } from '@ordre/core/types';
+import type { EmailDelivery, OutboxPayloadFor } from '@ordre/core/types';
 
 import { copyFor } from './copy.ts';
 import { TEMPLATES } from './registry.ts';
@@ -27,7 +27,7 @@ export type RenderedEmail = {
  * @example
  * const { subject, html, text } = await renderEmail('email:invite:created', payload);
  */
-export const renderEmail = async <D extends OutboxDelivery>(
+export const renderEmail = async <D extends EmailDelivery>(
   delivery: D,
   payload: OutboxPayloadFor<D>
 ): Promise<RenderedEmail> => {

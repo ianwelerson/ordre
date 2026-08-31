@@ -1,23 +1,14 @@
-import env from '#env';
-import { Resend } from 'resend';
+import { getResend } from '#/config/email.ts';
+import { logger } from '#/config/logger.ts';
+import { parseOutboxPayload } from '#/utils/outbox-payload.ts';
+import { env } from '#env';
 import { z } from 'zod';
 
 import { type OutboxTopic } from '@ordre/core/enums';
-import { OUTBOX_PAYLOAD_SCHEMAS } from '@ordre/core/schemas';
-import type { OutboxDelivery, OutboxPayload } from '@ordre/core/types';
+import { isEmailDelivery } from '@ordre/core/schemas';
+import type { OutboxPayload } from '@ordre/core/types';
 
-let resend: Resend | undefined;
-
-/**
- * Built on first send, not at import.
- *
- * The SDK throws on an empty key from its constructor, and this module is pulled in
- * transitively by every producer (through the worker's provider registry), so doing
- * it at module scope takes down anything that imports a controller when the key is
- * unset. Deferring makes a missing key a delivery failure the outbox records and
- * retries, which is where it belongs.
- */
-const getResend = () => (resend ??= new Resend(env.RESEND_API_KEY));
+const log = logger.child({ service: 'email' });
 
 /**
  * Loads the template package on first send, for the same reason as the client above.
@@ -39,14 +30,6 @@ const getRenderEmail = async () => (await import('@ordre/email')).renderEmail;
 const EMAIL_FROM = 'Ordre <onboarding@ordre.app>';
 
 /**
- * Flattens a Zod error to one line: the message lands in the row's `last_error`
- * column, and a queued payload that no longer matches its schema is only
- * debuggable if that column says which field is wrong.
- */
-const formatIssues = (error: z.ZodError): string =>
-  error.issues.map(({ path, message }) => `${path.join('.') || '(root)'} - ${message}`).join('; ');
-
-/**
  * Sends one outbox row through Resend.
  *
  * The template is resolved here from the row's topic, not read off the payload, so
@@ -60,21 +43,29 @@ const formatIssues = (error: z.ZodError): string =>
  * `ErrorResponse` is rethrown as-is because it carries the `statusCode` the worker
  * classifies on.
  *
+ * `DISABLE_OUTBOX_EMAIL` returns before anything is rendered or sent. Resolving is
+ * what marks the row processed, so a skipped message is dropped rather than held.
+ *
  * @param topic - The business event the row was queued for.
  * @param payload - The outbox row's payload: recipient, locale and variables.
  * @param id - The outbox row id, used as the idempotency key so an at-least-once
  *   redelivery inside Resend's 24h window doesn't send twice.
  */
 export const sendEmail = async (topic: OutboxTopic, payload: OutboxPayload, id: string) => {
-  const delivery = `email:${topic}` satisfies OutboxDelivery;
-  const parsedPayload = z.safeParse(OUTBOX_PAYLOAD_SCHEMAS[delivery], payload);
-  const parsedId = z.safeParse(z.uuid(), id);
+  if (env.DISABLE_OUTBOX_EMAIL) {
+    log.info({ outboxId: id, topic }, 'outbox email skipped - DISABLE_OUTBOX_EMAIL is set');
 
-  if (!parsedPayload.success) {
-    throw new Error(
-      `Outbox row ${id} has a payload that does not match the schema for ${delivery}: ${formatIssues(parsedPayload.error)}`
-    );
+    return;
   }
+
+  const delivery = `email:${topic}`;
+
+  if (!isEmailDelivery(delivery)) {
+    throw new Error(`Outbox row ${id} has no email delivery for topic ${topic}`);
+  }
+
+  const parsedPayload = parseOutboxPayload(delivery, payload, id);
+  const parsedId = z.safeParse(z.uuid(), id);
 
   if (!parsedId.success) {
     throw new Error(
@@ -83,11 +74,11 @@ export const sendEmail = async (topic: OutboxTopic, payload: OutboxPayload, id: 
   }
 
   const renderEmail = await getRenderEmail();
-  const { subject, html, text } = await renderEmail(delivery, parsedPayload.data);
+  const { subject, html, text } = await renderEmail(delivery, parsedPayload);
 
   const { data, error } = await getResend().emails.send(
     {
-      to: parsedPayload.data.to,
+      to: parsedPayload.to,
       from: EMAIL_FROM,
       subject,
       html,
