@@ -201,8 +201,13 @@ export const drain = async (): Promise<number> => {
     try {
       await providers[row.channel](row.topic, row.payload, row.id);
 
+      // `last_error` is cleared on the way through: a row that failed once and then
+      // delivered would otherwise keep the message from the attempt that failed, and
+      // read as broken while sitting there processed.
       await db.execute(
-        sql`UPDATE outbox SET processed_at = now(), updated_at = now() WHERE id = ${row.id}`
+        sql`UPDATE outbox
+            SET processed_at = now(), updated_at = now(), last_error = NULL
+            WHERE id = ${row.id}`
       );
 
       delivered += 1;

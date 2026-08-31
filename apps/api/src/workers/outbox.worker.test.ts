@@ -349,6 +349,22 @@ describe('workers/outbox', () => {
       expect((await readRow(emailId)).processed_at).not.toBeNull();
       expect((await readRow(audienceId)).processed_at).toBeNull();
     });
+
+    it('clears a stale error once the row finally delivers', async () => {
+      const id = await insertAudienceRow();
+      syncAudienceContact.mockRejectedValueOnce(resendError(500));
+
+      await drain();
+      expect((await readRow(id)).last_error).not.toBeNull();
+
+      await db.execute(sql`UPDATE outbox SET next_attempt_at = now() WHERE id = ${id}`);
+      await drain();
+
+      const row = await readRow(id);
+
+      expect(row.processed_at).not.toBeNull();
+      expect(row.last_error).toBeNull();
+    });
   });
 
   describe('lifecycle', () => {
