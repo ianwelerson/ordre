@@ -14,13 +14,20 @@ type Context = { tx: Tx; afterCommit: (() => void)[] };
 const storage = new AsyncLocalStorage<Context>();
 
 /**
+ * A handle queries run through: the request transaction when there is one, the
+ * pooled connection when there is not. Named so a helper can take one without
+ * caring which it was given.
+ */
+export type DbHandle = Tx | typeof db;
+
+/**
  * The database handle to use everywhere in the request path.
  *
  * Inside a request (i.e. within `runWithUser`), this is the transaction that has
  * `app.user_id` set, so queries run under RLS. Outside a request (startup, or a
  * query before the middleware runs) it falls back to the plain pooled `db`.
  */
-export const getDb = (): Tx | typeof db => storage.getStore()?.tx ?? db;
+export const getDb = (): DbHandle => storage.getStore()?.tx ?? db;
 
 /**
  * Queues `fn` to run once the request transaction commits, or runs it immediately
