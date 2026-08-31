@@ -194,7 +194,7 @@ which snapshot is newest, not which became due first.
 | Knob  | Value     | Why                                                                                                                                                          |
 | ----- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Wake  | on commit | Where delivery latency actually comes from                                                                                                                   |
-| Sweep | 30 min    | Safety net only. Neon's free plan suspends after five idle minutes and bills for being awake, so a faster sweep keeps compute up 24/7 against an empty table |
+| Sweep | 1 hour    | Safety net only. Neon's free plan suspends after five idle minutes and bills for being awake, so a faster sweep keeps compute up 24/7 against an empty table |
 | Batch | 10        | A full batch means there may be more; the loop keeps draining until one comes back short                                                                     |
 
 The loop is a recursive `setTimeout`, not `setInterval` - `setInterval` does not

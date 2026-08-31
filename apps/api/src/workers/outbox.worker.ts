@@ -24,7 +24,7 @@ import type { OutboxPayload } from '@ordre/core/types';
  * it is the delivery mechanism, so that row arrives between its own delay and
  * that delay plus one sweep.
  */
-const SWEEP_MS = 30 * 60 * 1000;
+const SWEEP_MS = 60 * 60 * 1000;
 
 const BATCH = 10;
 
