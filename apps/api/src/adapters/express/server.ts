@@ -5,7 +5,7 @@ import cors from 'cors';
 import express, { type Express, type NextFunction, type Request, type Response } from 'express';
 import helmet from 'helmet';
 
-import { API_BASE_PATH } from '@ordre/core/constants';
+import { API_BASE_PATH, API_ROUTES } from '@ordre/core/constants';
 import { httpLogger } from '@ordre/monitoring/server';
 
 import { clientIp } from './middlewares/client-ip.ts';
@@ -51,7 +51,12 @@ app.use(helmet());
 // Credentialed CORS against an explicit origin list.
 app.use(cors({ origin: [...appOrigins], credentials: true }));
 
-app.use(httpLogger('api', !isTest()));
+app.use(
+  httpLogger('api', {
+    enabled: !isTest(),
+    quietPaths: [`${API_BASE_PATH}${API_ROUTES.health}`],
+  })
+);
 
 // Above the routes so everything below - Better Auth included - reads one
 // resolved client IP rather than re-deriving its own from the forwarded chain.
