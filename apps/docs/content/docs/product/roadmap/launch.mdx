@@ -4,32 +4,87 @@ icon: Rocket
 description: The committed scope for Ordre's initial release - a living map of what's built and what's still planned.
 ---
 
-Everything here is committed for the initial release. This page is a living map
-of scope, grouped by layer - the product features clients and members see, the
-API that powers them, the apps that ship them, the platform they run on, and the
+Everything here is committed for the initial release. The page opens with the
+order the work is being done in, then lists the full scope grouped by layer - the
+product features clients and members see, the API that powers them, the apps that
+ship them, the foundations underneath, the platform they run on, and the
 commercial layer. The **Status** column shows where each piece stands today.
-There are no dates or deadlines; it's a picture of the product's current state
-and where it's headed.
+There are no dates or deadlines; the order is a sequence, not a schedule.
 
 **Status key:** ✅ Done · 🚧 In progress · 📋 Planned
+
+## The order of work
+
+Grouping by layer is how you find something on this page, not how it gets built.
+The build order follows one rule: work whose cost rises the longer it waits goes
+first. A change to an API contract is nearly free while no screen consumes it and
+a breaking change once one does, so contract changes land ahead of the screens
+that will depend on them. The same logic puts a few pieces of security and
+logging work early, next to the features they protect, rather than in a cleanup
+phase at the end.
+
+### In progress: creating an account
+
+The last unbuilt part of the signed-out product. Someone invited into an existing
+workspace can already complete the whole flow; what is missing is creating a
+workspace from nothing. That flow collects the industry, the kind of provider, a
+name, an optional business name, the workspace address, contact details and a
+password, then creates the account and the workspace together.
+
+Three things ship alongside it. The screen that confirms an email address, which
+is what allows a verified address to become a requirement rather than a
+suggestion. A way to turn down an invite meant for somebody else. And request
+limits on the public endpoints this flow leans on, since checking whether a
+workspace address is free is a question anyone can ask without an account.
+
+### Next: the workspace behind the session
+
+Everything that requires a sign-in. The shell comes first, because it decides
+where the current workspace and location live for every screen after it, followed
+by the home screen it lands on, then team management, workspace settings and
+personal settings.
+
+Most of this is interface work: the API already covers every action on the team
+screen and nearly all of workspace settings. One API change comes first, though,
+because it gets expensive later - every list endpoint gains a consistent envelope
+for paging before any screen starts reading one.
+
+### Then: boards
+
+The product itself, and the largest block of work on this page. It starts with a
+design question rather than code: clients reach a board through a link and never
+create an account, so none of the existing access rules describe them. Settling
+how a board decides what a link-holder may see comes before the schema, the
+tokens, and the client-facing read model that depend on it.
+
+The API arrives first - boards, clients, templates, the timeline, approvals,
+photos, chat, verification and recurring visits - then the screens on both sides:
+the member's working view in the dashboard, and the board the client opens.
+
+### Finally: opening the doors
+
+Subscription billing with localised pricing, the public marketing site, and the
+switches that let a surface be closed without a deploy. Ahead of any of it, the
+backend and database move onto their production plans, which is the point several
+of the foundations below are working towards.
 
 ## Product
 
 The features clients and workspace members experience.
 
-| Feature                    | Description                                                                                                                                                                                                           | Status |
-| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| Registration & onboarding  | Industry selection, provider type (Individual / Business), contact info, password set in the flow; creates a user account and workspace. The invite half - accepting into an existing workspace - is built end to end | 🚧     |
-| Board creation and sharing | Unique link per job, shareable via SMS, email, or WhatsApp                                                                                                                                                            | 📋     |
-| Timeline updates           | Text and photo updates posted by members, shown on the client's board                                                                                                                                                 | 📋     |
-| Photo documentation        | Before/during/after shots attached to timeline updates                                                                                                                                                                | 📋     |
-| Approval requests          | Formal approve/decline flow for scope or price changes                                                                                                                                                                | 📋     |
-| Built-in chat              | Direct messaging between client and members inside the board                                                                                                                                                          | 📋     |
-| Phase tracker              | Template-defined progress stages (Full service type only)                                                                                                                                                             | 📋     |
-| Templates                  | Pre-built Quick, Full, and Recurring service-type templates; custom template creation                                                                                                                                 | 📋     |
-| Identity verification      | Sensitive fields blurred until the client verifies via email or phone                                                                                                                                                 | 📋     |
-| Recurring services         | Boards for ongoing service relationships: visits on a schedule, per-visit reports, and reschedule requests in either direction                                                                                        | 📋     |
-| Multiple locations         | Workspaces can manage boards across more than one physical site. Location management is built; assigning a board to a site arrives with boards                                                                        | 🚧     |
+| Feature                    | Description                                                                                                                                                                                                                                                                             | Status |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| Registration & onboarding  | Industry, provider type (Individual / Business), name, an optional business name, the workspace address, contact info and a password, all set in the flow; creates the account and the workspace together. The invite half - accepting into an existing workspace - is built end to end | 🚧     |
+| Board creation and sharing | Unique link per job, shareable via SMS, email, or WhatsApp                                                                                                                                                                                                                              | 📋     |
+| Timeline updates           | Text and photo updates posted by members, shown on the client's board                                                                                                                                                                                                                   | 📋     |
+| Photo documentation        | Before/during/after shots attached to timeline updates                                                                                                                                                                                                                                  | 📋     |
+| Approval requests          | Formal approve/decline flow for scope or price changes                                                                                                                                                                                                                                  | 📋     |
+| Built-in chat              | Direct messaging between client and members inside the board                                                                                                                                                                                                                            | 📋     |
+| Phase tracker              | Template-defined progress stages (Full service type only)                                                                                                                                                                                                                               | 📋     |
+| Templates                  | Pre-built Quick, Full, and Recurring service-type templates; custom template creation                                                                                                                                                                                                   | 📋     |
+| Identity verification      | Sensitive fields blurred until the client verifies via email or phone                                                                                                                                                                                                                   | 📋     |
+| Recurring services         | Boards for ongoing service relationships: visits on a schedule, per-visit reports, and reschedule requests in either direction                                                                                                                                                          | 📋     |
+| Multiple locations         | Workspaces can manage boards across more than one physical site. Location management is built; assigning a board to a site arrives with boards                                                                                                                                          | 🚧     |
 
 <Callout title="Boards update on load, not live">
   A board reflects its timeline as of the moment it was loaded. Pushing changes to an open board is
@@ -81,17 +136,17 @@ The signed-out surface is built; everything behind a session is still to come.
 Each screen is a view under `src/views/`, with its route in `src/app/(auth)/` or
 `src/app/(authenticated)/`.
 
-| Screen                               | Description                                                                                                                        | Status |
-| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| Route gate (`src/proxy.ts`)          | Picks the auth shell or the app shell per request; carries the intended destination through `?next=`                               | ✅     |
-| Sign in (`/login`)                   | Email and password, keep-me-signed-in, arrival notices, and the `?next=` round trip                                                | ✅     |
-| Forgot password (`/forgot-password`) | Requests the reset mail and swaps itself for the confirmation; reveals nothing about the address                                   | ✅     |
-| Set password (`/set-password`)       | Serves both the reset and the invite's first password, plus the expired-link dead end                                              | ✅     |
-| Invite (`/invite/:token`)            | Preview, sign-up-and-join, one-click join for a signed-in invitee, wrong-account, and error states                                 | ✅     |
-| Decline an invite                    | The API endpoint is live; the dashboard has no "not you?" action yet                                                               | 📋     |
-| Registration (`/get-started`)        | Placeholder screen. `/register` redirects here from `next.config.ts`; the flow in [Specs](/internal-docs/product/specs) is unbuilt | 🚧     |
-| Sign-in link (magic link)            | Drafted on the login screen and commented out pending the API endpoint                                                             | 📋     |
-| Email verification                   | The screen that lets a verified address become a precondition for workspace actions                                                | 📋     |
+| Screen                               | Description                                                                                                                                             | Status |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| Route gate (`src/proxy.ts`)          | Picks the auth shell or the app shell per request; carries the intended destination through `?next=`                                                    | ✅     |
+| Sign in (`/login`)                   | Email and password, keep-me-signed-in, arrival notices, and the `?next=` round trip                                                                     | ✅     |
+| Forgot password (`/forgot-password`) | Requests the reset mail and swaps itself for the confirmation; reveals nothing about the address                                                        | ✅     |
+| Set password (`/set-password`)       | Serves both the reset and the invite's first password, plus the expired-link dead end                                                                   | ✅     |
+| Invite (`/invite/:token`)            | Preview, sign-up-and-join, one-click join for a signed-in invitee, wrong-account, and error states                                                      | ✅     |
+| Decline an invite                    | The API endpoint is live; the dashboard has no "not you?" action yet                                                                                    | 📋     |
+| Registration (`/get-started`)        | Placeholder screen. `/register` redirects here from `next.config.ts`. The flow in [Specs](/internal-docs/product/specs) is designed and being built now | 🚧     |
+| Sign-in link (magic link)            | Drafted on the login screen and commented out pending the API endpoint                                                                                  | 📋     |
+| Email verification                   | The screen that lets a verified address become a precondition for workspace actions                                                                     | 📋     |
 
 Behind the session, the shell and the four screens whose APIs are already complete
 come first; the board screens follow the Board API.
@@ -109,6 +164,25 @@ come first; the board screens follow the Board API.
 The five built screens share one anatomy - `AuthCard`, `AuthHeading`, `AuthAction`,
 `AuthFootnote` in `src/shared/components/` - so the card width, the spacing rhythm
 and the primary action are decided once rather than per screen.
+
+## Foundations
+
+Work that sits under every feature rather than inside one. It appears here because
+it takes real time and because several pieces are preconditions for running the
+product in production rather than optional polish.
+
+| Area                | What it covers                                                                                                     | Status |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------ | ------ |
+| Log hygiene         | Session cookies, invite tokens and query parameters scrubbed from every log record                                 | ✅     |
+| Process resilience  | Dropped database connections and uncaught failures handled rather than ending the process                          | ✅     |
+| Invite privileges   | An administrator cannot issue an invite that grants more than they hold                                            | ✅     |
+| Rate limiting       | Request limits on the public endpoints: sign-in, sign-up, password reset, invites, and the workspace address check | 📋     |
+| Email verification  | A confirmed address as a precondition for acting inside a workspace                                                | 📋     |
+| List paging         | One envelope and one cursor convention across every list endpoint                                                  | 📋     |
+| Request correlation | An id on every request, joining its access log line to any error it produced and returned to the caller            | 📋     |
+| Error reporting     | A single place unexpected failures pass through, so an error tracker plugs in once rather than per handler         | 📋     |
+| Database backstop   | Suspended members excluded by the database itself, not only by the application                                     | 📋     |
+| Production capacity | Connection limits and transaction scope chosen deliberately rather than inherited from defaults                    | 📋     |
 
 ## Platform & Services
 

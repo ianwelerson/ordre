@@ -168,10 +168,11 @@ The registration flow creates a new user account and a workspace. The person reg
    - Business (registered entity, any size)
 3. **Enter first and last name** - two separate required fields. The account stores both, and the full name is composed from them rather than entered on its own
 4. **Enter business name** _(optional)_ - if left blank, the person name is used as the workspace display name
-5. **Enter contact info** - email (required) and phone number (optional). This is the user's personal contact info; workspace-level contact info can be configured later in settings.
-6. **Create password** - the account password is chosen here, in the flow, and confirmed in a second field
-7. **Marketing consent** _(optional)_ - an unticked checkbox for product news. Nothing else subscribes an account, and leaving it alone is a complete answer
-8. **Review and submit**
+5. **Confirm the workspace address** - the display name from the previous step is slugified into a slug field that stays editable, and availability is checked as it changes. The slug identifies the workspace in URLs
+6. **Enter contact info** - email (required) and phone number (optional). This is the user's personal contact info; workspace-level contact info can be configured later in settings.
+7. **Create password** - the account password is chosen here, in the flow, and confirmed in a second field
+8. **Marketing consent** _(optional)_ - an unticked checkbox for product news. Nothing else subscribes an account, and leaving it alone is a complete answer
+9. **Review and submit**
 
 ---
 
@@ -182,5 +183,9 @@ The registration flow creates a new user account and a workspace. The person reg
 - First and last name are both required, and neither may be blank. They are what the workspace member's display name is seeded from on a first join, and what the Resend contact carries, so a single free-text name field would not do
 - Industry selection is used for template recommendations only - it does not lock the workspace into a category; any template can be used regardless of selected industry
 - Provider type (Individual / Business) is stored for future use (invoicing, branding) but does not affect available features at this stage
+- The slug is seeded from the workspace display name and remains editable. The availability check has to agree with what workspace creation accepts, so a reserved or protected slug reports as unavailable rather than free
+- Slugification folds an accented character to its base letter before removing anything else, so `Açaí Manutenção` becomes `acai-manutencao` rather than dropping the accented letters. One transform in `@ordre/core` defines this, and both the registration flow and the API schema use it
+- A display name that slugifies to nothing, such as punctuation alone or a non-Latin script, is not rejected as a name. The flow asks for a slug directly instead
+- Leaving the business name blank means the person's name becomes the workspace display name, and so the public slug
 - The password is set during registration, so the account is usable as soon as the form is submitted - a forgotten password is recovered through the reset link on the login page
 - The workspace owner can later invite additional members (admin or member roles) from the dashboard
