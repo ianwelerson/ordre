@@ -1,0 +1,130 @@
+---
+title: Foundations
+icon: Ruler
+description: The tokens everything else is built from - color, typography, elevation, spacing, and radius.
+---
+
+## Color System
+
+### Philosophy
+
+The palette is rooted in earth tones (Amber, Sage, Ash) and polished by Midnight. We do not use "blue" to signify technology; we use precision, layout, and warm neutrals. Ordre's trust signal comes from craftsmanship, not the default SaaS blue.
+
+### Core Palette
+
+| Role           | Name       | Hex       | Usage                                               |
+| -------------- | ---------- | --------- | --------------------------------------------------- |
+| Primary Text   | Midnight   | `#1A1D26` | Headlines, primary text, high-authority UI elements |
+| Secondary Text | Slate      | `#3A3F4B` | Body text, descriptions, secondary labels           |
+| Accent         | Amber      | `#E0913E` | Primary CTAs, active states, highlights, links      |
+| Accent Hover   | Deep Amber | `#C67A2E` | Hover/pressed states on accent elements             |
+| Success        | Sage       | `#5B9A6F` | Completed states, confirmations, positive feedback  |
+| Surface        | Snow       | `#FAFAF8` | Primary page backgrounds                            |
+| Surface Alt    | Warm Gray  | `#F0EEEB` | Section alternation, sidebars, input fields         |
+| Border         | Ash        | `#D9D6D0` | Subtle dividers, card borders, input borders        |
+| Muted          | Stone      | `#8A8680` | Captions, timestamps, helper text, placeholders     |
+| Elevated       | White      | `#FFFFFF` | Cards, modals, elevated surfaces, overlays          |
+| Error          | Brick      | `#C44B3F` | Error states, destructive actions, urgent badges    |
+
+### Surface Hierarchy
+
+Three tiers only. Complexity in surface layering creates visual noise, not depth.
+
+| Layer     | Token         | Hex       | When to use                              |
+| --------- | ------------- | --------- | ---------------------------------------- |
+| Page      | `surface`     | `#FAFAF8` | The base page background                 |
+| Container | `surface-alt` | `#F0EEEB` | Sidebars, grouped sections, input fields |
+| Elevated  | `surface-top` | `#FFFFFF` | Cards, modals, popovers on any bg        |
+
+### Accent Rules
+
+- **Amber** (`#E0913E`) - The spark in the workshop. Used for primary CTAs, active navigation states, links, and interactive highlights. Use sparingly - if everything is amber, nothing is.
+- **Midnight** (`#1A1D26`) - Our ink. Primary text, headings, and high-authority UI elements like dark section backgrounds.
+- **Sage** (`#5B9A6F`) - Completed/success states only. Not for decoration.
+- **Brick** (`#C44B3F`) - Errors and destructive actions only. Not for warnings (use Amber for warnings).
+
+### Border Usage
+
+Borders are a legitimate UI tool. The rule is restraint, not prohibition.
+
+- **Cards and containers:** Use `Ash` at 1px when the card sits on a same-tone background and tonal contrast alone is insufficient.
+- **Inputs:** Use `Ash` at 1px in default state; `Amber` at 1px in focus state.
+- **Section dividers:** Prefer spacing (24–48px) or background shifts. Use a 1px `Ash` divider only when layout alone doesn't create a clear enough boundary.
+- **Sidebar boundaries:** No border - the tonal shift from Warm Gray to White creates the boundary.
+- **Data tables:** 1px `Ash` borders between rows are acceptable and often necessary for scanability.
+- **Never:** Thick borders (2px+), colored borders for decoration, or borders as a primary design motif.
+---
+
+## Typography
+
+### Philosophy
+
+Two font families. One for brand personality (headings), one for functional precision (everything else). Plus Jakarta Sans is the **brand voice** - authoritative but human. Geist is the **functional voice** - geometric precision for all interface text.
+
+### Font Stack
+
+| Role       | Font              | Weight         | Size    | Tracking | Line Height | Usage                                     |
+| ---------- | ----------------- | -------------- | ------- | -------- | ----------- | ----------------------------------------- |
+| Display    | Plus Jakarta Sans | 700 (Bold)     | 48–72px | -0.02em  | 1.1         | Hero headlines, marketing pages           |
+| Heading    | Plus Jakarta Sans | 600 (SemiBold) | 24–36px | -0.015em | 1.2         | Page titles, section headings             |
+| Subheading | Geist             | 500 (Medium)   | 18–20px | 0        | 1.4         | Card titles, feature labels, sub-sections |
+| Body       | Geist             | 400 (Regular)  | 15–16px | 0        | 1.6         | Paragraphs, descriptions, UI text         |
+| Small      | Geist             | 400 (Regular)  | 12–13px | 0        | 1.5         | Captions, helper text, metadata           |
+| Mono       | Geist Mono        | 400 (Regular)  | 13–14px | 0        | 1.5         | Tokens, board IDs, timestamps, codes      |
+
+### Typography Rules
+
+- **Plus Jakarta Sans** is used only for `display` and `heading` roles. Never for body text or UI labels.
+- **Geist** handles all body copy, labels, buttons, and interface text.
+- **Geist Mono** reinforces the craftsman's-tool identity. Use for board tokens (`go.ordre.app/XYZ`), timestamps, serial numbers, metadata, and any technical value.
+- **Never use pure black** (`#000000`). Always use Midnight (`#1A1D26`) for text.
+- Display type (48px+) should always use negative letter-spacing (-0.02em) for a tight, editorial feel.
+---
+
+## Elevation & Depth
+
+### Tonal Layering (Primary Method)
+
+Depth is primarily achieved by stacking surface tiers. To make a component feel elevated, place a White (`#FFFFFF`) card on a Snow (`#FAFAF8`) or Warm Gray (`#F0EEEB`) background. The tonal contrast does the work.
+
+### Shadows (Reserved for Interaction)
+
+Shadows are not decorative. They are reserved for interactive feedback:
+
+- **Hover on cards/clickable surfaces:** `box-shadow: 0 4px 16px rgba(26, 29, 38, 0.06);`
+- **Modals and overlays:** `box-shadow: 0 12px 40px rgba(26, 29, 38, 0.08);`
+- **Popovers and dropdowns:** `box-shadow: 0 4px 12px rgba(26, 29, 38, 0.08);`
+- **Default resting state:** No shadow.
+
+### Overlays
+
+For floating menus, modals, and command palettes: `#FFFFFF` at 92% opacity with `backdrop-filter: blur(12px)`.
+---
+
+## Spacing & Radius
+
+### Spacing Scale
+
+| Token | Value | Usage                                              |
+| ----- | ----- | -------------------------------------------------- |
+| `xs`  | 4px   | Inline icon gaps, tight label padding              |
+| `sm`  | 8px   | Between related elements, chip padding             |
+| `md`  | 12px  | Input internal padding, list item vertical spacing |
+| `lg`  | 16px  | Card internal padding (minimum), grid gaps         |
+| `xl`  | 24px  | Card internal padding (standard), section gaps     |
+| `2xl` | 32px  | Between content groups                             |
+| `3xl` | 48px  | Between major page sections                        |
+| `4xl` | 64px  | Hero spacing, page-level breathing room            |
+| `5xl` | 80px  | Between top-level sections on marketing pages      |
+
+### Border Radius
+
+| Token  | Value  | Usage                                          |
+| ------ | ------ | ---------------------------------------------- |
+| `sm`   | 4px    | Chips, small badges                            |
+| `md`   | 8px    | Buttons, inputs, small cards                   |
+| `lg`   | 12px   | Cards, containers, modals                      |
+| `xl`   | 16px   | Large hero cards, marketing sections           |
+| `full` | 9999px | Avatars, status indicators, pill-shaped badges |
+
+**Never use 0px radius.** Every interactive or container element should have at least `sm` (4px).

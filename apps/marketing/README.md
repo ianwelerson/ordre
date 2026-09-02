@@ -17,7 +17,7 @@ Built with **[Next.js 16](https://nextjs.org/) (App Router)**, React 19, [`@ordr
 
 ## 🚀 Getting Started
 
-Install and run the whole stack from the repo root - see **[Setup → Running the Project](../docs/content/docs/setup/running-the-project.mdx)**. To run only this app:
+Install and run the whole stack from the repo root - see **[Setup → Running the Project](../docs/content/docs/start/running-the-project.mdx)**. To run only this app:
 
 ```bash
 pnpm --filter marketing dev
@@ -31,6 +31,6 @@ pnpm --filter marketing dev
 
 The folder layout (`app/` · `views/` · `shared/`), the import alias, and the locale routing (`en` unprefixed, `pt` under `/br`) are documented once in the docs project:
 
-- [Architecture → Marketing App Structure](../docs/content/docs/engineering/architecture.mdx#-marketing)
-- [Architecture → i18n Structure](../docs/content/docs/engineering/architecture.mdx#-i18n-structure)
+- [Architecture → Marketing App Structure](../docs/content/docs/architecture/apps.mdx#marketing)
+- [Architecture → i18n Structure](../docs/content/docs/architecture/conventions.mdx#i18n-structure)
 - [Root README](../../README.md) - monorepo overview

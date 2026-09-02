@@ -98,7 +98,7 @@ Brazil routes.
 
 **Open questions:** Best unlocked by abstracting the messaging layer behind a
 `NotificationService` interface in `@ordre/services` so the provider is a swap,
-not a rewrite. See [Infrastructure - SMS Alternative](/internal-docs/engineering/infrastructure).
+not a rewrite. See [Infrastructure - Alternatives](/internal-docs/architecture/infrastructure/alternatives).
 
 ## API & Infrastructure
 
@@ -126,5 +126,5 @@ cost-effective at certain traffic shapes.
 untouched in either migration; the main change is swapping the `pg` pool driver
 for Neon's serverless/HTTP driver, since a serverless runtime can't hold a
 pooled TCP connection open. See
-[Infrastructure - Future Compute Options](/internal-docs/engineering/infrastructure) for the
+[Infrastructure - Alternatives](/internal-docs/architecture/infrastructure/alternatives) for the
 full mapping.

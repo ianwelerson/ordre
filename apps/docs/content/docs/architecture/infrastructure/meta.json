@@ -1,0 +1,9 @@
+{
+  "title": "Infrastructure",
+  "icon": "Server",
+  "pages": [
+    "platform",
+    "services",
+    "alternatives"
+  ]
+}

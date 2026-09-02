@@ -1,0 +1,177 @@
+---
+title: Error Codes
+icon: TriangleAlert
+description: Every error code in the shared catalog, with its HTTP status and message.
+---
+
+{/* GENERATED FILE - do not edit by hand. Source: packages/core/src/errors. Run `pnpm docs:errors` to regenerate. */}
+
+The API returns a stable `code` on every error response. The `code` is the
+contract - branch on it, never on the message text.
+
+The message below is the English copy from `@ordre/core/messages`, which is also
+what the API puts on the response body. There is one string per code, not two: a
+client resolves the **same code** in the reader's own locale under the `errors`
+namespace, and only falls back to reading `message` if it has no copy at all.
+
+Copy is typed as `Record<ErrorCode, string>`, so a code added to the catalog
+cannot ship until every locale has words for it.
+
+`CLIENT_ERRORS` are raised by `@ordre/services` itself - a dropped connection,
+an unparseable body - and never come from the API. They share the catalog so a
+consumer has one vocabulary to map.
+
+## Auth
+
+| Code | Status | Message |
+| ---- | ------ | ------- |
+| `USER_NOT_FOUND` | 404 | We couldn't find an account with those details. |
+| `FAILED_TO_CREATE_USER` | 422 | We couldn't create your account. Please try again. |
+| `FAILED_TO_UPDATE_USER` | 500 | We couldn't save your changes. Please try again. |
+| `INVALID_USER` | 401 | We couldn't verify your account. |
+| `USER_EMAIL_NOT_FOUND` | 401 | We couldn't find an account with that email. |
+| `USER_ALREADY_EXISTS` | 422 | An account with that email already exists. |
+| `USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL` | 422 | An account with that email already exists. Try another one. |
+| `USER_ALREADY_HAS_PASSWORD` | 400 | Your account already has a password. Enter it to continue. |
+| `ACCOUNT_NOT_FOUND` | 400 | We couldn't find that account. |
+| `CREDENTIAL_ACCOUNT_NOT_FOUND` | 400 | We couldn't find an account with a password set. |
+| `FAILED_TO_UNLINK_LAST_ACCOUNT` | 400 | You can't unlink your last sign-in method. |
+| `LINKED_ACCOUNT_ALREADY_EXISTS` | 400 | That account is already linked. |
+| `SOCIAL_ACCOUNT_ALREADY_LINKED` | 400 | That account is already linked to another user. |
+| `FAILED_TO_CREATE_SESSION` | 500 | We couldn't sign you in. Please try again. |
+| `FAILED_TO_GET_SESSION` | 401 | We couldn't verify your session. Sign in again. |
+| `SESSION_EXPIRED` | 401 | Your session has expired. Sign in again. |
+| `SESSION_NOT_FRESH` | 403 | Confirm your password to continue. |
+| `INVALID_PASSWORD` | 400 | That password isn't correct. |
+| `INVALID_EMAIL` | 400 | Enter a valid email address. |
+| `INVALID_EMAIL_OR_PASSWORD` | 401 | That email and password don't match. |
+| `PASSWORD_TOO_SHORT` | 400 | That password is too short. |
+| `PASSWORD_TOO_LONG` | 400 | That password is too long. |
+| `PASSWORD_ALREADY_SET` | 400 | Your account already has a password set. |
+| `EMAIL_NOT_VERIFIED` | 403 | Verify your email address before continuing. |
+| `EMAIL_CAN_NOT_BE_UPDATED` | 400 | That email address can't be changed. |
+| `CHANGE_EMAIL_DISABLED` | 400 | Changing your email address isn't available. |
+| `EMAIL_ALREADY_VERIFIED` | 400 | That email address is already verified. |
+| `EMAIL_MISMATCH` | 400 | That email address doesn't match. |
+| `VERIFICATION_EMAIL_NOT_ENABLED` | 400 | Email verification isn't available. |
+| `FAILED_TO_CREATE_VERIFICATION` | 500 | We couldn't send the verification email. Please try again. |
+| `PROVIDER_NOT_FOUND` | 404 | That sign-in method isn't available. |
+| `INVALID_TOKEN` | 400 | This link isn't valid. Request a new one. |
+| `TOKEN_EXPIRED` | 400 | This link has expired. Request a new one. |
+| `ID_TOKEN_NOT_SUPPORTED` | 404 | That sign-in method isn't supported. |
+| `FAILED_TO_GET_USER_INFO` | 401 | We couldn't read your profile from that provider. |
+| `INVALID_ORIGIN` | 403 | This request came from an address we don't recognise. |
+| `MISSING_OR_NULL_ORIGIN` | 403 | This request came from an address we don't recognise. |
+| `INVALID_CALLBACK_URL` | 403 | That return address isn't allowed. |
+| `INVALID_REDIRECT_URL` | 403 | That return address isn't allowed. |
+| `INVALID_ERROR_CALLBACK_URL` | 403 | That return address isn't allowed. |
+| `INVALID_NEW_USER_CALLBACK_URL` | 403 | That return address isn't allowed. |
+| `CALLBACK_URL_REQUIRED` | 400 | A return address is required. |
+| `CROSS_SITE_NAVIGATION_LOGIN_BLOCKED` | 403 | For your security, this sign-in was blocked. Try again from the sign-in page. |
+| `METHOD_NOT_ALLOWED_DEFER_SESSION_REQUIRED` | 405 | Something went wrong. Please try again. |
+
+## Base
+
+| Code | Status | Message |
+| ---- | ------ | ------- |
+| `INTERNAL_ERROR` | 500 | Something went wrong. Please try again. |
+| `UNAUTHORIZED` | 401 | Your session has ended. Sign in again. |
+| `FORBIDDEN` | 403 | You don't have permission to do that. |
+
+## Billing
+
+| Code | Status | Message |
+| ---- | ------ | ------- |
+| `PLAN_MISSING` | 500 | We couldn't find an active plan for this workspace. Please contact support. |
+| `PLAN_ENTITLEMENTS_INVALID` | 500 | We couldn't read the limits on your plan. Please contact support. |
+| `PLAN_LOCATION_LIMIT_REACHED` | 402 | You've reached the maximum number of locations allowed on your plan. |
+| `PLAN_SEAT_LIMIT_REACHED` | 402 | You've used every seat on your plan. Pending invites count as seats. |
+
+## Client
+
+| Code | Status | Message |
+| ---- | ------ | ------- |
+| `NETWORK_ERROR` | 503 | We couldn't reach the server. Check your connection and try again. |
+| `MALFORMED_RESPONSE` | 502 | We got an unexpected response from the server. Please try again. |
+| `UNKNOWN_ERROR` | 500 | Something went wrong. Please try again. |
+
+## Invite
+
+| Code | Status | Message |
+| ---- | ------ | ------- |
+| `INVITE_NOT_FOUND` | 404 | We couldn't find the invite you're looking for. |
+| `INVITE_CREATE_FAILED` | 500 | Something went wrong while creating the invite. Please try again. |
+| `INVITE_ALREADY_PENDING` | 409 | There is already a pending invite for this email. |
+| `INVITE_EMAIL_MISMATCH` | 403 | This invite was sent to a different email address. |
+
+## Location
+
+| Code | Status | Message |
+| ---- | ------ | ------- |
+| `LOCATION_NOT_FOUND` | 404 | We couldn't find the location you're looking for. |
+| `LOCATION_CREATE_FAILED` | 500 | Something went wrong while creating the location. Please try again. |
+| `LOCATION_MEMBER_ASSIGN_FAILED` | 500 | Something went wrong while assigning the member to the location. Please try again. |
+| `LOCATION_IS_DEFAULT` | 409 | You can't delete your default location. |
+
+## Member
+
+| Code | Status | Message |
+| ---- | ------ | ------- |
+| `MEMBER_NOT_FOUND` | 404 | We couldn't find the member you're looking for. |
+| `MEMBER_ALREADY_EXISTS` | 409 | A member with this email already exists in the workspace. |
+| `MEMBER_LAST_OWNER` | 409 | A workspace needs at least one owner. Assign another owner first. |
+| `MEMBER_TARGET_SUSPENDED` | 409 | You can't change the role for a suspended member. |
+| `MEMBER_SELF_SUSPENDED` | 403 | Your access to this workspace has been suspended. |
+| `MEMBER_SELF_ROLE_UPDATE` | 403 | You can't change your own role. |
+| `MEMBER_SELF_REMOVE` | 403 | You can't remove yourself from the workspace. |
+| `MEMBER_OWNER_ROLE_FORBIDDEN` | 403 | Only an owner can assign or change the owner role. |
+| `MEMBER_REMOVE_FORBIDDEN` | 403 | You can only remove members, not owners or admins. |
+
+## Validation
+
+| Code | Status | Message |
+| ---- | ------ | ------- |
+| `INVALID_INPUT` | 400 | Some of the information you entered isn't valid. |
+| `VALIDATION_ERROR` | 400 | Some of the information you entered isn't valid. |
+| `MISSING_FIELD` | 400 | This field is required. |
+| `FIELD_NOT_ALLOWED` | 400 | This field can't be set. |
+| `BODY_MUST_BE_AN_OBJECT` | 400 | Something went wrong. Please try again. |
+| `ASYNC_VALIDATION_NOT_SUPPORTED` | 500 | Something went wrong. Please try again. |
+
+## Workspace
+
+| Code | Status | Message |
+| ---- | ------ | ------- |
+| `WORKSPACE_NOT_FOUND` | 404 | We couldn't find the workspace you're looking for. |
+| `WORKSPACE_CREATE_FAILED` | 500 | Something went wrong while creating your workspace. Please try again. |
+| `WORKSPACE_SLUG_ALREADY_EXISTS` | 409 | That workspace URL is already taken. |
+| `WORKSPACE_SLUG_RESERVED` | 400 | This name is reserved. Please choose another. |
+| `WORKSPACE_SLUG_PROTECTED` | 400 | This name is reserved. If it belongs to your organization, get in contact with us. |
+| `WORKSPACE_SLUG_BANNED` | 400 | This name isn't available. Please choose another. |
+
+## Validation keys
+
+Field-level failures travel in `details`, keyed by field name. The **value** is one of
+these keys rather than a sentence, so each client renders it in its own locale.
+
+| Key | Message |
+| --- | ------- |
+| `validation.required` | This field is required. |
+| `validation.invalidType` | This value isn't in the expected format. |
+| `validation.invalidFormat` | This value isn't in the expected format. |
+| `validation.invalid` | This value isn't valid. |
+| `validation.email` | Enter a valid email address. |
+| `validation.url` | Enter a valid URL. |
+| `validation.uuid` | Enter a valid identifier. |
+| `validation.datetime` | Enter a valid date and time. |
+| `validation.date` | Enter a valid date. |
+| `validation.time` | Enter a valid time. |
+| `validation.ipv4` | Enter a valid IPv4 address. |
+| `validation.ipv6` | Enter a valid IPv6 address. |
+| `validation.regex` | This value isn't in the expected format. |
+| `validation.tooShort` | This value is too short. |
+| `validation.tooLong` | This value is too long. |
+| `validation.invalidOption` | Choose one of the available options. |
+| `validation.invalidNumber` | Enter a valid number. |
+| `validation.unknownField` | This field isn't recognised. |
+| `validation.passwordMismatch` | The passwords don't match. |

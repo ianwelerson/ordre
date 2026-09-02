@@ -44,13 +44,12 @@ Run it locally with `pnpm dev` (or just the docs app via `pnpm --filter docs doc
 and open the docs site, or read the MDX sources directly under
 [`apps/docs/content/docs`](./apps/docs/content/docs):
 
-| Section                                             | What's there                                                                                                 |
-| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| [Overview](./apps/docs/content/docs/index.mdx)      | What Ordre is, and how the docs are organized.                                                               |
-| [Setup](./apps/docs/content/docs/setup)             | Running the project, environment variables, database roles, workflow, and deployment.                        |
-| [Product](./apps/docs/content/docs/product)         | Feature specs, pricing & billing, and the roadmap.                                                           |
-| [Engineering](./apps/docs/content/docs/engineering) | Architecture, tech stack, data model, authorization, the outbox, testing, AI assistance, and infrastructure. |
-| [Design](./apps/docs/content/docs/design/brand.mdx) | Brand, color system, typography, and component patterns.                                                     |
+| Section                                                | What's there                                                                                              |
+| ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| [Overview](./apps/docs/content/docs/index.mdx)         | What Ordre is, and how the docs are organized.                                                            |
+| [Get started](./apps/docs/content/docs/start)          | Running the project, environment variables, database roles, workflow, testing, AI assistance, and deployment. |
+| [Product](./apps/docs/content/docs/product)            | Feature specs, pricing & billing, the roadmap, and the brand system.                                      |
+| [Architecture](./apps/docs/content/docs/architecture)  | The monorepo, the data model, authorization, the outbox, the API runtime, infrastructure, and reference.  |
 
 To keep a single source of truth, this README says only what the repo **is** and
 where each part lives. Everything else - commands, conventions, tech stack,
@@ -122,7 +121,7 @@ pnpm dev
 ```
 
 Prerequisites, environment variables, database roles, per-app dev URLs, and how to
-run one app at a time: **[Setup → Running the Project](./apps/docs/content/docs/setup/running-the-project.mdx)**.
+run one app at a time: **[Running the Project](./apps/docs/content/docs/start/running-the-project.mdx)**.
 
 ---
 
@@ -131,7 +130,7 @@ run one app at a time: **[Setup → Running the Project](./apps/docs/content/doc
 Instructions, hooks, and skills are tracked in [`CLAUDE.md`](./CLAUDE.md) and
 [`.claude/`](./.claude), so the rules travel with the repo. What each one does and
 how to add to them:
-**[Engineering → AI Assistance](./apps/docs/content/docs/engineering/ai-assistance.mdx)**.
+**[AI Assistance](./apps/docs/content/docs/start/ai-assistance.mdx)**.
 
 ---
 

@@ -1,0 +1,61 @@
+---
+title: Testing
+icon: FlaskConical
+description: The API's two-tier test strategy - route integration tests against a real database, and controller unit tests for fault injection.
+---
+
+The API is tested at two tiers, and they are deliberately **not** redundant. Each tier owns the cases the other cannot reach. Before adding a test, decide which tier it belongs to using the rule of thumb below - a test placed in the wrong tier is either impossible to write or pure duplication.
+
+## The two tiers
+
+| Tier            | File suffix        | Runs against     | Owns                                                                     |
+| --------------- | ------------------ | ---------------- | ------------------------------------------------------------------------ |
+| **Integration** | `*.routes.test.ts` | The real test DB | The full request path: middleware, RBAC guards, validation, happy paths  |
+| **Unit**        | `*.test.ts`        | Mocks (no DB)    | Branches that need fault injection - errors, races, impossible DB states |
+
+These map one-to-one onto the two Vitest projects in [`vitest.config.ts`](../../../../apps/api/vitest.config.ts): the `integration` project globs `*.routes.test.ts` and boots a database; the `unit` project globs every other `*.test.ts` and explicitly excludes `*.routes.test.ts`, so it never needs one.
+
+## Integration tests (`*.routes.test.ts`)
+
+Co-located with the route in `adapters/express/routes/<feature>/`, these drive the assembled Express app with [`supertest`](https://github.com/ladjs/supertest) against a **real** Postgres test database. Because the whole stack is live, they are the only place that can verify how the pieces connect:
+
+- **RBAC** - the full role/permission matrix per route (owner, admin, member, non-member, unauthenticated). See [`workspace.routes.test.ts`](../../../../apps/api/src/adapters/express/routes/workspace/workspace.routes.test.ts), whose header comment lays out the matrix as a table with one test per cell.
+- **Validation & input rules** - malformed UUIDs, missing fields, protected/reserved/banned slugs.
+- **Happy paths** - a real create/read/update/delete round-trips through Drizzle and the fixtures.
+
+The harness gives every test identical, known data:
+
+- [`global-setup.ts`](../../../../apps/api/src/test/global-setup.ts) migrates and cleans the shared test DB once per run.
+- [`integration.setup.ts`](../../../../apps/api/src/test/integration.setup.ts) runs `resetDb()` + `seedDb()` in a `beforeEach`, so each test starts from the fixed-UUID fixtures in [`fixtures.ts`](../../../../apps/api/src/test/fixtures.ts).
+- `fileParallelism: false` serializes the files so one file's per-test `TRUNCATE` never wipes data another file is mid-way through using.
+- The seeded plans are deliberately **uncapped** (`entitlements.limits: {}`), so a route test that creates a location or an invite is never gated by `requireWorkspaceQuota` and keeps asserting its own behaviour. A test that means to exercise a quota sets the cap it needs.
+
+A guard in [`db.ts`](../../../../apps/api/src/test/db.ts) refuses to reset unless `APP_STAGE=test`, so the truncate can never point at a real database.
+
+## Unit tests (`*.controller.test.ts`)
+
+Co-located with the controller, these mock the database entirely (`vi.mock('#/config/db-context.ts')`) and exist purely for **fault injection** - the failure and edge branches that a healthy real database cannot be coaxed into producing on demand:
+
+- **Race conditions** - the slug pre-check passes but the write loses a race and the unique index fires (`WORKSPACE_SLUG_ALREADY_EXISTS`).
+- **Infrastructure failures** - the DB throws, mapping to `INTERNAL_ERROR` (500).
+- **Impossible-by-construction states** - a transaction commits but the read-back returns nothing (`WORKSPACE_CREATE_FAILED`); no active plan is seeded.
+
+See [`workspace.controller.test.ts`](../../../../apps/api/src/controllers/workspace/workspace.controller.test.ts): every case is a `catch` block or error mapping, and there are **zero** happy-path or RBAC assertions. It does not re-test anything the integration suite covers.
+
+## Which tier does my test belong to?
+
+- **Reachable through a real HTTP request?** (auth, permissions, validation, happy path, anything a real DB can produce) → integration test (`*.routes.test.ts`).
+- **An error branch that requires forcing the DB into a state you cannot set up for real?** (throws, races, read-back-fails) → unit test with a mock (`*.controller.test.ts`).
+
+The trap to avoid: adding a happy-path or plain-validation case to the controller unit test. That path is already covered end-to-end by the integration suite, where it is more meaningful and cheaper to maintain. Keep the unit tier scoped to fault injection.
+
+## Running the tests
+
+| Command                      | Runs                                          |
+| ---------------------------- | --------------------------------------------- |
+| `pnpm test:unit`             | Both projects, watch mode, with coverage      |
+| `pnpm test:unit:ci`          | Both projects, single run (CI)                |
+| `pnpm test:unit:integration` | The `integration` project only (needs the DB) |
+| `pnpm test:unit:unit`        | The `unit` project only (no DB)               |
+
+All scripts set `APP_STAGE=test`. See the [API README](../../../../apps/api/README.md) for the rest of the app's scripts.

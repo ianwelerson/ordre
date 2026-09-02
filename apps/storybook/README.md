@@ -18,7 +18,7 @@ Storybook does not contain product code - it is a thin app whose only job is to 
 
 ## 🚀 Getting Started
 
-Install and run the whole stack from the repo root - see **[Setup → Running the Project](../docs/content/docs/setup/running-the-project.mdx)**. To run only Storybook:
+Install and run the whole stack from the repo root - see **[Setup → Running the Project](../docs/content/docs/start/running-the-project.mdx)**. To run only Storybook:
 
 ```bash
 pnpm storybook
@@ -33,6 +33,6 @@ pnpm storybook
 The stories glob, the sidebar order, and the deployment are documented once in the
 docs project:
 
-- [Architecture → storybook](../docs/content/docs/engineering/architecture.mdx#-storybook)
-- [Architecture → `@ordre/ui`](../docs/content/docs/engineering/architecture.mdx#ordreui) - the component and story conventions
+- [Architecture → storybook](../docs/content/docs/architecture/apps.mdx#storybook)
+- [Architecture → `@ordre/ui`](../docs/content/docs/architecture/packages.mdx#ordreui) - the component and story conventions
 - [Root README](../../README.md) - monorepo overview

@@ -1,0 +1,31 @@
+---
+title: Overview
+icon: Server
+description: Every external service Ordre depends on, what it does, and whether it is chosen, active, or still an option.
+---
+
+The stack is deliberately made of managed services with scale-to-zero pricing, so
+a study project costs close to nothing while idle and the operational surface
+stays small. Each row links to the page that records why it was picked.
+
+## The service map
+
+| Service                                                        | Role                       | Status               |
+| -------------------------------------------------------------- | -------------------------- | -------------------- |
+| [Vercel](/internal-docs/architecture/infrastructure/platform)   | Frontend hosting           | Active               |
+| [Railway](/internal-docs/architecture/infrastructure/platform)  | API compute                | Active               |
+| [Neon](/internal-docs/architecture/infrastructure/platform)     | Postgres                   | Active               |
+| [Cloudflare R2](/internal-docs/architecture/infrastructure/platform) | Image storage         | Chosen               |
+| [Upstash](/internal-docs/architecture/infrastructure/platform)  | Redis cache                | Chosen               |
+| [Cloudflare](/internal-docs/architecture/infrastructure/platform) | Domain and DNS           | Active               |
+| [portless](/internal-docs/architecture/infrastructure/platform) | Local HTTPS hostnames      | Active               |
+| [Better Auth](/internal-docs/architecture/infrastructure/services) | Authentication          | Active               |
+| [Resend](/internal-docs/architecture/infrastructure/services)   | Email and audience         | Active               |
+| [Twilio](/internal-docs/architecture/infrastructure/services)   | SMS and WhatsApp           | Chosen               |
+| [Sentry](/internal-docs/architecture/infrastructure/services)   | Error tracking             | Chosen               |
+| [Umami](/internal-docs/architecture/infrastructure/services)    | Analytics                  | Chosen               |
+| [pino](/internal-docs/architecture/infrastructure/services)     | Logging                    | Active               |
+| [Storybook](/internal-docs/architecture/infrastructure/services) | Component documentation   | Active               |
+| [Fumadocs](/internal-docs/architecture/infrastructure/services) | This documentation site    | Active               |
+| [AWS Lambda / Vercel Functions](/internal-docs/architecture/infrastructure/alternatives) | Future compute | Mapped, not committed |
+| [Plivo](/internal-docs/architecture/infrastructure/alternatives) | SMS alternative           | Mapped, not committed |

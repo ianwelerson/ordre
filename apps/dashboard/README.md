@@ -17,7 +17,7 @@ Built with **[Next.js 16](https://nextjs.org/) (App Router)**, React 19, [`@ordr
 
 ## 🚀 Getting Started
 
-Install and run the whole stack from the repo root - see **[Setup → Running the Project](../docs/content/docs/setup/running-the-project.mdx)**. To run only this app:
+Install and run the whole stack from the repo root - see **[Setup → Running the Project](../docs/content/docs/start/running-the-project.mdx)**. To run only this app:
 
 ```bash
 pnpm --filter dashboard dev
@@ -31,6 +31,6 @@ pnpm --filter dashboard dev
 
 The folder layout (`app/` · `views/` · `shared/`), the import alias, and the i18n setup are the same three-folder convention every frontend app follows, and are documented once in the docs project:
 
-- [Architecture → Dashboard App Structure](../docs/content/docs/engineering/architecture.mdx#-dashboard)
-- [Architecture → i18n Structure](../docs/content/docs/engineering/architecture.mdx#-i18n-structure)
+- [Architecture → Dashboard App Structure](../docs/content/docs/architecture/apps.mdx#dashboard)
+- [Architecture → i18n Structure](../docs/content/docs/architecture/conventions.mdx#i18n-structure)
 - [Root README](../../README.md) - monorepo overview

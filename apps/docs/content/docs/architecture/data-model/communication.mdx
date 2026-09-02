@@ -1,0 +1,235 @@
+---
+title: Communication
+icon: MessagesSquare
+description: How a job talks to its client - the activity feed, media, messaging, client verification, channels, and notification preferences.
+---
+
+## Activity Feed (one table per type)
+
+📋 **Planned** - no table in the schema yet. Seven feed tables plus `feed_approval_line_item`.
+
+Each card in the board feed is its own table. They share a common shape -
+`boardId`, an author, `createdAt`, and a `visibility` - then add their own fields.
+
+**Shared columns** (on every feed table):
+
+| Field            | Type                              | Notes                  |
+| ---------------- | --------------------------------- | ---------------------- |
+| `id`             | uuid                              |                        |
+| `boardId`        | fk → board                        |                        |
+| `authorType`     | enum `member \| client \| system` |                        |
+| `authorMemberId` | fk → workspace_member, nullable   | Null for client/system |
+| `visibility`     | enum `client \| team \| internal` |                        |
+| `createdAt`      | timestamp                         |                        |
+
+### `feed_update` - status update
+
+| Field  | Type | Notes           |
+| ------ | ---- | --------------- |
+| `body` | text | The update text |
+
+### `feed_internal_note` - team-only note
+
+| Field  | Type | Notes                             |
+| ------ | ---- | --------------------------------- |
+| `body` | text | `visibility` is always `internal` |
+
+### `feed_milestone`
+
+| Field   | Type           | Notes          |
+| ------- | -------------- | -------------- |
+| `title` | text           | Milestone name |
+| `body`  | text, nullable | What it means  |
+
+### `feed_stage_transition`
+
+| Field       | Type | Notes          |
+| ----------- | ---- | -------------- |
+| `fromPhase` | text | Previous phase |
+| `toPhase`   | text | New phase      |
+
+### `feed_system_event`
+
+| Field  | Type | Notes                                              |
+| ------ | ---- | -------------------------------------------------- |
+| `text` | text | "Board created · Client link sent to M. Delacroix" |
+
+> `authorType` is `system` for these rows.
+
+### `feed_approval` - approval request
+
+| Field                        | Type                                   | Notes                    |
+| ---------------------------- | -------------------------------------- | ------------------------ |
+| `description`                | text                                   | "Crown tube replacement" |
+| `body`                       | text, nullable                         | Why it needs approval    |
+| `amount`                     | decimal, nullable                      |                          |
+| `currency`                   | text                                   | e.g. CHF                 |
+| `status`                     | enum `pending \| approved \| declined` |                          |
+| `respondedAt`                | timestamp, nullable                    |                          |
+| `respondedByClientContactId` | fk → client_contact, nullable          |                          |
+
+#### `feed_approval_line_item`
+
+Multi-item cost breakdowns (optional).
+
+| Field        | Type               | Notes |
+| ------------ | ------------------ | ----- |
+| `id`         | uuid               |       |
+| `approvalId` | fk → feed_approval |       |
+| `label`      | text               |       |
+| `price`      | decimal            |       |
+| `order`      | int                |       |
+
+### `feed_visit_report` - recurring boards
+
+| Field     | Type       | Notes                           |
+| --------- | ---------- | ------------------------------- |
+| `visitId` | fk → visit | The visit this report documents |
+| `body`    | text       | What was done                   |
+
+> Photos attach to any feed row via the shared **`media`** table below.
+
+---
+
+## Media
+
+📋 **Planned** - no table in the schema yet.
+
+Photos, videos, and files attached to feed rows, visits, or messages.
+
+| Field            | Type                                                          | Notes                        |
+| ---------------- | ------------------------------------------------------------- | ---------------------------- |
+| `id`             | uuid                                                          |                              |
+| `boardId`        | fk → board                                                    |                              |
+| `attachedToType` | enum `update \| approval \| visit_report \| visit \| message` | Which feed row owns it       |
+| `attachedToId`   | uuid                                                          | Row id within that table     |
+| `type`           | enum `photo \| video \| file`                                 |                              |
+| `url`            | text                                                          |                              |
+| `caption`        | text, nullable                                                |                              |
+| `isSensitive`    | boolean                                                       | Photos disabled until verify |
+| `capturedDate`   | date, nullable                                                |                              |
+| `uploadedByType` | enum `member \| client`                                       |                              |
+| `order`          | int                                                           |                              |
+| `createdAt`      | timestamp                                                     |                              |
+
+---
+
+## Messaging
+
+📋 **Planned** - no table in the schema yet.
+
+The secure chat between client and workspace (Messages page, board chat).
+
+### `thread`
+
+| Field           | Type                                                  | Notes        |
+| --------------- | ----------------------------------------------------- | ------------ |
+| `id`            | uuid                                                  |              |
+| `workspaceId`   | fk → workspace                                        |              |
+| `clientId`      | fk → client                                           |              |
+| `boardId`       | fk → board, nullable                                  | Linked board |
+| `channel`       | enum `portal \| whatsapp \| sms \| email \| telegram` |              |
+| `lastMessageAt` | timestamp                                             |              |
+
+`[derived]`: unread count.
+
+### `message`
+
+| Field            | Type                                                  | Notes                       |
+| ---------------- | ----------------------------------------------------- | --------------------------- |
+| `id`             | uuid                                                  |                             |
+| `threadId`       | fk → thread                                           |                             |
+| `boardId`        | fk → board, nullable                                  |                             |
+| `senderType`     | enum `client \| member \| system`                     |                             |
+| `senderMemberId` | fk → workspace_member, nullable                       |                             |
+| `body`           | text                                                  | System rows hold event text |
+| `channel`        | enum `portal \| whatsapp \| sms \| email \| telegram` | Channel it was sent over    |
+| `sentAt`         | timestamp                                             |                             |
+| `readAt`         | timestamp, nullable                                   |                             |
+
+---
+
+## Client Verification
+
+📋 **Planned** - no table in the schema yet.
+
+Identity verification is **session-based** - the entered email/phone is matched
+and **not stored** (see [Specs](/internal-docs/product/specs)). The "verified" state lives
+in the client's session, not the database. Optionally keep an audit log:
+
+### `verification_attempt` (optional, audit only)
+
+| Field         | Type                  | Notes                              |
+| ------------- | --------------------- | ---------------------------------- |
+| `id`          | uuid                  |                                    |
+| `boardId`     | fk → board            |                                    |
+| `matched`     | boolean               |                                    |
+| `via`         | enum `email \| phone` |                                    |
+| `attemptedAt` | timestamp             | Do **not** store the entered value |
+
+---
+
+## Communication Channels
+
+📋 **Planned** - no table in the schema yet.
+
+Workspace-level channel config (Settings → Channels).
+
+| Field         | Type                                                  | Notes                                               |
+| ------------- | ----------------------------------------------------- | --------------------------------------------------- |
+| `id`          | uuid                                                  |                                                     |
+| `workspaceId` | fk → workspace                                        |                                                     |
+| `type`        | enum `portal \| whatsapp \| sms \| email \| telegram` |                                                     |
+| `enabled`     | boolean                                               |                                                     |
+| `isRequired`  | boolean                                               | Portal is always on                                 |
+| `config`      | jsonb                                                 | Connected number, from-address, last sync, provider |
+
+---
+
+## User Preferences
+
+📋 **Planned** - no table in the schema yet. Both tables below.
+
+### `notification_setting`
+
+Per-user notification matrix (User Settings → Notifications).
+
+| Field          | Type      | Notes                                                                                                                                    |
+| -------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`           | uuid      |                                                                                                                                          |
+| `userId`       | fk → user |                                                                                                                                          |
+| `key`          | enum      | `new_client_message \| approval_received \| approval_declined \| new_board_assigned \| daily_summary \| weekly_recap \| product_updates` |
+| `emailEnabled` | boolean   |                                                                                                                                          |
+| `pushEnabled`  | boolean   |                                                                                                                                          |
+
+### `working_hours`
+
+Per-user weekly availability (User Settings → Working hours).
+
+| Field       | Type           | Notes |
+| ----------- | -------------- | ----- |
+| `id`        | uuid           |       |
+| `userId`    | fk → user      |       |
+| `dayOfWeek` | enum `mon…sun` |       |
+| `openTime`  | time, nullable |       |
+| `closeTime` | time, nullable |       |
+| `isClosed`  | boolean        |       |
+
+---
+
+## Message Templates & Automations (optional)
+
+📋 **Planned** - no table in the schema yet.
+
+Surfaced under Settings → Automations / Templates. Build when needed.
+
+| Field         | Type           | Notes                |
+| ------------- | -------------- | -------------------- |
+| `id`          | uuid           |                      |
+| `workspaceId` | fk → workspace |                      |
+| `name`        | text           |                      |
+| `trigger`     | text           | Event that fires it  |
+| `channel`     | enum           | Channel to send over |
+| `body`        | text           |                      |
+| `enabled`     | boolean        |                      |
+

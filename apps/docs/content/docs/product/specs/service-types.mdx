@@ -1,0 +1,66 @@
+---
+title: Service Types
+icon: Layers
+description: The three board shapes - quick, full, and recurring - and what each one is meant for.
+---
+
+## Service Types
+
+### Overview
+
+Each template defines a **service type** that determines the board's structure, expected lifecycle, and available features. The service type is a property of the template - when a member picks a template, the type comes with it. A single industry template (e.g. "Bike Shop") can offer more than one variant.
+
+Quick and Full are both **linear**: a job starts, moves forward, and finishes. Recurring is **open-ended**, a standing relationship measured in visits rather than a job with an end. That difference drives most of what follows.
+
+---
+
+### Quick
+
+For jobs completed in a single visit or within the same day. Minimal status tracking.
+
+**Characteristics:**
+
+- Simplified timeline - few updates expected (received → in progress → done)
+- No phase tracker - the job doesn't pass through enough stages to justify one
+- Lightweight board UI - optimised for fast creation and fast completion
+- Board auto-archives after completion (configurable grace period)
+
+**Examples:** bike wash, key cutting, phone screen protector, shoe shine, watch battery replacement, basic oil change.
+
+---
+
+### Full
+
+The default type. For jobs that span multiple days and involve meaningful progress communication.
+
+**Characteristics:**
+
+- Full timeline with text, photo, and approval updates
+- Phase tracker with template-defined stages (e.g. assessment → repair → quality check → ready)
+- All board features available: chat, approvals, photo documentation
+- Board remains active until explicitly completed or archived by a workspace member
+
+**Examples:** watch repair, home renovation, bike overhaul, appliance repair, freelance design project.
+
+---
+
+### Recurring
+
+For ongoing service relationships with repeating visits on a schedule. The board tracks a contract rather than a job, and stays open for its whole term.
+
+**Characteristics:**
+
+- **A cadence instead of a lifecycle** - weekly, biweekly, monthly, condition-triggered (e.g. "snowfall ≥ 5 cm"), or a free-text custom pattern
+- **A visit list, not a phase tracker** - each visit is scheduled, then completed, rescheduled, missed, or skipped, and carries its own report
+- **Per-visit reports** - a visit's timeline entry covers what was done on that visit, so the board reads as a service history
+- **Reschedule requests in both directions** - a member can propose a new slot to the client, and a verified client can request one from the member
+- **A contract term** - a start date and an optional end date, with an optional season label (e.g. "2025/26") for seasonal work
+- **Pausable** - a contract can be suspended without archiving the board or losing its history
+
+**Examples:** snow removal, lawn care, pool maintenance, recurring cleaning, grounds maintenance.
+
+<Callout title="Why Recurring is its own type, not a setting on Full">
+  A Full board asks "how far along is this job?" A Recurring board asks "when is the next visit, and
+  did the last one happen?" The phase tracker, the completion state, and the archive rule all stop
+  making sense on an open-ended contract, so the two share the board shell and little else.
+</Callout>

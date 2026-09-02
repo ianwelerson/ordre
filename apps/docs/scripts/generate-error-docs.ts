@@ -11,7 +11,7 @@ import type { ErrorMap } from '@ordre/core/types';
 // grouped by domain (AUTH_ERRORS, VALIDATION_ERRORS, ...). The source of truth
 // is @ordre/core/errors, so the page can never drift from the catalog the API
 // actually returns. Wired into the docs build alongside generate-api-docs.ts.
-const output = './content/docs/reference/error-codes.mdx';
+const output = './content/docs/architecture/reference/error-codes.mdx';
 
 // `import *` over a workspace package gives the module namespace object - one
 // entry per export. Spec guarantees these keys come back sorted, so the group

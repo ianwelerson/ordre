@@ -19,7 +19,7 @@ Everything that _manages_ boards lives in the [`dashboard`](../dashboard) app - 
 
 ## 🚀 Getting Started
 
-Install and run the whole stack from the repo root - see **[Setup → Running the Project](../docs/content/docs/setup/running-the-project.mdx)**. To run only this app:
+Install and run the whole stack from the repo root - see **[Setup → Running the Project](../docs/content/docs/start/running-the-project.mdx)**. To run only this app:
 
 ```bash
 pnpm --filter board dev
@@ -33,6 +33,6 @@ pnpm --filter board dev
 
 The route module layout, the three-folder convention, and the i18n detection order (path prefix → `lng` cookie → header) are documented once in the docs project:
 
-- [Architecture → Board App Structure](../docs/content/docs/engineering/architecture.mdx#-board)
-- [Architecture → i18n Structure](../docs/content/docs/engineering/architecture.mdx#-i18n-structure)
+- [Architecture → Board App Structure](../docs/content/docs/architecture/apps.mdx#board)
+- [Architecture → i18n Structure](../docs/content/docs/architecture/conventions.mdx#i18n-structure)
 - [Root README](../../README.md) - monorepo overview

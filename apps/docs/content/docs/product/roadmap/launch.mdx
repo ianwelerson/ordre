@@ -95,7 +95,7 @@ The features clients and workspace members experience.
 
 ## API
 
-Backend capabilities in [`apps/api`](/internal-docs/engineering/architecture) that power the product. See the [API Reference](/api-docs) for the live contract.
+Backend capabilities in [`apps/api`](/internal-docs/architecture/apps) that power the product. See the [API Reference](/api-docs) for the live contract.
 
 | Capability              | Description                                                                                                                                                                                  | Status |
 | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
@@ -105,7 +105,7 @@ Backend capabilities in [`apps/api`](/internal-docs/engineering/architecture) th
 | Workspace management    | Create, read (by id/slug), update, delete, and slug-availability check                                                                                                                       | ✅     |
 | Members & invitations   | Member endpoints (list, read, self-service profile/leave, update, remove, role change) plus admin invites (create, list, read, revoke) and the public invite flow (preview, accept, decline) | ✅     |
 | Locations               | Location CRUD, default-location management, and assigning members to locations                                                                                                               | ✅     |
-| Transactional email     | Outbox worker delivering account, workspace, and invite emails through Resend - see [Transactional Outbox](/internal-docs/engineering/outbox)                                                | ✅     |
+| Transactional email     | Outbox worker delivering account, workspace, and invite emails through Resend - see [Transactional Outbox](/internal-docs/architecture/outbox)                                                | ✅     |
 | Contact & audience sync | A second outbox channel keeping Resend audience segments in step with workspace membership, with marketing topics kept separate as consent                                                   | ✅     |
 | Billing & subscriptions | Billing data model in place; Stripe integration pending                                                                                                                                      | 🚧     |
 | Boards                  | Board lifecycle, access tokens, and client-facing read model                                                                                                                                 | 📋     |
@@ -186,7 +186,7 @@ product in production rather than optional polish.
 
 ## Platform & Services
 
-Hosting and third-party services. See [Infrastructure](/internal-docs/engineering/infrastructure) for the reasoning behind each choice.
+Hosting and third-party services. See [Infrastructure](/internal-docs/architecture/infrastructure) for the reasoning behind each choice.
 
 | Service        | Role                                                                      | Status |
 | -------------- | ------------------------------------------------------------------------- | ------ |

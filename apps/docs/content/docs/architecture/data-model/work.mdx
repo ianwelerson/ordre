@@ -1,0 +1,223 @@
+---
+title: The work
+icon: ClipboardList
+description: The tables behind a job - clients, templates, boards and their phases, and recurring service visits.
+---
+
+## Client
+
+📋 **Planned** - no table in the schema yet.
+
+Someone the workspace does jobs for (Clients page, New Board → Client step).
+
+| Field                     | Type                              | Notes                            |
+| ------------------------- | --------------------------------- | -------------------------------- |
+| `id`                      | uuid                              |                                  |
+| `workspaceId`             | fk → workspace                    |                                  |
+| `name`                    | text                              | `[sensitive]`                    |
+| `companyName`             | text, nullable                    | "North Studio"                   |
+| `internalNote`            | text, nullable                    | Team-only, never shown to client |
+| `preferredContactChannel` | enum `phone \| email \| whatsapp` |                                  |
+| `status`                  | enum `active \| inactive`         |                                  |
+| `createdAt`               | timestamp                         | Drives the "since 2023" label    |
+
+`[derived]`: board count, active boards, lifetime spend, average turnaround.
+
+### `client_contact`
+
+A client has one primary contact and an optional second. The contact is what's
+matched during board identity verification, and is required to create a client.
+
+| Field             | Type                  | Notes                             |
+| ----------------- | --------------------- | --------------------------------- |
+| `id`              | uuid                  |                                   |
+| `clientId`        | fk → client           |                                   |
+| `type`            | enum `phone \| email` |                                   |
+| `value`           | text                  | `[sensitive]`                     |
+| `isPrimary`       | boolean               |                                   |
+| `whatsappEnabled` | boolean               | Same number reachable on WhatsApp |
+| `verified`        | boolean               |                                   |
+
+### `client_follow_up`
+
+Scheduled reminder against a client (Clients detail → Follow-up).
+
+| Field         | Type                                  | Notes                       |
+| ------------- | ------------------------------------- | --------------------------- |
+| `id`          | uuid                                  |                             |
+| `clientId`    | fk → client                           |                             |
+| `workspaceId` | fk → workspace                        |                             |
+| `dueDate`     | date                                  |                             |
+| `reason`      | text                                  | "12-month service reminder" |
+| `note`        | text, nullable                        |                             |
+| `channel`     | enum `whatsapp \| email \| sms`       |                             |
+| `sendTime`    | time                                  | Auto-send time of day       |
+| `autoSend`    | boolean                               |                             |
+| `status`      | enum `scheduled \| sent \| cancelled` |                             |
+
+---
+
+## Template
+
+📋 **Planned** - no table in the schema yet.
+
+Defines a board's structure and service type (New Board step 1).
+
+| Field         | Type                              | Notes                              |
+| ------------- | --------------------------------- | ---------------------------------- |
+| `id`          | uuid                              |                                    |
+| `workspaceId` | fk → workspace, nullable          | Null for built-in/system templates |
+| `name`        | text                              | "Watch & Jewellery"                |
+| `subtitle`    | text                              | "Repair & servicing"               |
+| `industry`    | enum                              | For onboarding recommendations     |
+| `serviceType` | enum `quick \| full \| recurring` |                                    |
+| `icon`        | text                              | Icon key                           |
+| `isSystem`    | boolean                           |                                    |
+| `isCustom`    | boolean                           |                                    |
+
+### `template_phase`
+
+Default phases a template ships with.
+
+| Field        | Type          | Notes |
+| ------------ | ------------- | ----- |
+| `id`         | uuid          |       |
+| `templateId` | fk → template |       |
+| `name`       | text          |       |
+| `order`      | int           |       |
+
+---
+
+## Board
+
+📋 **Planned** - no table in the schema yet.
+
+The core job entity (Boards list, Board Detail, New Board).
+
+| Field               | Type                                       | Notes                                          |
+| ------------------- | ------------------------------------------ | ---------------------------------------------- |
+| `id`                | text/uuid                                  | Display id like "ORD-0041"                     |
+| `workspaceId`       | fk → workspace                             |                                                |
+| `locationId`        | fk → workspace_location                    |                                                |
+| `clientId`          | fk → client                                |                                                |
+| `templateId`        | fk → template                              |                                                |
+| `assignedMemberId`  | fk → workspace_member                      |                                                |
+| `createdByMemberId` | fk → workspace_member                      |                                                |
+| `serviceType`       | enum `quick \| full \| recurring`          |                                                |
+| `serviceLabel`      | text                                       | "Watch Repair", "Quick · Bike"                 |
+| `title`             | text                                       | "Rolex Submariner"                             |
+| `subtitle`          | text, nullable                             | "Crystal Replacement"                          |
+| `reference`         | text, nullable                             | Invoice #, serial, plate - `[sensitive]`       |
+| `token`             | text, unique                               | Share-link slug (`go.ordre.app/K7F-RM2`)       |
+| `status`            | enum `draft \| active \| done \| archived` |                                                |
+| `currentPhase`      | fk → board_phase, nullable                 |                                                |
+| `dueDate`           | date, nullable                             |                                                |
+| `heroMediaUrl`      | text, nullable                             | Cover image                                    |
+| `heroMediaCaption`  | text, nullable                             |                                                |
+| `createdAt`         | timestamp                                  |                                                |
+| `completedAt`       | timestamp, nullable                        |                                                |
+| `archivedAt`        | timestamp, nullable                        | Quick boards auto-archive after a grace period |
+
+`[derived]`: overdue state, unread messages, pending approvals, board age,
+unread-updates-since-last-visit.
+
+### `board_fact`
+
+The hero "facts" grid - flexible key/value rows, some blurred until verified.
+
+| Field          | Type                              | Notes                      |
+| -------------- | --------------------------------- | -------------------------- |
+| `id`           | uuid                              |                            |
+| `boardId`      | fk → board                        |                            |
+| `label`        | text                              | "Serial number", "Address" |
+| `value`        | text                              |                            |
+| `isSensitive`  | boolean                           | Blurred until verified     |
+| `displayOrder` | int                               |                            |
+| `size`         | enum `normal \| big \| fullWidth` |                            |
+
+### `board_phase`
+
+Per-board phase instances (full boards - phase tracker / schedule rail).
+
+| Field     | Type                             | Notes |
+| --------- | -------------------------------- | ----- |
+| `id`      | uuid                             |       |
+| `boardId` | fk → board                       |       |
+| `name`    | text                             |       |
+| `order`   | int                              |       |
+| `status`  | enum `pending \| active \| done` |       |
+| `date`    | date, nullable                   |       |
+| `detail`  | text, nullable                   |       |
+
+---
+
+## Recurring Service
+
+📋 **Planned** - no table in the schema yet.
+
+Backs `serviceType = recurring` boards (Snow Removal, Garden Care).
+
+### `recurrence`
+
+One per recurring board - the contract + cadence config.
+
+| Field              | Type                                                      | Notes                 |
+| ------------------ | --------------------------------------------------------- | --------------------- |
+| `id`               | uuid                                                      |                       |
+| `boardId`          | fk → board                                                |                       |
+| `cadence`          | enum `weekly \| biweekly \| monthly \| trigger \| custom` |                       |
+| `visitDay`         | enum `mon…sun`, nullable                                  | When cadence is fixed |
+| `visitTime`        | time, nullable                                            |                       |
+| `triggerCondition` | text, nullable                                            | "Snowfall ≥ 5 cm"     |
+| `customSchedule`   | text, nullable                                            | Free-text pattern     |
+| `contractStart`    | date                                                      |                       |
+| `contractEnd`      | date, nullable                                            | Null = open-ended     |
+| `serviceWindow`    | text, nullable                                            | "04:00 - 11:00 AM"    |
+| `status`           | enum `active \| paused`                                   |                       |
+| `seasonLabel`      | text, nullable                                            | "2025/26"             |
+
+`[derived]`: visits expected, visits completed, % of season.
+
+### `visit`
+
+A single scheduled service occurrence (schedule list + visit report modal).
+
+| Field              | Type                                                                                 | Notes           |
+| ------------------ | ------------------------------------------------------------------------------------ | --------------- |
+| `id`               | uuid                                                                                 |                 |
+| `boardId`          | fk → board                                                                           |                 |
+| `recurrenceId`     | fk → recurrence                                                                      |                 |
+| `num`              | int                                                                                  | Sequence number |
+| `scheduledDate`    | date                                                                                 |                 |
+| `window`           | text                                                                                 |                 |
+| `status`           | enum `next \| scheduled \| upcoming \| complete \| rescheduled \| missed \| skipped` |                 |
+| `assignedMemberId` | fk → workspace_member                                                                | The technician  |
+| `arrivedAt`        | time, nullable                                                                       |                 |
+| `finishedAt`       | time, nullable                                                                       |                 |
+| `notes`            | text, nullable                                                                       |                 |
+| `forecast`         | text, nullable                                                                       |                 |
+| `visibility`       | enum `client \| team`                                                                |                 |
+| `reportPostedAt`   | timestamp, nullable                                                                  |                 |
+
+`[derived]`: photo count.
+
+### `schedule_change_request`
+
+Reschedule proposals in either direction (provider ↔ client).
+
+| Field                 | Type                                                                  | Notes                         |
+| --------------------- | --------------------------------------------------------------------- | ----------------------------- |
+| `id`                  | uuid                                                                  |                               |
+| `boardId`             | fk → board                                                            |                               |
+| `visitId`             | fk → visit                                                            |                               |
+| `direction`           | enum `client-to-provider \| provider-to-client`                       |                               |
+| `requestedByType`     | enum `client \| member`                                               |                               |
+| `requestedByMemberId` | fk → workspace_member, nullable                                       |                               |
+| `proposedFrom`        | text                                                                  | Current slot                  |
+| `proposedTo`          | text                                                                  | New date/time                 |
+| `reason`              | text                                                                  |                               |
+| `status`              | enum `pending \| client-pending \| approved \| declined \| withdrawn` |                               |
+| `verifiedVia`         | enum `email \| phone`, nullable                                       | Client must verify to request |
+| `verifiedAt`          | timestamp, nullable                                                   |                               |
+| `sentAt`              | timestamp                                                             |                               |
+| `resolvedAt`          | timestamp, nullable                                                   |                               |

@@ -1,0 +1,128 @@
+---
+title: Identity
+icon: UserRound
+description: The four tables Better Auth manages - user, session, account, and verification - and the relations between them.
+---
+
+## Better Auth Tables
+
+✅ **Built** - `packages/db/src/schemas/better-auth.ts`
+
+> **Managed by Better Auth.** These four tables (`user`, `session`, `account`,
+> `verification`) are generated and owned by Better Auth - do not hand-edit their
+> schema. The structure below mirrors the generated definition; profile and
+> registration extras that used to live here now sit on the **`member`** table.
+
+`packages/db/src/schemas/better-auth.ts` is emitted by the Better Auth CLI, so the
+next `pnpm --filter api auth:generate` overwrites anything written there by hand.
+
+That generator has no options for two fixes the timestamp columns need, so
+`auth:generate` chains `auth:patch` (`packages/db/scripts/patch-better-auth-schema.ts`),
+which rewrites its output: timestamps become timezone-aware, and `updated_at` gets
+a default, since the generator marks it `NOT NULL` without one and inserts that do
+not set it explicitly fail. The rules are idempotent and keyed off shapes rather
+than table names, and the script **fails the command** when it cannot apply one,
+because a silent no-op would mean losing time zones without noticing.
+
+Everything Better Auth addresses by name (tables, columns, schema properties) is
+left exactly as generated, so its adapter and tooling see the standard schema.
+Cosmetic differences such as index naming and import order are deliberately not
+patched: they buy nothing and add divergence to maintain.
+
+### Relations
+
+The generator also emits Drizzle `relations()` into `better-auth.ts`, but those are
+not the ones the Drizzle client sees. `packages/db/src/schemas/auth.ts` owns the auth
+relations by hand, and `schemas/index.ts` exports the **tables** from the generated
+file and the **relations** from `auth.ts`. That split is what lets a relation the
+generator knows nothing about, such as `user` to its workspaces, survive the next
+`auth:generate`.
+
+<Callout type="warn">
+  These relations are load-bearing, not a convenience. `apps/api/src/config/auth.ts` sets
+  `advanced.database.joins: true`, which makes Better Auth's Drizzle adapter fetch related rows
+  through Drizzle's relational query API - `db.query.session.findFirst({ with: { user: true } })` -
+  rather than issuing a second query for the related row. A session lookup is one round trip instead
+  of two, on the hot path of every authenticated request. Rename or drop one of these relations and
+  the adapter logs `The model "..." was not found in the query object` and falls back to the separate
+  query: correct results, silently slower.
+</Callout>
+
+The relation **names** are part of that contract. The adapter builds its `with` key
+from the model name, singular for a one-to-one and plural for a one-to-many, so
+`session.user`, `user.sessions`, and `user.accounts` have to be spelled exactly that
+way to be found.
+
+### `user`
+
+| Field              | Type                     | Notes                                                                                                                                                          |
+| ------------------ | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`               | uuid                     |                                                                                                                                                                |
+| `name`             | text                     | Derived, never supplied: `firstName` and `lastName` joined                                                                                                     |
+| `firstName`        | text                     | Declared through Better Auth's `additionalFields`, required                                                                                                    |
+| `lastName`         | text                     | Required. Seeds `workspaceMember.displayName` on the first join                                                                                                |
+| `productNewsOptIn` | boolean, default `false` | Marketing consent, from the sign-up checkbox. Drives the `product-news` topic opt-in, and is kept because consent has to be provable rather than only acted on |
+| `email`            | text, unique             |                                                                                                                                                                |
+| `emailVerified`    | boolean                  |                                                                                                                                                                |
+| `image`            | text, nullable           | Avatar URL                                                                                                                                                     |
+| `createdAt`        | timestamp                |                                                                                                                                                                |
+| `updatedAt`        | timestamp                |                                                                                                                                                                |
+
+`firstName` and `lastName` are declared in `auth.ts` and reach the table through
+`auth:generate`, not by hand-editing `better-auth.ts`. A `databaseHooks.user.create.before`
+hook recomputes `name` from them, so a client cannot store a name that disagrees
+with the two parts the audience channel sends to Resend.
+
+### `session`
+
+| Field       | Type           | Notes               |
+| ----------- | -------------- | ------------------- |
+| `id`        | uuid           |                     |
+| `userId`    | fk → user      | `on delete cascade` |
+| `token`     | text, unique   |                     |
+| `expiresAt` | timestamp      |                     |
+| `ipAddress` | text, nullable |                     |
+| `userAgent` | text, nullable |                     |
+| `createdAt` | timestamp      |                     |
+| `updatedAt` | timestamp      |                     |
+
+Index: `session_userId_idx` on (`userId`).
+
+### `account`
+
+Credentials and linked OAuth providers per user.
+
+| Field                   | Type                | Notes                        |
+| ----------------------- | ------------------- | ---------------------------- |
+| `id`                    | uuid                |                              |
+| `issuer`                | text                | Who issued the credential    |
+| `userId`                | fk → user           | `on delete cascade`          |
+| `accountId`             | text                | Provider's account id        |
+| `providerId`            | text                | e.g. `credential`, `google`  |
+| `accessToken`           | text, nullable      |                              |
+| `refreshToken`          | text, nullable      |                              |
+| `idToken`               | text, nullable      |                              |
+| `accessTokenExpiresAt`  | timestamp, nullable |                              |
+| `refreshTokenExpiresAt` | timestamp, nullable |                              |
+| `scope`                 | text, nullable      |                              |
+| `password`              | text, nullable      | Hashed - credential accounts |
+| `createdAt`             | timestamp           |                              |
+| `updatedAt`             | timestamp           |                              |
+
+Unique: (`issuer`, `accountId`), as `account_issuer_accountId_uidx` - one row per
+identity at a provider. Index: `account_userId_idx` on (`userId`).
+
+### `verification`
+
+Email/identity verification tokens.
+
+| Field        | Type      | Notes                 |
+| ------------ | --------- | --------------------- |
+| `id`         | uuid      |                       |
+| `identifier` | text      | What's being verified |
+| `value`      | text      | Token value           |
+| `expiresAt`  | timestamp |                       |
+| `createdAt`  | timestamp |                       |
+| `updatedAt`  | timestamp |                       |
+
+Index: `verification_identifier_idx` on (`identifier`).

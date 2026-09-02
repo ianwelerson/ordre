@@ -92,7 +92,7 @@ pnpm --filter @ordre/ui lint
 
 Explain in the chat what the component is, why the variant axes are split the way
 they are, and which existing component it was modelled on. Then say whether
-[Brand](../../../apps/docs/content/docs/design/brand.mdx) needs a new pattern
+[Brand → Components](../../../apps/docs/content/docs/product/brand/components.mdx) needs a new pattern
 recorded, or that nothing needs updating.
 
 ## Rules

@@ -1,0 +1,34 @@
+---
+title: Overview
+icon: ListChecks
+description: The feature specifications - what each one covers and where the behaviour rules and edge cases live.
+---
+
+Each page here specifies one feature: how it behaves, what the rules are, and the
+edge cases that have already been decided. These are the reference the
+implementation is checked against, not a description of what is built today. For
+what exists in the database, see the
+[Data Model](/internal-docs/architecture/data-model).
+
+<Cards>
+  <Card
+    title="Board Access & Identity Verification"
+    href="/internal-docs/product/specs/board-access"
+    description="How a client opens a board without an account, and what stays blurred until they verify."
+  />
+  <Card
+    title="Service Types"
+    href="/internal-docs/product/specs/service-types"
+    description="Quick, full, and recurring - what each type is for and how the board differs."
+  />
+  <Card
+    title="Workspace Locations"
+    href="/internal-docs/product/specs/locations"
+    description="Multiple physical sites under one workspace, and the rules around assigning them."
+  />
+  <Card
+    title="Registration"
+    href="/internal-docs/product/specs/registration"
+    description="The sign-up flow, what it creates, and how the workspace slug is derived."
+  />
+</Cards>

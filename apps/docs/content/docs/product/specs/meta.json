@@ -1,0 +1,10 @@
+{
+  "title": "Specifications",
+  "icon": "ListChecks",
+  "pages": [
+    "board-access",
+    "service-types",
+    "locations",
+    "registration"
+  ]
+}

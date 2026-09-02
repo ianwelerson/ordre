@@ -30,8 +30,9 @@ Report findings only. Do not edit files unless the user asks for the fix.
 
 Read before judging, or you will recommend something the system already decided:
 
-- `apps/docs/content/docs/design/brand.mdx` for the palette, surface tiers,
-  typography rules, spacing, radius, and the component patterns.
+- `apps/docs/content/docs/product/brand/foundations.mdx` for the palette, surface
+  tiers, typography rules, spacing, and radius, and
+  `apps/docs/content/docs/product/brand/components.mdx` for the component patterns.
 - `packages/ui/src/styles/tokens/*.mdx` for the token namespaces as they actually
   exist: colours, typography, spacing, radius, shadows, motion, breakpoints,
   containers.

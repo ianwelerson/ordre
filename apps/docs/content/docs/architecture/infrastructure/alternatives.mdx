@@ -1,0 +1,45 @@
+---
+title: Alternatives
+icon: GitFork
+description: Options mapped but not committed - two serverless compute models for the API, and a cheaper SMS provider.
+---
+
+## Future Compute Options
+
+**Status:** Mapped as options, not committed
+
+**Context:** Express is the deployed backend. If traffic patterns, cost, or infrastructure goals make a different compute model more attractive, the adapter pattern in `apps/api/` makes either migration low-effort - business logic in `logic/` is untouched in both cases.
+
+### Option A - AWS Lambda + API Gateway
+
+Each Express route becomes an individual Lambda handler. The handler extracts values from the Lambda `event` object, calls the same `logic/` function, and returns the Lambda response shape. API Gateway handles routing and CORS in place of Express.
+
+**When to consider:** AWS skills are a priority for the portfolio, or pay-per-invocation pricing is more cost-effective at the actual traffic volume.
+
+### Option B - Vercel Functions
+
+Each Express route becomes a Vercel Function. The function signature changes from Express `(req, res)` to Vercel's standard `Request`/`Response` format, but calls the same `logic/` function. Routing is handled by Vercel natively - no separate API Gateway needed. Since Vercel already hosts all frontends, no additional vendor is introduced.
+
+**When to consider:** Simplifying the infrastructure footprint; Vercel Functions are included in the Pro plan already paid for frontend hosting.
+
+### What stays the same in either migration
+
+- `logic/` business logic functions - untouched
+- `@ordre/core` schemas and types
+- `@ordre/services` data access layer
+- Drizzle ORM schemas and migrations
+- All other services (Upstash Redis, Better Auth, Twilio, Resend, Sentry, Umami)
+
+### Database portability note
+
+Neon is standard PostgreSQL. If the database host ever needs to change, the switch is a driver swap and connection string change in Drizzle config - schemas, queries, and migrations are identical. Data migrates via standard `pg_dump`/`pg_restore`.
+
+The coupling runs the other way too: the `pg` pool driver is chosen specifically because the API is a long-lived process. Moving to a serverless compute model (Option A or B above) would mean swapping the client for Neon's serverless/HTTP driver, which is built for environments that can't hold a pooled TCP connection open - schemas and migrations stay the same, only `@ordre/db/connection` changes.
+
+## SMS Alternative - Plivo
+
+**Status:** Mapped as a future option
+
+**Why it's listed:** If Twilio costs grow significantly at scale (particularly due to Brazil SMS rates), Plivo is a drop-in alternative with lower per-message pricing and a similar REST API. The messaging layer should be abstracted behind a `NotificationService` interface in `@ordre/services` to make this swap straightforward.
+
+**When to consider:** Twilio spend exceeds ~$200/month consistently, or Brazil SMS volume justifies negotiating rates.

@@ -18,7 +18,7 @@ Built with **[Express 5](https://expressjs.com/) on Node.js**.
 
 ## 🚀 Getting Started
 
-Install and run the whole stack from the repo root - see **[Setup → Running the Project](../docs/content/docs/setup/running-the-project.mdx)**. To run only the API:
+Install and run the whole stack from the repo root - see **[Setup → Running the Project](../docs/content/docs/start/running-the-project.mdx)**. To run only the API:
 
 ```bash
 pnpm --filter api api:dev
@@ -26,7 +26,7 @@ pnpm --filter api api:dev
 
 `pnpm api:dev` serves it over HTTPS at **https://api.ordre.localhost** (via portless); `pnpm api:dev:app` runs the raw server on **http://localhost:3000**. Health check: `GET /api/health`.
 
-The API validates its environment with a Zod schema at startup, so a missing or malformed value fails immediately rather than at request time - including `RESEND_API_KEY`, which is required on every stage. See **[Setup → Environment Variables](../docs/content/docs/setup/environment-variables.mdx)**.
+The API validates its environment with a Zod schema at startup, so a missing or malformed value fails immediately rather than at request time - including `RESEND_API_KEY`, which is required on every stage. See **[Setup → Environment Variables](../docs/content/docs/start/environment-variables.mdx)**.
 
 ---
 
@@ -34,8 +34,8 @@ The API validates its environment with a Zod schema at startup, so a missing or 
 
 Everything conceptual lives in the docs project, not here:
 
-- [Architecture](../docs/content/docs/engineering/architecture.mdx) - folder conventions and package boundaries
-- [Authorization](../docs/content/docs/engineering/authorization) - RBAC guards and row-level security
-- [Transactional Outbox](../docs/content/docs/engineering/outbox.mdx) - how email is queued and delivered
-- [Testing](../docs/content/docs/engineering/testing.mdx) - the two-tier test strategy
+- [Architecture](../docs/content/docs/architecture/index.mdx) - folder conventions and package boundaries
+- [Authorization](../docs/content/docs/architecture/authorization) - RBAC guards and row-level security
+- [Transactional Outbox](../docs/content/docs/architecture/outbox.mdx) - how email is queued and delivered
+- [Testing](../docs/content/docs/start/testing.mdx) - the two-tier test strategy
 - [Root README](../../README.md) - monorepo overview

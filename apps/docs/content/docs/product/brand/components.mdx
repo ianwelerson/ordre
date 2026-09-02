@@ -1,0 +1,131 @@
+---
+title: Components
+icon: Component
+description: The shared component patterns, the dashboard shell they sit in, and the Tailwind theme that provides their tokens.
+---
+
+## Components
+
+### Buttons
+
+| Variant     | Background  | Text Color | Border        | Radius | Padding   |
+| ----------- | ----------- | ---------- | ------------- | ------ | --------- |
+| Primary     | `#E0913E`   | `#FFFFFF`  | None          | 8px    | 12px 24px |
+| Secondary   | transparent | `#1A1D26`  | 1px `#D9D6D0` | 8px    | 12px 24px |
+| Ghost       | transparent | `#E0913E`  | None          | 8px    | 12px 24px |
+| Destructive | `#C44B3F`   | `#FFFFFF`  | None          | 8px    | 12px 24px |
+
+- **All buttons:** Geist Medium, 15px, letter-spacing -0.01em.
+- **Hover states:** Primary → `#C67A2E`. Secondary → background `#F0EEEB`. Ghost → background `#F0EEEB`. Destructive → darken 8%.
+- **Transition:** `all 150ms ease`.
+- **Sizes:** Small (8px 16px, 13px text), Medium (default), Large (16px 32px, 16px text).
+- **Disabled:** 40% opacity, `cursor: not-allowed`.
+- **Why Primary is Amber, not Midnight:** The primary CTA must be the most visually distinct element on any screen. Midnight blends with body text and headings. Amber is the single accent color - it demands attention.
+
+### Cards
+
+- **Background:** `#FFFFFF` (elevated) on `#FAFAF8` or `#F0EEEB` backgrounds.
+- **Border:** 1px `#D9D6D0` when on a white background. No border when tonal contrast is sufficient.
+- **Radius:** 12px.
+- **Internal padding:** Minimum 24px.
+- **Hover (if clickable):** Apply hover shadow, no background change.
+
+### Input Fields
+
+| State    | Background | Border        | Label Color |
+| -------- | ---------- | ------------- | ----------- |
+| Default  | `#F0EEEB`  | 1px `#D9D6D0` | `#8A8680`   |
+| Focus    | `#FFFFFF`  | 1px `#E0913E` | `#3A3F4B`   |
+| Error    | `#FFFFFF`  | 1px `#C44B3F` | `#C44B3F`   |
+| Disabled | `#F0EEEB`  | 1px `#D9D6D0` | `#D9D6D0`   |
+
+- **Labels:** Geist Regular, 13px, positioned above the input with 6px gap.
+- **Placeholder text:** Geist Regular, 15px, `#8A8680`.
+- **Input text:** Geist Regular, 15px, `#1A1D26`.
+- **Radius:** 8px.
+- **Padding:** 12px 16px.
+
+### Status Chips
+
+| Status    | Background  | Text Color | Example       |
+| --------- | ----------- | ---------- | ------------- |
+| Completed | `#5B9A6F20` | `#5B9A6F`  | ✓ Completed   |
+| Active    | `#E0913E20` | `#E0913E`  | ● In Progress |
+| Urgent    | `#C44B3F20` | `#C44B3F`  | ! Urgent      |
+| Default   | `#F0EEEB`   | `#3A3F4B`  | - Pending     |
+
+- **Shape:** Pill (`border-radius: 9999px`).
+- **Font:** Geist Mono, 12px, Medium weight.
+- **Padding:** 4px 12px.
+
+### Phase Tracker Dots
+
+Used in board mockups and status indicators:
+
+- **Completed:** Sage (`#5B9A6F`)
+- **Active:** Amber (`#E0913E`)
+- **Pending:** Ash (`#D9D6D0`)
+
+Dots are connected by thin 1px lines in Ash. Active dot may have a subtle ring (`ring-4 ring-white`) for emphasis.
+---
+
+## Dashboard Shell
+
+The dashboard is the container that the provider lives inside every day. It optimizes for speed, clarity, and confidence.
+
+### Layout Structure
+
+- **Sidebar** (260px, fixed): Warm Gray (`#F0EEEB`) background. Full viewport height. No right border - tonal contrast creates the boundary.
+- **Top bar** (64px, sticky): White (`#FFFFFF`) background at 95% opacity with `backdrop-filter: blur(12px)`. 1px Ash bottom border. Contains search bar (left) and notification bell (right).
+- **Content area:** White (`#FFFFFF`) background, fills remaining space, scrolls independently. Padding: 32px.
+
+### Sidebar Anatomy
+
+- **Header:** "Ordre" wordmark (Plus Jakarta Sans Bold, 18px, Midnight) + provider name (Geist Medium 12px, Stone).
+- **Primary CTA:** "New board" button - full-width, Amber bg, white text, 40px height, 13px Geist Medium.
+- **Primary nav:** Home, Boards, Messages, Clients - Stone text, 13px, 20px Material icons. Active state: White bg + Amber text, rounded-lg.
+- **Divider:** 1px Ash/30, 12px vertical margin.
+- **Secondary nav:** Team, Settings - same styling, always default state.
+- **Profile (footer):** Avatar initials circle (32px, Warm Gray bg, Ash border) + name + email + more icon.
+
+### Navigation States
+
+- **Default:** Stone text, transparent bg.
+- **Hover:** Snow (`#FAFAF8`) bg, Stone text.
+- **Active:** White (`#FFFFFF`) bg, Amber text. Font-weight medium (not bold). Outline icons only - no filled variants.
+---
+
+## Tailwind Configuration
+
+Ordre uses **Tailwind v4** with CSS-based theme configuration - there is no `tailwind.config.ts`. Design tokens live in `packages/ui/src/styles/tailwind.css` and are consumed across all apps via `@ordre/ui/styles/main`:
+
+```css
+/* packages/ui/src/styles/tailwind.css */
+@theme static {
+  /* === Colors === */
+  --color-*: initial;
+  --color-midnight: #1a1d26;
+  --color-slate: #3a3f4b;
+  --color-amber: #e0913e;
+  --color-deep-amber: #c67a2e;
+  --color-sage: #5b9a6f;
+  --color-snow: #fafaf8;
+  --color-warm-gray: #f0eeeb;
+  --color-ash: #d9d6d0;
+  --color-stone: #8a8680;
+  --color-brick: #c44b3f;
+  --color-white: #ffffff;
+
+  --color-accent: var(--color-amber);
+  --color-accent-strong: var(--color-deep-amber);
+
+  /* === Fonts === */
+  --font-headline: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-body: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, monospace;
+}
+```
+
+**No Material Design tokens.** No `surface-container`, `inverse-surface`, `primary-container`, or any other Material naming. The 11 simple color names above are the entire palette.
+
+> The spacing and border-radius tokens on [Foundations](/internal-docs/product/brand/foundations) are applied via Tailwind's default scale plus utility classes - they are not declared as custom theme properties yet. The fixed values there are the reference for how each token should be used, not a list of custom Tailwind properties.

@@ -13,10 +13,10 @@ Drizzle ORM schema, migrations, and the shared Postgres connection for Ordre.
 
 Field-level notes on every table - what each column is for, which are derived, and
 which tables are planned rather than built - live in
-**[Data Model](../../apps/docs/content/docs/engineering/data-model.mdx)**.
+**[Data Model](../../apps/docs/content/docs/architecture/data-model/index.mdx)**.
 
 ## 📚 Further Reading
 
-- [Data Model](../../apps/docs/content/docs/engineering/data-model.mdx) - every table, field by field
-- [Row-Level Security](../../apps/docs/content/docs/engineering/authorization/row-level-security.mdx) - how the policies work
+- [Data Model](../../apps/docs/content/docs/architecture/data-model/index.mdx) - every table, field by field
+- [Row-Level Security](../../apps/docs/content/docs/architecture/authorization/row-level-security.mdx) - how the policies work
 - [Root README](../../README.md) - monorepo overview

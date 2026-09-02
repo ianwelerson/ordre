@@ -1,0 +1,251 @@
+---
+title: Services
+icon: Boxes
+description: The managed services the apps call into - auth, messaging, email, monitoring, analytics, and the two documentation tools.
+---
+
+## Authentication - Better Auth
+
+**Status:** Chosen
+
+**Why:**
+
+- Open-source library that runs directly inside the Express app - no external service, no MAU pricing, no lock-in
+- Session-based authentication with auth data stored in the Neon database alongside app tables
+- Handles password hashing, session management, CSRF protection, and rate limiting out of the box
+- Multi-session support allows controlling the number of concurrent devices per user - enforcing that workspace owners add employees as individual members rather than sharing a single account
+- Auth UI is fully custom - Better Auth provides the API endpoints, Ordre builds the pages (multi-step registration, branded login, etc.)
+- Only workspace members (owners, admins, and members) authenticate - clients access boards via a unique link and never create an account
+
+**Who authenticates:** Every owner account and every member account (admin or member role) is a Better Auth user. Clients are excluded - they verify their identity via a one-time token sent by email (Resend) or SMS (Twilio), not through Better Auth.
+
+**Alternatives considered:** Auth0 (industry standard with strong Canadian market recognition, 25,000 MAU free tier, but user data lives externally and MAU-based pricing at scale), Clerk (polished DX but higher per-MAU cost), AWS Cognito (rougher developer experience).
+
+### Better Auth Dash
+
+**Status:** Trialling
+
+`@better-auth/infra` ships a `dash()` plugin that connects the API to Better Auth's
+hosted dashboard: user administration, session inspection and revocation, and sign-up
+and sign-in history. It reads the `user`, `session`, and `account` tables through the
+same Drizzle adapter the app uses, so the records stay in Neon.
+
+It is mounted only when a key is configured, in `apps/api/src/config/auth.ts`:
+
+```ts
+const dashPlugins = env.BETTER_AUTH_API_KEY ? [dash({ apiKey: env.BETTER_AUTH_API_KEY })] : [];
+```
+
+The key is passed explicitly rather than left to the plugin's own `process.env` read,
+so the value reaching it is the one the Zod schema validated. An environment without
+a key, which includes every test run, mounts nothing.
+
+<Callout type="warn">
+  The plugin sends auth **events** - sign-ups, sign-ins, session lifecycle - to Better Auth's API as
+  they happen. The rows stay in Neon, the activity metadata does not. That is the trade being made
+  for the dashboard, and it is why the plugin is opt-in per environment rather than always on.
+</Callout>
+
+Keeping it conditional is what preserves the "no lock-in" claim above. `dash()` adds no
+columns unless `activityTracking` or `managedDirectorySync` is enabled, and neither is,
+so backing it out is deleting the const and its spread - no migration to unwind.
+
+#### `sentinel` evaluated, not adopted
+
+The same package ships a security plugin covering breached-password rejection,
+disposable-email blocking, bot and geo blocking, velocity limits, impossible-travel
+detection, and device-keyed abuse prevention.
+
+Its device-level checks depend on the Better Auth **client** SDK, which fingerprints
+the browser and posts the record to Better Auth's KV so the server can load it back.
+The dashboard reaches the API through `@ordre/services`' own fetch client instead, so
+no identification record is ever created and the server resolves no visitor id. The
+consequences are not uniform degradation:
+
+| Check                                                  | Without a visitor id                 |
+| ------------------------------------------------------ | ------------------------------------ |
+| `compromisedPassword`, `emailValidation`, `staleUsers` | Work - evaluated server-side         |
+| `credentialStuffing`, `velocity`                       | Fall back to email and IP keying     |
+| `impossibleTravel`, `maxSignupsPerVisitor`             | Silently skipped                     |
+| Any `action: 'challenge'`                              | Degrades to allow                    |
+| `freeTrialAbuse`                                       | **Rejects every sign-up with a 403** |
+
+What still works costs two external round trips on the sign-in path and a deeper
+runtime dependency on the hosted service. Revisit only alongside a decision to adopt
+the Better Auth client. If it is ever enabled, `emailNormalization` must stay off: it
+rewrites addresses past lowercasing, which would break the invite address match in
+`apps/dashboard/src/views/Invite/model/useInviteState.ts`.
+
+---
+
+## SMS & WhatsApp - Twilio
+
+**Status:** Chosen
+
+**Why:**
+
+- Industry-standard messaging API with excellent documentation and SDKs
+- Covers board link delivery via SMS and WhatsApp, and client verification via SMS (4-digit token)
+- WhatsApp Business API support is important for the Brazilian market where WhatsApp is the dominant channel
+- Pay-per-message pricing with no minimum commitment
+- Trial credit covers development and testing
+
+**Use cases:**
+
+| Message type                        | Channel         | Trigger                                                                |
+| ----------------------------------- | --------------- | ---------------------------------------------------------------------- |
+| Board link delivery                 | SMS or WhatsApp | Workspace member creates a new board                                   |
+| Client verification (4-digit token) | SMS             | Client requests access to blurred fields (when email is not available) |
+| Member notifications                | SMS             | Optional alerts (e.g. client approved a request)                       |
+
+**Market consideration:** SMS costs vary significantly by country. Brazil is the most expensive of the three target markets. Defaulting to WhatsApp delivery for Brazilian clients reduces per-message cost substantially. The workspace member chooses the delivery channel when sharing the board link.
+
+**Alternatives considered:** Plivo (cheaper per-message rates - strong alternative if Twilio costs grow at scale), AWS SNS (requires an AWS account, rougher DX, less mature WhatsApp support).
+
+---
+
+## Email and audience - Resend
+
+**Status:** Live - integrated and delivering
+
+**Why:**
+
+- Developer-first email API built by the team behind React Email - natural fit for the React/Next.js stack
+- Clean REST API and official Node.js SDK. Templates are ours, written with React Email in `packages/email` and rendered on each send, so a message is versioned with the code that sends it
+- Free tier covers development and early production
+- Handles both transactional email (account and workspace lifecycle, invitations, board notifications) and marketing email (member onboarding sequences, product updates)
+
+**How it's wired:** the API never calls Resend from a request. A producer writes a row to the `outbox` table inside the same transaction as the business data, and a background worker claims and delivers it. That is what keeps a request DB-only and makes a Resend outage a retry rather than a failed sign-up. Two channels share that queue: `email` sends a rendered message, `audience` keeps the contact record and its segments in step with workspace membership. See **[Transactional Outbox](/internal-docs/architecture/outbox)** for the full design.
+
+**Delivering today:**
+
+| Topic               | Recipient       | Trigger                             |
+| ------------------- | --------------- | ----------------------------------- |
+| `account:created`   | New user        | A Better Auth user row is created   |
+| `workspace:created` | Workspace owner | A workspace is created              |
+| `invite:created`    | Invited person  | An admin creates a workspace invite |
+
+**Syncing today** (the `audience` channel, one delivery):
+
+| Topic          | Contact           | Trigger                                                                 |
+| -------------- | ----------------- | ----------------------------------------------------------------------- |
+| `contact:sync` | The account owner | Sign-up, workspace creation, invite accept, role change, removal, leave |
+
+Segments are ours - `all-accounts`, `workspace-owner`, `workspace-member` - and each
+row carries the complete set, so the provider reconciles against what Resend holds.
+Topics are the contact's: `product-news` and `workspace-updates`, opted into and
+never opted out of by us. Ids are per environment and come from `RESEND_SEGMENT_*` /
+`RESEND_TOPIC_*`; a row names them, never their ids.
+
+**Planned:** board notifications (new update, photo, approval request) and client verification tokens land as new outbox topics once boards exist, and reuse the same worker.
+
+<Callout type="warn">
+  **Free-plan rate limits are load-bearing.** The plan caps daily sends, so the worker treats a
+  Resend `429` as "not this message's fault": the attempt is handed back and the row waits an hour
+  instead of burning a retry. Confirm the current cap against the [Resend pricing
+  page](https://resend.com/pricing) before assuming headroom for a bulk send.
+</Callout>
+
+<Callout type="warn">
+  **One API key serves every environment today**, and `DISABLE_OUTBOX_EMAIL` skips email only. A
+  local sign-up therefore writes a real contact into the account's audience. Point a local `.env` at
+  throwaway segment ids until the keys diverge: a broadcast targets a segment, so a contact in a
+  dev-only segment can never be reached by one.
+</Callout>
+
+**Sending domain:** `ordre.app`, verified with Resend. The from-address is a constant rather than an env-derived origin - there is no `@ordre.localhost` to send from - so dev, staging, and production all send as the same verified sender. The **links inside** the email are environment-specific and come from `config/urls.ts`.
+
+**Alternatives considered:** AWS SES (cheapest at scale but requires AWS account and minimal DX), SendGrid (legacy platform, removed free tier), Postmark (excellent deliverability but higher cost and no marketing email support on the same account).
+
+---
+
+## Error Tracking - Sentry
+
+**Status:** Release tracking wired in CI; SDK integration pending
+
+**Why:**
+
+- Industry standard for error tracking; strong portfolio signal
+- Official Next.js SDK with 3-layer integration (client, server, edge)
+- Automatic error grouping with full context (user, browser, breadcrumbs)
+- GitHub integration to link errors to specific commits/releases
+- Free tier is sufficient for development and beta
+
+**Current setup:** A reusable `sentry.yml` GitHub Actions workflow publishes a Sentry release per app (via `getsentry/action-release`) as part of the deploy pipeline. The client/server SDKs themselves are not yet wired into the Next.js or React Router apps.
+
+**Setup pattern:** Environment-based activation; source maps uploaded via CI to enable unminified stack traces.
+
+---
+
+## Analytics - Umami
+
+**Status:** Planned
+
+**Why:**
+
+- Privacy-first: no tracking cookies, GDPR-compliant by default, no cookie banner needed
+- Open source (MIT licence) - can self-host later if needed
+- Covers the essential metrics (page views, events, sessions, traffic sources) without the complexity of GA4
+- Aligns with Ordre's privacy-first philosophy
+- Cloud free tier covers development; self-hosting on a small VPS is the cost-effective path at scale
+
+**Alternatives considered:** Google Analytics 4 (tracking-heavy, complex), Plausible (similar to Umami but paid-only cloud).
+
+---
+
+## Logging - pino, with a deferred platform
+
+**Status:** Structured logging active; managed platform deferred
+
+**Logging (active):** Application and HTTP logs go through [pino](https://github.com/pinojs/pino), configured once in the `@ordre/monitoring` package - `createLogger` for application logs (the `console.log` replacement) and `httpLogger` (pino-http) for Express access logs. Output is pretty-printed in development and raw JSON in production. Each service tags its logs with a `service` field so they remain queryable per app once centralised. See [Architecture](/internal-docs/architecture/packages) → `@ordre/monitoring` for the package design.
+
+**Redaction and scrubbing:** pino's `redact` option matches a key path, so on its own it reaches a secret passed as a plain object but never a value inside an array or a substring of an error message. `redact` is kept for the first case; `scrub.ts` supplies serializers for the three shapes that carry the rest.
+
+- **Requests** keep an allowlist of headers, so one added to the stack later is dropped by default rather than logged until somebody notices. `url` and `referer` are masked: the segment following `/invite` or `/reset-password` is replaced, as is every query parameter value, so an invite token, a password-reset token and Better Auth's `verify-email?token=` never appear.
+- **Responses** keep only their status code. The header set is dropped because it carries the session cookie Better Auth issues on every sign-in and sign-up.
+- **Errors** lose the values a failed statement ran with. `DrizzleQueryError` renders its bound parameters into its own message, which pino copies into both `message` and `stack`, so that rendered string is cut out of both and the parameterised SQL is kept: it names columns, never values. node-postgres's `detail`, `where` and `internalQuery` are dropped for the same reason, as are the members of an `AggregateError`, which pino serializes before the scrub runs.
+- **Client IPs** are dropped. `remoteAddress`, `x-forwarded-for` and `x-ordre-client-ip` all sit outside the allowlist, so the access log holds no personal data under GDPR. Recording an IP on the security events instead, where the abuse signal is actually read, is open work.
+
+The composition direction differs between the two loggers and getting it backwards produces a serializer that silently does nothing. `pino-http` composes a custom serializer over the standard one, so `httpLogger` registers `scrubError` directly; plain pino passes the raw `Error` through, so `createLogger` composes it over `stdSerializers.err` by hand.
+
+**Access log levels:** 404s and any path passed as `quietPaths` log at `debug` rather than `info`. A public host is scanned continuously for `/wp-admin` and friends, and the uptime monitor polling `/v1/health` is the highest-volume line in the log while saying nothing when it succeeds. Both stay in the record, one `LOG_LEVEL` flip away.
+
+**Process-level failures:** The API entrypoint registers `uncaughtException` and `unhandledRejection` handlers, so a crash is written to the structured log instead of landing on stderr outside it. `uncaughtException` logs at `fatal` under `event: 'process.uncaught_exception'` and then exits 1, because the process is in an unknown state and must not keep serving. `unhandledRejection` logs at `error` under `event: 'process.unhandled_rejection'` and keeps the process up, since one stray promise is not grounds for dropping every other in-flight request. The cost of that choice is that registering the listener disables Node's default of crashing on an unhandled rejection, which makes the event worth an alert once logs are centralised. The `fatal` line survives the immediate `process.exit(1)` in both output modes, because pino registers an `exit` handler that flushes synchronously: on the SonicBoom destination in production, and on the transport thread in development.
+
+**Platform (deferred):** Shipping those JSON logs to a managed platform - Better Stack or Axiom - for retention, full-text search, and uptime alerts is deferred. Railway's and Vercel's built-in logs plus Sentry are sufficient during the early phase. Because pino already emits structured JSON tagged by service, adopting a platform later is a config change inside `@ordre/monitoring`, not an app-wide rewrite. Revisit once real traffic patterns and debugging needs emerge.
+
+---
+
+## Component Documentation - Storybook
+
+**Status:** Live and deployed
+
+**Why:**
+
+- Industry standard for component documentation and visual development
+- Enables isolated component development - build and test UI components without running the full app
+- Stories double as visual regression tests and design handoff artefacts
+- Integrates with the existing `@ordre/ui` package structure - each component ships with a `.stories.tsx` file
+
+**Hosting:** Deployed to `storybook.ordre.app` via Vercel as a static export.
+
+**Scope:** Documents all components in `@ordre/ui`, plus the app-specific components in `apps/*/src/shared/components/`. App components are filed under a top-level folder named for their app (`Dashboard/`), below the design system's own groups, so it stays clear which components are shared and which belong to one surface.
+
+**Process:** Every new component added to `@ordre/ui` ships with a `.stories.tsx` file alongside its implementation - there is no "add story later" path. App-specific components follow the same layout: one directory per component holding its `.tsx`, `.test.tsx` and `.stories.tsx`. Design tokens (colors, iconography) are documented via MDX pages in the same Storybook.
+
+---
+
+## Documentation - Fumadocs
+
+**Status:** Live and deployed
+
+**Why:**
+
+- Purpose-built documentation framework for Next.js - MDX content, full-text search, and a polished docs UI out of the box
+- `fumadocs-openapi` generates an interactive API reference (one MDX page per operation, with a request playground) directly from the OpenAPI spec `apps/api` produces, so the docs always match the deployed contract
+- Keeps the internal guides (architecture, specs, infrastructure, pricing, brand, roadmap) and the API reference in a single app under one domain
+- MDX authoring means docs live in the repo and ship through the same review and deploy pipeline as the code
+
+**Hosting:** Deployed to `docs.ordre.app` via Vercel, alongside the other frontends.
+
+**Sections:** Internal guides at `/internal-docs` and the generated API reference at `/api-docs`. The root (`/`) redirects to the marketing site. See `apps/docs/README.md` for the content layout and generation commands.

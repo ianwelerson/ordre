@@ -1,0 +1,85 @@
+---
+title: Conventions
+icon: FolderTree
+description: The three-folder convention every src directory follows, and how i18n is structured across the apps.
+---
+
+## Three-Folder Convention
+
+Each folder inside `src/` has a single, non-overlapping responsibility.
+
+| Folder    | Responsibility                                                                                                                                                                                                |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `app/`    | Route definitions, layouts, and framework-level concerns (middleware, entry files, API routes). Re-exports views. No business logic. All apps use `app/` - the Board app nests routes under `app/pages/`.     |
+| `views/`  | Page UI components, page-level logic, tests, and Storybook stories. A view with any logic splits into `ui/` (JSX) and `model/` (hooks, form schemas), so a screen's behaviour can be read without its markup. |
+| `shared/` | Cross-cutting code reused across multiple views: hooks, utils, types, i18n.                                                                                                                                   |
+
+**Flow example (Board app):**
+
+```tsx
+// 1. Route module - src/app/pages/home/home.tsx
+import { HomePage } from '@/views/Home';
+export default function Home() { return <HomePage />; }
+
+// 2. View - src/views/Home/ui/HomePage.tsx
+import { Button } from '@ordre/ui';
+
+export function HomePage() { ... }
+
+// 3. Test - src/views/BoardView/ui/BoardView.test.tsx
+test('renders board timeline', () => { ... });
+```
+
+---
+
+## i18n Structure
+
+**Initial languages:** English (`en`) and Portuguese (`pt`).
+
+**Shared strings** (app constants, status labels, error and validation copy, common UI words) live in [`@ordre/core/messages`](#messages) and are merged with app-specific strings at runtime. This section covers how each app _consumes_ them; what they contain and why they live in core is documented there.
+
+**Libraries per app:**
+
+| App       | Library                                       | Locale detection                                               | URL prefix                                     |
+| --------- | --------------------------------------------- | -------------------------------------------------------------- | ---------------------------------------------- |
+| Marketing | `next-intl`                                   | Path-based via `next-intl` routing                             | `as-needed` - `en` no prefix, `pt` → `/br`     |
+| Dashboard | `next-intl`                                   | Accept-Language header via `Negotiator` + `intl-localematcher` | None                                           |
+| Board     | `i18next` + `react-i18next` + `remix-i18next` | Order: custom path (`/br` → `pt`) → `lng` cookie → header      | `en` no prefix, `pt` → `/br` (via app helpers) |
+
+### Marketing (`next-intl`)
+
+```
+src/shared/i18n/
+├── routing.ts                 # defineRouting({ locales: ['en','pt'], defaultLocale: 'en', localePrefix: { mode:'as-needed', prefixes:{ pt:'/br' } } })
+├── navigation.ts              # createNavigation(routing) - exports Link, redirect, usePathname, useRouter, getPathname
+├── requests.ts                # getRequestConfig - spreads @ordre/core `app` + global `en|pt` + local messages
+└── messages/
+    ├── en.ts
+    └── pt.ts
+```
+
+### Dashboard (`next-intl`)
+
+```
+src/shared/i18n/
+├── requests.ts                # getRequestConfig - matches Accept-Language via Negotiator + intl-localematcher
+└── messages/
+    ├── en.ts
+    └── pt.ts
+```
+
+### Board (`i18next` + `remix-i18next`)
+
+```
+src/
+├── shared/i18n/
+│   ├── index.ts                 # Resource map: { en: { translation: en }, pt: { translation: pt } }
+│   └── messages/
+│       ├── en.ts                # Spreads @ordre/core `app` + global `en` + app-specific strings
+│       └── pt.ts
+│
+└── app/
+    ├── locale/locales.ts        # supportedLanguages, fallbackLanguage, localePrefixes ({ en:'', pt:'/br' }), getLocaleFromPath, stripLocalePrefix
+    ├── middleware/i18next.ts    # createI18nextMiddleware - lng cookie, detection order ['custom','cookie','header'], i18next module augmentation for typed resources
+    └── api/locales.ts           # /api/locales/:lng/:ns - serves namespace resources (used by i18next-fetch-backend on the client)
+```

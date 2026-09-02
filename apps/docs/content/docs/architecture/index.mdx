@@ -1,0 +1,143 @@
+---
+title: Overview
+icon: Boxes
+description: How the monorepo is organized - the root layout, the shared stack, and the dependency rules between packages and apps.
+---
+
+## Monorepo Root
+
+```
+ordre/
+├── apps/                     # Runnable applications
+│   ├── api/                  # Backend API (Express)
+│   ├── dashboard/            # Dashboard Next.js app (workspace members)
+│   ├── marketing/            # Marketing Next.js app
+│   ├── portal/               # [FUTURE] Client portal Next.js app
+│   ├── board/                # Board (shareable board) React app
+│   ├── docs/                 # Documentation + generated API reference (Fumadocs)
+│   └── storybook/            # Component documentation
+│
+├── packages/                 # Shared, reusable code
+│   ├── core/                 # Schemas, types, error catalog & every translated string
+│   ├── db/                   # Database schema, migrations & connection
+│   ├── services/             # HTTP client layer for the frontend apps
+│   ├── monitoring/           # Structured logging (pino) & future error tracking
+│   ├── ui/                   # Design system & components
+│   └── config/               # Shared tooling configs
+│
+├── turbo.json                # Turborepo pipeline config
+├── pnpm-workspace.yaml       # Workspace definition
+└── package.json              # Root dependencies
+```
+
+**Rule:** `apps/` = things that run. `packages/` = things that are shared.
+
+---
+
+## Shared Tech Stack
+
+Every workspace sits on the same base, so the per-workspace sections below list
+only what is specific to them.
+
+| Concern      | Choice                                                                         |
+| ------------ | ------------------------------------------------------------------------------ |
+| Language     | TypeScript, strict, via `@ordre/config/typescript/*`                           |
+| Monorepo     | Turborepo + pnpm workspaces                                                    |
+| Runtime      | Node.js 24+ (see `.nvmrc`)                                                     |
+| Testing      | Vitest, with `@vitest/coverage-v8`                                             |
+| Linting      | ESLint 9 flat config, via `@ordre/config/eslint/*`                             |
+| Formatting   | Prettier with import sorting, via `@ordre/config/prettier`                     |
+| Dependencies | Syncpack, keeping shared versions aligned (`pnpm packages:lint`)               |
+| Local HTTPS  | portless - see [Running the Project](/internal-docs/start/running-the-project) |
+
+Frontend workspaces add React 19, Tailwind CSS v4, and Testing Library with
+Playwright as Vitest's browser provider.
+
+<Callout>
+  **Major versions only, on this page.** Exact versions live in each workspace's `package.json` and
+  in `pnpm-lock.yaml` - a number copied into prose goes stale on the next dependency bump.
+</Callout>
+
+---
+
+## Package Architecture
+
+The packages follow a strict dependency flow. Upper layers may import from lower layers. **Lower layers must never import from upper layers**, and no package imports an app.
+
+```
+┌──────────────────────────────────────────────────────────┐
+│                      Frontend Apps                       │
+│              dashboard · board · marketing               │
+└──────────────────────────┬───────────────────────────────┘
+                           │
+              ┌────────────┴────────────┐
+              ▼                         ▼
+┌─────────────────────┐   ┌────────────────────────────────┐
+│      @ordre/ui      │   │        @ordre/services         │
+│ Components, tokens, │   │      HTTP client layer         │
+│  the form mechanism │   │                                │
+└─────────────────────┘   └────────────────────────────────┘
+
+
+┌──────────────────────────────────────────────────────────┐
+│                         apps/api                         │
+│ imports @ordre/db, @ordre/email, monitoring, @ordre/core │
+└──────────────────────────┬───────────────────────────────┘
+                           │
+       ┌───────────────────┼───────────────────┐
+       ▼                   ▼                   ▼
+┌──────────────────┐ ┌───────────────┐ ┌────────────────────┐
+│ @ordre/monitoring│ │ @ordre/email  │ │     @ordre/db      │
+│   pino logging   │ │ React Email   │ │ Drizzle tables,    │
+│                  │ │ templates.    │ │ migrations.        │
+│                  │ │ Built, not    │ │ Only imported by   │
+│                  │ │ raw source    │ │ apps/api           │
+└──────────────────┘ └───────┬───────┘ └─────────┬──────────┘
+                             │                   │
+                             └─────────┬─────────┘
+                                       ▼
+┌──────────────────────────────────────────────────────────┐
+│                       @ordre/core                        │
+│             schemas · types · errors · enums             │
+│           constants · permissions · messages             │
+│             The floor: no Drizzle, no React.             │
+│         Imported by every app and every package.         │
+└──────────────────────────────────────────────────────────┘
+
+  @ordre/config  -  devDependency of every workspace that has its own
+                    ESLint/TypeScript config; ships no runtime code
+```
+
+The edges above are the real ones today, not the intended end state:
+
+| Workspace                                                      | Depends on                                                                     |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `apps/api`                                                     | `@ordre/core`, `@ordre/db`, `@ordre/email`, `@ordre/monitoring`                |
+| `apps/dashboard`                                               | `@ordre/core`, `@ordre/services`, `@ordre/ui`                                  |
+| `apps/board` · `marketing`                                     | `@ordre/core`, `@ordre/ui`                                                     |
+| `apps/docs`                                                    | `@ordre/core` (the error-code page is generated from its catalog and its copy) |
+| `apps/storybook`                                               | `@ordre/ui`                                                                    |
+| `@ordre/db` · `@ordre/services` · `@ordre/ui` · `@ordre/email` | `@ordre/core`                                                                  |
+| `@ordre/core` · `monitoring`                                   | nothing but `@ordre/config`                                                    |
+| `@ordre/config`                                                | nothing at all                                                                 |
+
+`apps/storybook` carries no `@ordre/config` because it has no ESLint or TypeScript
+config of its own - it lints through the workspaces it loads stories from.
+
+Every workspace that renders anything sits on `@ordre/core`, because that is
+where the strings live as well as the contract. Core has no React and no Drizzle,
+so the edge stays legal from all of them.
+
+Two rules fall out of that shape and are worth stating explicitly:
+
+- **`@ordre/db` is imported by `apps/api` and nothing else.** No frontend, and not `@ordre/core`. Drizzle and `pg` stay out of every browser bundle.
+- **`@ordre/core` is the floor.** It has no Drizzle and no React dependency, which is what lets both the API and the frontends import it.
+- **`@ordre/email` is imported by `apps/api` and nothing else**, for the same reason as `@ordre/db`: it pulls in `react-dom/server`, which has no business in a browser bundle. It is also the only workspace consumed as **built output** rather than raw source, because it is the only one containing JSX - see [The API Runtime](/internal-docs/architecture/runtime).
+
+<Callout>
+  **`@ordre/core` holds every translated string - error copy, validation copy, email copy, and
+  shared product words. That is a deliberate widening: the copy for an error is keyed by the same
+  `ErrorCode` the catalog defines, and splitting the two across packages meant either duplicating
+  strings or resolving them across a boundary that `errorResponse` could not cross. One package, one
+  vocabulary.
+</Callout>

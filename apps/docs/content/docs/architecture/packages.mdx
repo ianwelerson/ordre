@@ -1,0 +1,434 @@
+---
+title: Packages
+icon: Package
+description: What each shared package owns, what it may import, and how to add a new one.
+---
+
+## Package Responsibilities
+
+### `@ordre/core`
+
+**Purpose:** The floor. Everything both sides of the wire have to agree on - schemas, types, error codes, route paths, permissions - plus every translated string in the product.
+
+**Tech stack:** Zod 4 only. No Drizzle, no React - that is what keeps it importable by anything.
+
+**Export paths:**
+
+| Path                              | Contents                                                                                               |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `@ordre/core/schemas`             | Zod schemas for request and response validation, plus `z` itself                                       |
+| `@ordre/core/types`               | TypeScript types inferred from schemas, plus primitives (`ErrorDefinition`, `ErrorMap`, `StatusCodes`) |
+| `@ordre/core/errors`              | Error catalogs, `ERROR_CATALOG`, `ErrorCode`, `ServiceError`, `errorResponse`                          |
+| `@ordre/core/enums`               | Canonical value lists, several of which back Postgres enums                                            |
+| `@ordre/core/constants`           | Values identical in every environment - route paths, TTLs, cookie names                                |
+| `@ordre/core/permissions`         | The role/permission matrix and `can()`                                                                 |
+| `@ordre/core/messages`            | Every translated string - `{ app, en, pt }`                                                            |
+| `@ordre/core/messages/en` · `/pt` | One locale on its own                                                                                  |
+
+**Key constraint:** No Drizzle dependency. No React dependency. Importable by any app - API, dashboard, board, or marketing.
+
+#### Errors
+
+Grouped by domain and keyed by a stable identifier. A definition carries **only a status** - the words live in [Messages](#messages), keyed by the same code.
+
+```ts
+import { errorMessage, VALIDATION_ERRORS } from '@ordre/core/errors';
+
+VALIDATION_ERRORS.INVALID_INPUT; // { status: 400 }
+errorMessage('INVALID_INPUT'); // "Some of the information you entered isn't valid."
+```
+
+`ERROR_CATALOG` merges every domain map into one object and `ErrorCode` is its `keyof`. That union is what types the copy as `Record<ErrorCode, string>`, so a code cannot ship without words for it in every locale. `CLIENT_ERRORS` (`NETWORK_ERROR`, `MALFORMED_RESPONSE`, `UNKNOWN_ERROR`) sit in the same catalog even though the server never returns them, so a consumer maps a dropped connection and a `403` through one vocabulary.
+
+**One string per code.** `errorResponse` fills the wire `message` from the English copy, so a log line or a `curl` stays readable; a client ignores it and resolves the same code in the reader's own locale. The message is a courtesy, the code is the contract.
+
+Every code, its status and its copy: **[Error Codes](/internal-docs/architecture/reference/error-codes)**, generated from the catalog.
+
+#### Schemas and validation
+
+Schemas carry **no messages at all** - `z.email()` stays `z.email()`. A global Zod error map, installed on import of `@ordre/core/schemas`, turns each issue into a stable key:
+
+```ts
+z.email()          →  "validation.email"
+z.string().min(1)  →  "validation.required"
+z.uuid()           →  "validation.uuid"
+```
+
+One schema is parsed in three places that need three different renderings: the browser (the user's locale), the API (which puts the key in `details` for a client to resolve), and the OpenAPI reference (English prose, resolved by the generator). Baking a message into the schema picks one and leaves the others wrong.
+
+A rule whose generic wording is not good enough passes its own key, and that wins: `z.string().min(8, "validation.passwordTooShort")`.
+
+**Nothing ever fails loudly.** An issue the map does not recognise falls back rather than emitting a key with no copy, and there are two fallbacks because Zod classifies on two axes:
+
+| Situation                                                                    | Falls back to              |
+| ---------------------------------------------------------------------------- | -------------------------- |
+| An issue `code` with no `case` (`invalid_union`, `custom`)                   | `validation.invalid`       |
+| `invalid_format` with a `format` not in `KNOWN_FORMATS` (`jwt`, `base64`, …) | `validation.invalidFormat` |
+
+`code` and `format` are separate: `z.email()`, `z.uuid()` and `z.ipv4()` all report `invalid_format` and differ only in `issue.format`, which is why formats are matched by a `Set` inside that one case rather than by their own `case` arms.
+
+**Adding a validation message** means editing two lists plus the copy, and the compiler enforces the last step:
+
+1. `VALIDATION_KEYS` in `error-map.ts` - declares that the key exists
+2. `KNOWN_FORMATS`, **only if** the key is a Zod format name - this is what allows the format to emit its own key instead of the generic one
+3. `messages/en/validation.ts` **and** `messages/pt/validation.ts` - `Record<ValidationKey, string>` will not compile until both are there
+
+Step 2 is the one that is easy to miss: adding `jwt` to `VALIDATION_KEYS` and the copy files without adding it to `KNOWN_FORMATS` leaves `z.jwt()` still resolving to `validation.invalidFormat`, with no error anywhere to say so.
+
+**Import `z` from here, not from `zod`.** A consumer building its own schema - a form extending one of core's - takes zod through this package:
+
+```ts
+import { SignInSchema, z } from '@ordre/core/schemas';
+```
+
+Two copies of zod are two module instances, and the error map is installed on one of them. The second would emit English sentences where the first emits keys - identical types, no compiler complaint, and the only symptom is untranslated text in a UI. One import specifier makes that impossible.
+
+`apps/api` is the exception and keeps its own `zod`, because `@asteasolutions/zod-to-openapi` requires it as a peer. Versions stay aligned by `syncpack`, which runs in CI.
+
+The keys and their copy are listed on the [Error Codes](/internal-docs/architecture/reference/error-codes) page. How a form consumes them is in [`@ordre/ui`](#ordreui).
+
+#### Messages
+
+Every translated string in the product. App-specific copy still lives in each app's `shared/i18n/` and is merged with these at runtime - see [i18n Structure](#-i18n-structure).
+
+```
+packages/core/src/messages/
+├── app.ts                # Locale-agnostic constants (name, domains)
+├── en/
+│   ├── errors.ts         # Record<ErrorCode, string>     - copy per catalog code
+│   ├── validation.ts     # Record<ValidationKey, string> - copy per Zod issue key
+│   └── index.ts          # Named namespaces + a default bundle
+├── pt/                   # Same files, same keys
+└── index.ts              # Re-exports { app, en, pt }
+```
+
+**What belongs here:** anything that names a concept rather than a screen - error copy, validation copy, shared product words. A page's own headline stays in that app's `shared/i18n/`.
+
+**Why in core rather than its own package:** the copy for an error is keyed by the same `ErrorCode` the catalog defines. Split across packages, that means either duplicating strings or resolving them across a boundary `errorResponse` cannot cross, since it lives inside core. One package, one vocabulary.
+
+**Coverage is enforced by the compiler.** `errors` is typed `Record<ErrorCode, string>` and `validation` is typed `Record<ValidationKey, string>`. Add a code or a key and core stops compiling until every locale has words for it.
+
+**Per-locale exports matter.** `errorResponse` imports only `messages/en`, because the wire message is always English; nothing that ships the API pulls in Portuguese to do it. Apps import the barrel and pick a locale at runtime.
+
+```ts
+import { app, en, pt } from '@ordre/core/messages';
+import { errors } from '@ordre/core/messages/en';
+
+// one locale, on its own
+
+// In an app, keys are absolute across namespaces:
+t('errors.INVALID_EMAIL_OR_PASSWORD');
+t('validation.email');
+```
+
+#### Routes
+
+`API_ROUTES` holds every path the API serves, absolute and version-free, in `:param` form. It lives here rather than in `apps/api` because three consumers need three spellings of the same path, and no layer inside the API may import from another - the OpenAPI registrations sit in `controllers/` and the routers in `adapters/express/`, so neither can own the shared table.
+
+| Consumer                                      | Spelling           | How                               |
+| --------------------------------------------- | ------------------ | --------------------------------- |
+| Express router (`adapters/express/routes/`)   | `/workspace/:id`   | `API_ROUTES.workspace.byId` as-is |
+| OpenAPI document (`controllers/*.openapi.ts`) | `/workspace/{id}`  | `toOpenApiPath(...)`              |
+| HTTP client (`@ordre/services`)               | `/workspace/8f0e…` | `buildPath(..., { id })`          |
+
+`API_BASE_PATH` (`/v1`) is joined on at the two edges that own it - the Express mount in `server.ts` and the `servers` list in the OpenAPI document - so the table itself never carries a version.
+
+`DASHBOARD_ROUTES` and `MARKETING_ROUTES` are the other half: the pages each frontend serves, spelled once so the API can link to them from an email.
+
+#### Permissions
+
+The role/permission matrix and `can()`. Documented in full under **[Authorization](/internal-docs/architecture/authorization)**.
+
+---
+
+### `@ordre/services`
+
+**Purpose:** HTTP client layer the frontend apps use to call the API, so a component never builds a URL or handles a `fetch` directly.
+
+**Tech stack:** native `fetch`, no client library. The transport is one small module; what would have been a library's job - typing, error shape, paths - is already owned by `@ordre/core`.
+
+**Contains:**
+
+- `createHttpClient` - the only module that touches `fetch`
+- One service per domain (`auth`, and more as they land), each a thin map from method name to endpoint
+
+**The factory, not a singleton.** The package never reads an environment variable: `createServices({ baseUrl })` takes the API origin and each app calls it once, in a single module, which every component then imports.
+
+```ts
+// apps/dashboard/src/shared/services.ts
+export const services = createServices({ baseUrl: process.env.NEXT_PUBLIC_API_URL });
+```
+
+The alternative - the package reading `process.env` itself - cannot work: the Next apps expose `NEXT_PUBLIC_*` while the board is Vite, and `process.env` in a browser bundle breaks the board outright.
+
+**What the client owns:** joining `API_BASE_PATH` and the origin, `credentials: 'include'` (the session is a cross-origin cookie, and without it every later call is unauthenticated), a JSON content type, and turning any failure - a `403`, an unparseable body, a dropped connection - into a `ServiceError` carrying a catalog `code`.
+
+**Key constraint:** never imported by `apps/api` - the API is the thing it calls. Requests and responses are typed with `@ordre/core/schemas` and addressed with `API_ROUTES` from `@ordre/core/constants`, so both halves of the contract are shared rather than restated. `ServiceError` lives in `@ordre/core` rather than here, so the code that _reads_ it - the form layer in `@ordre/ui`, the error copy beside the catalog - never has to import a transport.
+
+---
+
+### `@ordre/db`
+
+**Purpose:** Database schema, migrations, and connection. The single source of truth for how data is stored.
+
+**Tech stack:** Drizzle ORM + drizzle-kit over node-postgres (`pg`). The `pg` driver rather than Neon's HTTP driver, because the API is a long-lived process - see [Infrastructure](/internal-docs/architecture/infrastructure/platform).
+
+**Contains:**
+
+- Drizzle table definitions
+- Database connection - a node-postgres (`pg`) connection pool wrapped by Drizzle
+- Migrations (generated by drizzle-kit)
+- Database scripts (generate, migrate, studio, push)
+
+**Structure:**
+
+```
+packages/db/
+├── src/
+│   ├── schemas/
+│   │   ├── better-auth.ts  # generated by Better Auth - do not hand-edit
+│   │   ├── auth.ts         # hand-owned relations for the generated auth tables
+│   │   ├── workspace.ts
+│   │   ├── billing.ts
+│   │   ├── outbox.ts
+│   │   └── index.ts        # re-exports all tables (@ordre/db/schemas)
+│   ├── migrations/         # generated by drizzle-kit
+│   └── connection.ts       # pg pool + Drizzle factories (@ordre/db/connection)
+├── drizzle.config.ts
+└── package.json
+```
+
+**Export paths:**
+
+| Path                   | Contents                                                                                                                                                         |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@ordre/db/connection` | `createPool(url)` (a node-postgres `pg.Pool`) + `createDb(pool)` (wraps a pool in Drizzle). The API composes these into one shared pool/`db` it owns - see below |
+| `@ordre/db/schemas`    | Drizzle table definitions and relations (the schema namespace)                                                                                                   |
+
+**Key constraint:** Only imported by `apps/api`. Never imported by frontend apps or `@ordre/core`.
+
+---
+
+### `@ordre/monitoring`
+
+**Purpose:** Centralised observability - structured logging today, error tracking (Sentry) later. One place to configure _how_ every app logs, so output stays consistent across services and the backing platform can change without touching app code.
+
+**Tech stack:** pino, with pino-http for Express access logs and pino-pretty in development only.
+
+**Contains:**
+
+- `createLogger(service?)` - a configured pino logger factory; the `console.log` replacement
+- `httpLogger(service)` - a pino-http request logger factory for Express access logs
+- Shared base config: log level, secret redaction (`authorization`, `cookie`, `*.password`, `*.token`), and dev-only pretty-printing
+
+**Export paths:**
+
+| Path                       | Contents                                                                                    |
+| -------------------------- | ------------------------------------------------------------------------------------------- |
+| `@ordre/monitoring/server` | `createLogger`, `httpLogger`, and the `Logger` type (Node runtimes: API + Next.js server)   |
+| `@ordre/monitoring/client` | Browser logging / error tracking - empty stub for now, wired when the frontend apps need it |
+
+**Design principle:** A thin composition layer, _not_ a provider abstraction. It exports configured instances - consumers call pino's real API through them - rather than wrapping them behind a generic interface. Adding or swapping a platform (e.g. shipping to Better Stack, or adding Sentry) is a change _inside this package_, not across every app.
+
+**Usage:** Each app creates exactly one shared instance in its `config/` (calling `createLogger` again spins up a separate pino instance) and derives child loggers for per-module context:
+
+```ts
+// apps/api/src/config/logger.ts
+import { createLogger } from "@ordre/monitoring/server";
+
+export const logger = createLogger("api");
+
+// elsewhere - object first, message second (keeps fields queryable)
+import { logger } from "#/config/logger.ts";
+
+logger.info({ userId }, "user logged in");
+const log = logger.child({ controller: "auth" }); // stamps controller: "auth" on every line
+```
+
+**Production note:** `pino-pretty` is a devDependency and only loads in development. Production emits raw JSON - faster, and the format log platforms ingest.
+
+**Key constraint:** The `./server` entry is for Node runtimes only (API, Next.js server code). Browser code uses `./client`, keeping Node-only pino transports out of frontend bundles.
+
+---
+
+### `@ordre/ui`
+
+**Purpose:** Design system - atomic components, design tokens, and shared styles.
+
+**Tech stack:** React 19, Tailwind CSS v4, `class-variance-authority` for variants, `lucide-react` for icons. Tested with Vitest + Testing Library in a real browser via Playwright.
+
+**Contains:**
+
+- Atomic components (`Button`, `TextField`, `Card`, etc.)
+- Design tokens as CSS custom properties
+- Shared global styles
+- The shared form mechanism (`@ordre/ui/form`) - validation, error mapping, field binding
+
+**Structure:**
+
+```
+packages/ui/
+├── src/
+│   ├── components/
+│   │   ├── Button/
+│   │   │   ├── Button.tsx
+│   │   │   ├── Button.test.tsx
+│   │   │   └── Button.stories.tsx
+│   │   ├── Form/             # The one directory that is not one component
+│   │   │   ├── TextField.tsx     # …plus TextArea, Checkbox, RadioGroup, Toggle, …
+│   │   │   ├── Field.tsx         # The label/box/message anatomy they compose
+│   │   │   ├── fieldVariants.ts  # The cva they share
+│   │   │   └── useFieldControl.ts
+│   │   └── index.ts          # Re-exports all components, grouped
+│   ├── config/
+│   │   └── postcss.ts        # Shared PostCSS config for consuming apps
+│   ├── fonts/                # Self-hosted font files (Geist, Geist Mono, Plus Jakarta Sans)
+│   ├── helpers/              # Small styling helpers
+│   ├── form/                 # The shared form mechanism (@ordre/ui/form)
+│   │   ├── useAppForm.ts     # Schema and handler in, bound fields + onSubmit out
+│   │   ├── applyServiceError.ts  # A failed request onto the form
+│   │   └── translate.ts      # The injected `t`, see below
+│   ├── hooks/                # Shared React hooks
+│   ├── icons/
+│   │   ├── Icons.tsx         # Re-exports Lucide icon set + custom icons
+│   │   ├── Iconography.mdx   # Storybook docs for the icon system
+│   │   └── custom/
+│   │       └── Logo.tsx
+│   └── styles/
+│       ├── main.css          # Entry point (imports fonts.css + tailwind.css + @source)
+│       ├── tailwind.css      # Imports every token file
+│       ├── fonts.css         # @font-face declarations
+│       └── tokens/           # One .css per group, each with a sibling .mdx for Storybook
+│           ├── colors.css    # …plus typography, spacing, radius, shadows,
+│           └── colors.mdx    #    motion, breakpoint, container
+└── package.json
+```
+
+**Component layout:** one directory per component, holding its `.tsx`, `.test.tsx`, and
+`.stories.tsx`. `Form/` is the deliberate exception: its controls sit flat beside the
+field anatomy, cva, and hooks they all compose, because nesting each in its own
+directory would leave every one of them importing its siblings from a parent.
+
+**The form mechanism** (`src/form/`, distinct from `src/components/Form/`, which is the
+controls) is here rather than in `@ordre/core` for one reason: it is React, and core's
+whole value is having none. Every app validates the same way, so the decisions are made
+once - `onTouched` then `onChange`, messages resolved from keys, `details` onto fields and
+everything else into the banner. The handler goes in as an option rather than being
+wrapped at the call site, so no view can hand a `form` a submit that has not been
+through the error mapping.
+
+```tsx
+const { field, onSubmit, rootError, isBusy } = useAppForm({ schema, t, onSubmit: send });
+
+<TextField {...field('email')} label={t('Login.email.label')} />;
+```
+
+**Why `t` is a parameter and not a hook call.** The apps do not share an i18n runtime -
+the Next apps use `next-intl`, the board uses `i18next`. A shared layer that called either
+one directly could serve two of the three apps. Injecting the resolved function costs one
+line at each call site and keeps the mechanism portable.
+
+**Component groups:** the headings in `components/index.ts` - Primitives, Form,
+Surfaces, Shell - are also the Storybook sidebar folders. Adding a component to the
+barrel and filing it in Storybook is one decision, not two.
+
+**Usage in apps:**
+
+```ts
+import { Button } from '@ordre/ui/components';
+import '@ordre/ui/styles/main';
+
+// imported once in root layout
+```
+
+**Package exports:** `./components`, `./config/postcss`, `./styles/*`, `./fonts/*`, `./icons`, `./helpers/*`, `./hooks/*`.
+
+**Storybook requirement:** Every component in `@ordre/ui` must ship with a co-located `.stories.tsx`. Stories are published as part of the deployed Storybook at `storybook.ordre.app` - adding a component without a story is a review blocker.
+
+**Tailwind v4 note:** No `tailwind.config.ts`. Tokens are CSS custom properties consumed directly via Tailwind's `@source` directive.
+
+**Constraints.** Three rules keep this package importable by every consumer:
+
+- **No Next.js, React Router, or app-level code.** It must work in any React app.
+- **Atomic components only.** Feature-level compositions belong to the app that needs them.
+- **No business logic.** A component here knows about props and styles, never about Ordre's domain.
+
+---
+
+### `@ordre/config`
+
+**Purpose:** Shared tooling configurations - ESLint and TypeScript presets.
+
+**Tech stack:** ESLint 9, TypeScript, and Prettier (with `@trivago/prettier-plugin-sort-imports`) - presets only, no runtime code.
+
+**Structure:**
+
+```
+packages/config/
+├── eslint/
+│   ├── base.ts                 # Shared base config (TS, turbo, prettier)
+│   ├── next.ts                 # Next.js preset (marketing, dashboard)
+│   └── react.ts                # React / React Router preset (board, ui)
+├── typescript/
+│   ├── base.json
+│   ├── nextjs.json             # Preset for Next.js apps
+│   ├── react-library.json      # Preset for React libraries (e.g. @ordre/ui)
+│   └── react-router.json       # Preset for React Router v8 apps (board)
+├── prettier/
+│   └── index.ts                # Shared Prettier config with import sorting + tailwind plugin
+└── package.json
+```
+
+**Package exports:** `./eslint/next`, `./eslint/react`, `./typescript/*`, `./prettier`.
+
+**What each ESLint preset carries.** All three are flat configs targeting ESLint 9.
+
+| Preset            | Adds                                                                                                                                                                                                                                                                               |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `eslint/base.ts`  | `@eslint/js` recommended, `typescript-eslint` recommended, `eslint-plugin-turbo` (warns on undeclared env vars), `eslint-config-prettier`, and `curly: ["error", "all"]`. Ignores `dist/**` and `build/**`                                                                         |
+| `eslint/next.ts`  | Base, plus `eslint-plugin-react` flat recommended, `@next/eslint-plugin-next` (`recommended` and `core-web-vitals`), and `eslint-plugin-react-hooks`. Ignores `.next/**`, `out/**`, `build/**`, `next-env.d.ts`, and disables `react/react-in-jsx-scope` for the new JSX transform |
+| `eslint/react.ts` | Base, plus the same React and React Hooks rules without the Next-specific plugins. Targets browser and service worker globals                                                                                                                                                      |
+
+**Which TypeScript preset to extend:** `nextjs.json` for the Next apps,
+`react-library.json` for a React library such as `@ordre/ui`,
+`react-router.json` for the board, and `base.json` for anything else.
+
+**Usage:**
+
+```js
+// apps/dashboard/eslint.config.ts
+import { nextJsConfig } from '@ordre/config/eslint/next';
+
+export default nextJsConfig;
+```
+
+```jsonc
+// apps/dashboard/tsconfig.json
+{ "extends": "@ordre/config/typescript/nextjs.json" }
+```
+
+```ts
+// apps/dashboard/prettier.config.ts
+export { default } from '@ordre/config/prettier';
+```
+
+**Prettier rules:** `printWidth: 100`, `tabWidth: 2`, `semi: true`,
+`singleQuote: true`, `trailingComma: "es5"`, with
+`@trivago/prettier-plugin-sort-imports` and `prettier-plugin-tailwindcss`
+preconfigured.
+
+**Import order**, blank-line separated and sorted case-insensitively:
+
+1. CSS side-effect imports
+2. Third-party packages (`react`, `next`, anything not starting with `@ordre`, `@`, or `.`)
+3. `@ordre/*` workspace packages
+4. App-level aliases (`@/components`, `@/stores`, `@/locale`, `@/router`, `@/views`)
+5. Other `@/` aliases
+6. Relative imports
+
+**Adding a new consumer:**
+
+1. Add `"@ordre/config": "workspace:*"` to its `devDependencies`.
+2. Create `eslint.config.ts`, `tsconfig.json`, and `prettier.config.ts` from the snippets above.
+3. Run `pnpm lint`, `pnpm check-types`, and `pnpm format:check` to verify the wiring.
+4. Run `pnpm packages:lint` at the root, so Syncpack catches any version drift the new consumer introduced.

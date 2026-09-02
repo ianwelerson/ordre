@@ -1,0 +1,185 @@
+---
+title: Logo
+icon: Shapes
+description: The mark, the lockups, the clear space and sizing rules, and the treatments that are not allowed.
+---
+
+## Logo
+
+### The Mark
+
+An outlined O resting on a cursor bar. The O is drawn in the monospaced register that runs through the rest of the brand (board tokens, timestamps, serial numbers), and the Amber bar reads as a text cursor sitting under it: the job is open and something is about to be written to it.
+
+The mark is the quietest asset in the system on purpose. It carries no meaning on its own and is not asked to. Paired with the wordmark it is unmistakable, and at 16px in a browser tab it still resolves to a ring and a rule.
+
+<div
+  style={{
+    display: 'flex',
+    alignItems: 'center',
+    gap: 32,
+    padding: 32,
+    background: '#FAFAF8',
+    border: '1px solid #D9D6D0',
+    borderRadius: 12,
+  }}
+>
+  {[96, 48, 32, 20].map((size) => (
+    <svg
+      key={size}
+      width={size}
+      height={size}
+      viewBox="0 0 64 64"
+      fill="none"
+      role="img"
+      aria-label="Ordre"
+    >
+      <rect x="16" y="7" width="32" height="40" rx="12" stroke="#1A1D26" strokeWidth="6" />
+      <rect x="15" y="54" width="34" height="6" rx="3" fill="#E0913E" />
+    </svg>
+  ))}
+</div>
+
+### Geometry
+
+The artwork is defined in a square 64-unit box and every other asset is derived from it by scaling. There are exactly two shapes:
+
+| Shape      | Definition                             | Ink       |
+| ---------- | -------------------------------------- | --------- |
+| The O      | `rect x16 y7 32×40 rx12`, stroked at 6 | `primary` |
+| Cursor bar | `rect x15 y54 34×6 rx3`, filled        | `accent`  |
+
+Because the stroke is centred on its path, the ink spans **x 13-51** (38 wide) and **y 4-60** (56 tall). That is centred on both axes of the 64-unit box, so the mark drops into a square slot without a wrapper, and the box supplies 13 units of side padding and 4 units top and bottom for free.
+
+**Never re-draw these numbers.** Scale the box.
+
+### The Lockup
+
+The mark with the wordmark set beside it, at an aspect ratio of **3.69:1**.
+
+<div
+  style={{
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 1,
+    border: '1px solid #D9D6D0',
+    borderRadius: 12,
+    overflow: 'hidden',
+  }}
+>
+  {[
+    { bg: '#FAFAF8', primary: '#1A1D26', accent: '#E0913E' },
+    { bg: '#1A1D26', primary: '#FAFAF8', accent: '#E0913E' },
+    { bg: '#E0913E', primary: '#FFFFFF', accent: '#FFFFFF' },
+  ].map(({ bg, primary, accent }) => (
+    <div key={bg} style={{ background: bg, padding: '28px 32px' }}>
+      <svg height="44" viewBox="13 4 206.9 56" fill="none" role="img" aria-label="Ordre">
+        <rect x="16" y="7" width="32" height="40" rx="12" stroke={primary} strokeWidth="6" />
+        <rect x="15" y="54" width="34" height="6" rx="3" fill={accent} />
+        <text
+          x="85"
+          y="50.25"
+          fontFamily="var(--font-headline)"
+          fontWeight="700"
+          fontSize="49"
+          letterSpacing="-0.03em"
+          fill={primary}
+        >
+          Ordre
+        </text>
+      </svg>
+    </div>
+  ))}
+</div>
+
+The wordmark sits in the same 64-unit space as the mark: Plus Jakarta Sans Bold at 49 units, tracking -0.03em, text origin at x85, baseline at y50.25. The viewBox is `13 4 206.9 56`, cut to where the "e" actually ends.
+
+Those four numbers are measured against the shipped font file, not estimated, and they are written as literals rather than typography tokens. The viewBox hugs the word, so a type-scale token that moved would push the word past the right edge and the SVG would clip it. **If the brand font ever changes, the lockup has to be re-measured.**
+
+### Color Variants
+
+Four themes. Pick by the background the logo sits on, never by taste.
+
+| Theme   | The O          | Cursor bar     | Use on                                                            |
+| ------- | -------------- | -------------- | ----------------------------------------------------------------- |
+| `white` | Midnight       | Amber          | Snow, Warm Gray, White - the default                              |
+| `dark`  | Snow           | Amber          | Midnight sections, dark headers                                   |
+| `amber` | White          | White          | An Amber fill, where Amber-on-Amber would vanish                  |
+| `mono`  | `currentColor` | `currentColor` | One-color reproduction: print, engraving, embroidery, a watermark |
+
+`mono` inherits the CSS `color` of its container rather than naming an ink, so the caller decides whether the single color is Midnight, Snow, or something else. That is what makes it safe on a dark background, where a hardcoded Midnight would disappear.
+
+### Clear Space and Minimum Size
+
+Keep clear space on all four sides equal to **twice the stroke weight** - 12 units at the 64-unit scale, or 19% of the mark's height. Measure it from the ink, not from the box.
+
+The bare mark holds down to **16px**. Below that the stroke falls under 1.5px, the counter fills in, and the mark reads as a filled blob rather than a ring. The lockup holds down to **24px tall**, where the wordmark's cap height is 15px.
+
+### App Icon
+
+The favicon and any tile treatment use the Amber chip: a rounded square filled `#E0913E` with the mark in white.
+
+<div
+  style={{
+    display: 'flex',
+    alignItems: 'center',
+    gap: 24,
+    padding: 32,
+    background: '#FAFAF8',
+    border: '1px solid #D9D6D0',
+    borderRadius: 12,
+  }}
+>
+  {[80, 48, 32].map((size) => (
+    <svg
+      key={size}
+      width={size}
+      height={size}
+      viewBox="0 0 64 64"
+      fill="none"
+      role="img"
+      aria-label="Ordre"
+    >
+      <rect width="64" height="64" rx="13.71" fill="#E0913E" />
+      <g transform="translate(5.12 5.12) scale(0.84)">
+        <rect x="16" y="7" width="32" height="40" rx="12" stroke="#FFFFFF" strokeWidth="6" />
+        <rect x="15" y="54" width="34" height="6" rx="3" fill="#FFFFFF" />
+      </g>
+    </svg>
+  ))}
+</div>
+
+- **Tile radius:** 12/56 of the tile edge (13.71 units at the 64 scale).
+- **Mark box:** 0.84 of the tile, centred.
+
+The mark is deliberately larger inside the tile than the 34/56 ratio used for inline chip specimens. At that smaller ratio the stroke drops below one pixel at 16px and the whole tile turns into an Amber square with a smudge in it.
+
+Every `favicon.ico` in the repo carries four entries - 16, 32, 48 and 64 - each rendered at its own size rather than downsampled from one bitmap.
+
+### Where It Lives
+
+| Asset            | Path                                                       |
+| ---------------- | ---------------------------------------------------------- |
+| Mark component   | `packages/ui/src/icons/custom/OrdreLogo.tsx`               |
+| Lockup component | `packages/ui/src/icons/custom/OrdreLockup.tsx`             |
+| Themes           | `packages/ui/src/icons/custom/logoThemes.ts`               |
+| Favicons         | `apps/{board,dashboard,docs,marketing}/public/favicon.ico` |
+| Docs icon        | `apps/docs/public/icon-rounded.{svg,png}`                  |
+
+Both components go through the shared `Icon` component, so nothing imports them directly:
+
+```tsx
+import Icon from '@ordre/ui/icons';
+
+<Icon name="ordre-logo" />
+<Icon name="ordre-lockup" theme="dark" />
+<Icon name="ordre-logo" theme="mono" className="text-sage" />
+```
+
+### Logo Don'ts
+
+- **Don't** re-type the rect coordinates anywhere. Import the component or scale the 64-unit box.
+- **Don't** recolor the mark outside the four themes. Amber-on-Amber and Midnight-on-Midnight are the failure cases the themes exist to prevent.
+- **Don't** stretch the lockup. Set one dimension and let the 3.69:1 ratio drive the other.
+- **Don't** rebuild the lockup by placing the mark next to live text. The gap and baseline are fixed geometry, and a flex row will not reproduce them.
+- **Don't** put the bare mark on an Amber fill without switching to the `amber` theme - the Amber cursor bar disappears.
+- **Don't** add a container, ring, or drop shadow to the mark. The chip is the only framed treatment.

@@ -1,0 +1,63 @@
+---
+title: Board Access
+icon: LockKeyhole
+description: How a client reaches a board without an account, which fields are sensitive, and the identity verification rules that reveal them.
+---
+
+## Board Access & Identity Verification
+
+### Overview
+
+Each board is accessible via a unique link containing an embedded token. The token identifies the board and allows the client to view it without any login or account creation. Sensitive information on the board is blurred by default and revealed only after the client verifies their identity.
+
+---
+
+### Access Flow
+
+1. A workspace member creates a board and registers the client's email or phone number - required to share the board link
+2. Ordre generates a unique link with an embedded token (e.g. `go.ordre.app/XYZ`)
+3. The member shares the link via SMS, email, or WhatsApp using the registered contact
+4. Client opens the link and lands on the board immediately - no login, no account required
+5. Most board content is visible straight away
+6. Sensitive fields are blurred with a prompt to verify identity
+7. Client enters the email or phone number the member used to send them the link
+8. The entered value is matched against what the member registered
+9. On match, sensitive fields are revealed for the session
+
+---
+
+### Sensitive vs Non-Sensitive Information
+
+| Content                     | Visibility              |
+| --------------------------- | ----------------------- |
+| Job status and phase        | Always visible          |
+| Timeline updates (text)     | Always visible          |
+| Photos                      | Disabled until validate |
+| Workspace name and business | Always visible          |
+| Approval requests           | Disabled until validate |
+| Chat messages               | Disabled until validate |
+| Client name                 | Blurred                 |
+| Client email                | Blurred                 |
+| Client phone number         | Blurred                 |
+| Client address              | Blurred                 |
+| Serial number / plate       | Blurred                 |
+
+> The sensitive fields above are fixed across all templates. They are always blurred regardless of industry or template type.
+
+---
+
+### Verification Rules
+
+- The client may attempt verification at any time - it is never mandatory to view the board
+- Verification is session-based - closing the browser requires re-verification on next visit
+- The verification input is matched case-insensitively and trimmed of whitespace
+- If the match fails, an error is shown and the client may try again - no lockout at this stage
+- A contact (email or phone) is always present - it is required when creating the client record in order to share the board link
+
+---
+
+### Edge Cases
+
+- **No sensitive fields on the board** - verification prompt is never shown; the full board is visible
+- **Token is invalid or expired** - client sees a generic error page; no board content is shown
+- **Link is shared publicly** - non-sensitive content is visible to anyone with the link; sensitive content remains protected by verification

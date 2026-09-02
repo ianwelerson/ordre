@@ -48,9 +48,17 @@ A short answer stays in the chat. When it is borderline, ask first.
 ## The docs are the source of truth
 
 `apps/docs` is the specification for this project. The MDX sources live in
-[apps/docs/content/docs/](apps/docs/content/docs/) and cover setup, product specs,
-architecture, the data model, authorization, the outbox, testing, infrastructure,
-and the brand system.
+[apps/docs/content/docs/](apps/docs/content/docs/), in three directories. The
+sidebar groups them under section titles set by the root `meta.json`, and a
+switcher at the top moves between Documentation and the API Reference:
+
+- **`start/`** - running the project, environment variables, database roles, the
+  commit workflow, testing, AI assistance, and API deployment.
+- **`product/`** - the feature specifications, pricing and billing, the roadmap,
+  and the brand system.
+- **`architecture/`** - the monorepo and its packages and apps, the data model,
+  authorization, the outbox, the API runtime, infrastructure, and the generated
+  error-code and utility reference.
 
 - Read the relevant page **before** proposing or implementing anything, and treat
   what it says as true.

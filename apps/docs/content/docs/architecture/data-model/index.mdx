@@ -1,0 +1,112 @@
+---
+title: Overview
+icon: Database
+description: What the database holds today, how the field tables below are notated, and the entity relationships at a glance.
+---
+
+
+This is the field-level map of the Ordre database, derived from every product
+screen (registration, dashboard, boards, the public client board, and settings).
+It exists so tables can be created by hand with a complete picture of what each
+screen needs.
+
+Most of it is therefore a **specification, not a description**. Twelve tables
+exist today; everything else on this page is a design waiting to be built.
+
+Two modelling decisions are baked in:
+
+- **Custom tables for workspace / member / invitation** - Ordre does not use the
+  Better Auth organization plugin. Those are first-class tables here. Better Auth
+  still owns `user`, `session`, `account`, and `verification`.
+- **One table per activity-feed type** - the board feed is not a single
+  polymorphic table. Each event kind (update, approval, milestone, internal note,
+  visit report, stage transition, system event) is its own table.
+
+---
+
+## What exists today
+
+[`packages/db/src/schemas/`](https://github.com/ianwelerson/ordre/tree/main/packages/db/src/schemas)
+is the only source of truth for what the database holds. Every section below is
+marked against it:
+
+| Marker         | Meaning                                                                                                                           |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| ✅ **Built**   | The table is in the schema and has a migration. The fields, enums, and indexes listed match it.                                   |
+| 📋 **Planned** | Designed here, not created yet. Names, types, and enums are proposals, and get checked against reality when the table is written. |
+
+The twelve built tables, by schema file:
+
+| Schema file                  | Tables                                                                                                 |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `better-auth.ts` (generated) | `user`, `session`, `account`, `verification`                                                           |
+| `workspace.ts`               | `workspace`, `workspace_location`, `workspace_member`, `workspace_member_location`, `workspace_invite` |
+| `billing.ts`                 | `plan`, `workspace_subscription`                                                                       |
+| `outbox.ts`                  | `outbox`                                                                                               |
+
+Everything else - clients, templates, boards, the activity feed, media,
+messaging, channels, user preferences, and add-ons - is planned. The product
+surfaces that would read those tables are not built either, so nothing is
+blocked on them; see [Launch Scope](/internal-docs/product/roadmap/launch) for
+the order they arrive in.
+
+<Callout type="warn">
+  A planned section is a proposal, not a promise. Do not write code against a table marked 📋, and
+  when one is finally created, update its section here in the same change so the marker flips with
+  the migration.
+</Callout>
+
+### Notation
+
+Table and column names below are the real Postgres ones: snake_case tables,
+camelCase Drizzle fields over snake_case columns.
+
+> `timestamp` below always means Postgres `timestamptz` (timestamp **with** time
+> zone) - every instant in Ordre is stored zone-aware.
+>
+> `[derived]` marks values computed at read time - do not store them.
+> `[sensitive]` marks fields blurred on the client board until identity is verified
+> (see [Board Access & Identity Verification](/internal-docs/product/specs)).
+
+---
+
+## Entity Relationships at a Glance
+
+### Built
+
+```
+user ─┬─ session
+      ├─ account
+      └─ workspace_member ── workspace_member_location ── workspace_location
+
+workspace ─┬─ workspace_location
+           ├─ workspace_member
+           ├─ workspace_invite   (→ workspace_member, workspace_location)
+           └─ workspace_subscription ── plan
+
+verification                 (standalone - Better Auth tokens)
+outbox                       (standalone - no FKs, no RLS; see Transactional Outbox)
+```
+
+### Planned
+
+```
+workspace ─┬─ client ─┬─ client_contact
+           │          └─ client_follow_up
+           ├─ template ── template_phase
+           ├─ channel
+           ├─ workspace_subscription ── workspace_subscription_addon ── addon
+           └─ board ─┬─ board_fact
+                     ├─ board_phase
+                     ├─ recurrence ── visit ── schedule_change_request
+                     ├─ feed_update / feed_internal_note / feed_milestone
+                     ├─ feed_stage_transition / feed_system_event
+                     ├─ feed_approval ── feed_approval_line_item
+                     ├─ feed_visit_report
+                     ├─ media
+                     └─ verification_attempt
+
+thread ── message            (thread → client, board; message → member)
+user ─┬─ notification_setting
+      └─ working_hours
+```

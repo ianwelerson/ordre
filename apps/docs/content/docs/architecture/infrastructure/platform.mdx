@@ -1,0 +1,168 @@
+---
+title: Platform
+icon: Cloud
+description: Where the code runs and the data lives - Vercel, Railway, Neon, R2, Upstash, Cloudflare DNS, and the local hostname proxy.
+---
+
+## Frontend Hosting - Vercel
+
+**Status:** Chosen and active
+
+**Why:**
+
+- Purpose-built for Next.js (made by the same team); zero-config deployments
+- Native App Router support and Turbopack optimizations
+- Automatic preview deployments per PR; easy environment variable management
+- Industry-standard choice for Next.js projects; strong portfolio signal
+- Free Hobby tier covers development; Pro tier when monetised
+
+**Plan:** Hobby (free) during development. Pro ($20/month flat, unlimited team members) once Ordre is commercial. The Pro plan's included bandwidth and serverless compute are more than sufficient for early production.
+
+**Tradeoff accepted:** Some Vercel-specific features exist, but the core app is standard Next.js and remains portable.
+
+---
+
+## Backend Compute - Railway
+
+**Status:** Chosen
+
+**Why:**
+
+- Usage-based billing (per-second) - pay for actual CPU and RAM consumed, not reserved capacity
+- Vertical auto-scaling: the container uses more resources under load and scales back down at idle, automatically
+- Long-running process support - Express runs as a persistent server, which is what keeps a warm connection pool, an interactive transaction per request, and the outbox worker inside the same process
+- Git-connected deploys from GitHub with preview environments per PR
+- Excellent CLI tooling for local development and deployment
+- Hobby plan ($5/month, includes $5 usage credit) covers development and early production
+
+**How it works:** Express runs as a containerised service on Railway. Under low traffic (e.g. overnight), the container idles at minimal CPU/RAM and the cost drops proportionally. During active hours, it scales up automatically - no configuration needed, no tier jumps. At the plan limits (8 vCPU, 8 GB RAM on Hobby), upgrading to Pro ($20/month per seat, includes $20 credit) raises the ceiling to 32 vCPU / 32 GB RAM and enables horizontal scaling via replicas.
+
+**Environments:**
+
+| Environment | Plan                        | Behaviour               | `APP_STAGE`  |
+| ----------- | --------------------------- | ----------------------- | ------------ |
+| Production  | Hobby ($5/month)            | Always-on, auto-scaling | `production` |
+| Staging     | Free ($1/month after trial) | Scale-to-zero when idle | `staging`    |
+
+Both run with `NODE_ENV=production` - Railway's builder injects it, and the API's schema requires it on a deployed stage. `APP_STAGE` is the variable that tells the two apart; see [Environment Variables](/internal-docs/start/environment-variables#app_stage-vs-node_env).
+
+The service's exact configuration (skipped build, direct `node` start command, V8 heap cap) is documented in [Start - API Deployment](/internal-docs/start/deployment) - it exists only in the Railway dashboard, and that page is its record.
+
+**Alternatives considered:** Render (fixed tier pricing - $7 Starter with steep jumps to $25/$85; less cost-efficient at scale), Fly.io (removed free tier), Heroku (expensive for equivalent resources), self-managed VPS (operational overhead).
+
+---
+
+## Database - Neon
+
+**Status:** Chosen
+
+**Why:**
+
+- Serverless PostgreSQL with true scale-to-zero - no idle instance cost during low-traffic periods or overnight
+- Ordre's data is relational by nature - boards, workspaces, members, clients, updates, approvals
+- Database branching for isolated dev/staging environments at no extra cost
+- Drizzle ORM abstracts the driver - standard PostgreSQL throughout, fully portable via `pg_dump`/`pg_restore`
+- Free tier (0.5 GB storage, 100 compute-hours per month) covers development and early production through ~100 owners
+
+**Plan progression:** Free tier → Launch ($19/month, 10 GB, 300 CU-hours) → Scale ($69/month, 50 GB, 750 CU-hours) as usage grows.
+
+**Data retention:** Active boards and archived boards are both stored with full history. Old boards remain accessible to clients via their original link.
+
+**Connection management:** The API connects through node-postgres (`pg`) with a single shared connection pool, created once per process in `apps/api/src/config/db.ts`. Because the API is a long-lived Express process on Railway (not serverless), a warm pool is the right model - it reuses TCP connections across requests and enables interactive transactions, neither of which Neon's HTTP driver offers. The pool is drained on `SIGTERM`/`SIGINT` so deploys and restarts finish in-flight queries before exiting. It also carries an `'error'` listener, because `pg` emits that event on an idle pooled client whose connection the server dropped, which is what a Neon restart or failover looks like from the API's side. `Pool` is an `EventEmitter`, so an unhandled `'error'` throws and ends the process with nothing in the log to explain it. The listener records the failure under `event: 'db.pool_error'` and does nothing else: `pg` has already discarded the dead client, and the next request opens a fresh connection. In production, `DATABASE_URL` points at Neon's pooled endpoint (the `-pooler` host) with `sslmode=verify-full`, stated explicitly so that certificate and hostname verification survives the `pg` 9 change that gives `sslmode=require` libpq semantics; local development uses a Homebrew PostgreSQL instance with a password-less, SSL-free connection string.
+
+**Alternatives considered:** AWS RDS PostgreSQL (always-on instance cost, AWS account required), Supabase (opinionated all-in-one stack), Aurora Serverless v2 (high minimum cost at low scale - 0.5 ACU floor).
+
+---
+
+## Image Storage - Cloudflare R2
+
+**Status:** Chosen
+
+**Why:**
+
+- S3-compatible object storage with zero egress fees at any volume - images are served globally through Cloudflare's 330+ edge locations at no transfer cost
+- Already using Cloudflare for DNS on `ordre.app` - R2 is in the same dashboard, same account
+- Free tier (10 GB storage, 1 million writes, 10 million reads per month) covers development and early production with no expiration
+- No separate CDN needed - Cloudflare's global network acts as the CDN automatically
+- The AWS SDK and any S3-compatible library work with R2 via a config change (endpoint URL + credentials)
+
+**Upload flow:** Workspace members upload photos via a pre-signed URL generated by the Express API. No file data passes through the API - the client uploads directly to R2.
+
+**Image processing:** Thumbnails for timeline views are generated on upload to reduce transfer size. Full-resolution originals are served on click. Both are stored in R2.
+
+**Alternatives considered:** AWS S3 + CloudFront (egress fees dominate at scale), Railway Object Storage (same storage price but charges egress with no CDN), Backblaze B2 (cheaper storage but requires Cloudflare CDN integration for free egress).
+
+---
+
+## Cache - Upstash Redis
+
+**Status:** Chosen
+
+**Why:**
+
+- Serverless Redis with pay-per-command pricing - no idle instance cost
+- Used for short-lived board and workspace caching, and as the shared store the rate limiter needs once the API runs more than one instance
+- Pushing board changes to an open board is out of launch scope, so nothing here is a pub/sub layer yet - see [Ideas](/internal-docs/product/roadmap/ideas)
+- Free tier (500K commands per month, 256 MB) covers development and early production
+- Low-latency global edge network
+- Simple HTTP-based API alongside standard Redis protocol
+
+**Tradeoff accepted:** Slightly higher latency than a self-managed Redis instance, but the operational simplicity and scale-to-zero pricing outweigh the difference for Ordre's use case.
+---
+
+## Domain & DNS - Cloudflare
+
+**Status:** Registered and active (`ordre.app`)
+
+**Why:** Already registered; Cloudflare provides reliable DNS management with fast propagation. Cloudflare R2 for image storage lives in the same account.
+
+**Preview domains:** All apps are accessible via Vercel's default `.vercel.app` subdomains for per-branch preview deployments. Production subdomains on `ordre.app` are configured once ready for public access. `ordre.dev` is planned as an additional domain and will be purchased and configured before launch. For local development, apps run behind HTTPS `*.localhost` hostnames via portless (see [Local Development - portless](#-local-development---portless)).
+
+**Staging is not a preview deploy.** Staging is a long-lived deployment with its own stable subdomains under `staging.ordre.app` and its own database (see [Neon](#-database---neon)), running `APP_STAGE=staging`. Vercel's `.vercel.app` URLs are throwaway per-branch builds; the two are separate and the staging origins are the ones the API trusts for CORS.
+
+**DNS strategy:**
+
+| Subdomain             | Purpose                           | Status       |
+| --------------------- | --------------------------------- | ------------ |
+| `ordre.app`           | Marketing                         | Production   |
+| `go.ordre.app`        | Shareable board (client-facing)   | Production   |
+| `dashboard.ordre.app` | Dashboard app (workspace members) | Production   |
+| `portal.ordre.app`    | Client portal (future)            | Out of scope |
+| `api.ordre.app`       | Backend API (Railway)             | Production   |
+| `docs.ordre.app`      | Docs & API reference (Fumadocs)   | Production   |
+| `storybook.ordre.app` | Component docs                    | Production   |
+
+**Staging domains:**
+
+Every deployed origin has a `staging.ordre.app` counterpart. Apart from Storybook, which never calls the API, these are the exact values the API's `APP_*_URL` and `BETTER_AUTH_URL` variables take on staging - they feed `appOrigins` in `src/config/urls.ts`, which is both the CORS allowlist and Better Auth's `trustedOrigins`, so a mismatch here shows up as a blocked browser request rather than a 404. See [Environment Variables](/internal-docs/start/environment-variables).
+
+| App       | Staging domain                    | API variable        |
+| --------- | --------------------------------- | ------------------- |
+| Marketing | `staging.ordre.app`               | `APP_BASE_URL`      |
+| Board     | `go.staging.ordre.app`            | `APP_BOARD_URL`     |
+| Dashboard | `dashboard.staging.ordre.app`     | `APP_DASHBOARD_URL` |
+| Docs      | `docs.staging.ordre.app`          | `APP_DOCS_URL`      |
+| Storybook | `storybook.staging.ordre.app`     | -                   |
+| API       | `api.staging.ordre.app` (Railway) | `BETTER_AUTH_URL`   |
+
+**Preview URLs (Vercel):**
+
+| App       | Preview URL                  |
+| --------- | ---------------------------- |
+| Marketing | `ordre-marketing.vercel.app` |
+| Dashboard | `ordre-dashboard.vercel.app` |
+| Board     | `ordre-board.vercel.app`     |
+| Storybook | `ordre-storybook.vercel.app` |
+
+**SSL/TLS:** Managed automatically by Vercel via Let's Encrypt for all production, staging, and preview deployments. Railway provides automatic TLS for the API subdomains (`api.ordre.app` and `api.staging.ordre.app`).
+
+---
+
+## Local Development - portless
+
+**Status:** Active
+
+Every app runs behind a stable HTTPS `*.localhost` hostname locally via [portless](https://www.npmjs.com/package/portless) instead of raw ports, so cookies, CORS, and OAuth-style flows behave the way they do in production and cross-app links resolve the same locally as once deployed. Each app keeps its own raw dev server (`*:dev:app`); portless is a thin proxy in front, wired through Turborepo.
+
+See [Start - Running the Project](/internal-docs/start/running-the-project) for the dev URLs and how to run each app locally.
+

@@ -1,0 +1,156 @@
+---
+title: Workspace
+icon: Building2
+description: The tenant boundary and everything scoped directly to it - workspace, member, invitation, and location.
+---
+
+## Workspace
+
+✅ **Built** - `packages/db/src/schemas/workspace.ts`
+
+The top-level tenant (`workspace`). Created during registration; configured in
+Workspace Settings.
+
+| Field          | Type                          | Notes                                                                      |
+| -------------- | ----------------------------- | -------------------------------------------------------------------------- |
+| `id`           | uuid                          |                                                                            |
+| `name`         | text                          | Workspace / business display name                                          |
+| `slug`         | text, unique                  | Public handle - `ordre.app/<slug>`                                         |
+| `type`         | enum `individual \| business` | Provider type - invoicing / branding                                       |
+| `industry`     | enum                          | `jewelry \| personal \| technology \| automotive \| construction \| other` |
+| `description`  | text, nullable                | Shown on the public page                                                   |
+| `logo`         | text, nullable                | Logo URL                                                                   |
+| `billingEmail` | text, nullable                |                                                                            |
+| `createdAt`    | timestamp                     |                                                                            |
+| `updatedAt`    | timestamp                     |                                                                            |
+
+---
+
+## Member
+
+✅ **Built** - `packages/db/src/schemas/workspace.ts`
+
+A user's membership in a workspace (`workspace_member`). Custom table - not the
+Better Auth org plugin.
+
+`locale` sits here rather than on `user` so one person can read one workspace in
+English and another in Portuguese. It is seeded from the request's
+`Accept-Language` when the membership is created - on workspace creation, and
+inside `app_invite_accept` on a first-time join - and the invite email is rendered
+in the _inviter's_ locale, since its recipient has no membership yet. See
+[Transactional Outbox](/internal-docs/architecture/outbox#copy-and-locale).
+
+| Field         | Type                            | Notes                                                       |
+| ------------- | ------------------------------- | ----------------------------------------------------------- |
+| `id`          | uuid                            |                                                             |
+| `userId`      | fk → user                       | `on delete cascade`                                         |
+| `workspaceId` | fk → workspace                  | `on delete cascade`                                         |
+| `displayName` | text, nullable                  | Name shown to clients on boards (first name works well)     |
+| `title`       | text, nullable                  | Role label under the name on the client board               |
+| `role`        | enum `owner \| admin \| member` |                                                             |
+| `status`      | enum `active \| suspended`      | Suspended = soft-removed; the row is kept, access is not    |
+| `phone`       | text, nullable                  | Personal account contact (Register step 4, Profile)         |
+| `locale`      | enum `en \| pt`, default `en`   | The language this member reads the product and its email in |
+| `createdAt`   | timestamp                       |                                                             |
+| `updatedAt`   | timestamp                       |                                                             |
+
+Unique: (`userId`, `workspaceId`), as `workspace_member_user_workspace_unique`.
+Index: `workspace_member_workspace_id_idx` on (`workspaceId`); `userId` lookups
+are served by the leftmost column of the unique.
+
+There is no `invited` status - an invitation lives in `workspace_invite`
+until it is accepted, and only then does a member row exist. Removing a member
+(or a member leaving) **soft-removes**: `status` becomes `suspended`, `role` resets
+to `member` and `phone` is cleared, while `displayName` and `title` are kept for
+audit and for reactivation on re-invite. `requireWorkspaceAccess` rejects a
+suspended member with `403 MEMBER_SELF_SUSPENDED` before any permission check
+runs, but the row stays visible in the member list - an admin has to see it to
+lift the suspension.
+
+`[derived]`: open-board count, last active (from sessions).
+
+### `workspace_member_location`
+
+✅ **Built** - `packages/db/src/schemas/workspace.ts`
+
+Which locations a member works from - a member can cover many locations and a
+location many members.
+
+| Field        | Type                    | Notes               |
+| ------------ | ----------------------- | ------------------- |
+| `id`         | uuid                    |                     |
+| `memberId`   | fk → workspace_member   | `on delete cascade` |
+| `locationId` | fk → workspace_location | `on delete cascade` |
+| `createdAt`  | timestamp               |                     |
+| `updatedAt`  | timestamp               |                     |
+
+Unique: (`memberId`, `locationId`), as `workspace_member_location_unique`.
+Index: `workspace_member_location_location_id_idx` on (`locationId`).
+
+---
+
+## Invitation
+
+✅ **Built** - `packages/db/src/schemas/workspace.ts`
+
+Pending teammate invites (`workspace_invite`; Team → Invite modal).
+
+| Field               | Type                                                         | Notes                                                       |
+| ------------------- | ------------------------------------------------------------ | ----------------------------------------------------------- |
+| `id`                | uuid                                                         |                                                             |
+| `email`             | text                                                         |                                                             |
+| `name`              | text                                                         | Name of the person being invited - used in the invite email |
+| `role`              | enum `owner \| admin \| member`                              | Shares `workspace_member_role`                              |
+| `workspaceId`       | fk → workspace                                               | `on delete cascade`                                         |
+| `locationId`        | fk → workspace_location, nullable                            | Location they're invited to                                 |
+| `invitedByMemberId` | fk → workspace_member, nullable                              | `on delete set null` - null for system/seed invites         |
+| `token`             | text                                                         | Invite-link token                                           |
+| `status`            | enum `pending \| accepted \| declined \| expired \| revoked` |                                                             |
+| `expiresAt`         | timestamp                                                    |                                                             |
+| `createdAt`         | timestamp                                                    |                                                             |
+| `updatedAt`         | timestamp                                                    |                                                             |
+
+**Partial** unique on (`workspaceId`, `email`) **where `status = 'pending'`**, as
+`workspace_invite_workspace_email_pending_unique`. Only one invite per address can
+be outstanding at a time, while expired, declined, and revoked rows accumulate and
+never block a re-invite.
+
+The partial unique is filtered, so it cannot serve the foreign keys. Those are
+indexed explicitly: `workspace_invite_workspace_id_idx`,
+`workspace_invite_location_id_idx`, and
+`workspace_invite_invited_by_member_id_idx`. A fourth,
+`workspace_invite_pending_expiry_idx` on (`expiresAt`) where `status = 'pending'`,
+backs the sweep for invites that have run out.
+
+---
+
+## Location
+
+✅ **Built** - `packages/db/src/schemas/workspace.ts`
+
+A physical site (`workspace_location`). Every workspace has at least one; every
+board belongs to one.
+
+| Field         | Type                   | Notes                  |
+| ------------- | ---------------------- | ---------------------- |
+| `id`          | uuid                   |                        |
+| `workspaceId` | fk → workspace         | `on delete cascade`    |
+| `name`        | text                   | "Geneva · Grand-Rue"   |
+| `address`     | text, nullable         |                        |
+| `latitude`    | numeric(8,6), nullable | For map pin            |
+| `longitude`   | numeric(9,6), nullable | For map pin            |
+| `phone`       | text, nullable         | Board "Workshop phone" |
+| `email`       | text, nullable         |                        |
+| `isDefault`   | boolean                | Default false          |
+| `createdAt`   | timestamp              |                        |
+| `updatedAt`   | timestamp              |                        |
+
+**Partial** unique on (`workspaceId`) **where `isDefault`**, as
+`workspace_location_one_default_per_workspace` - at most one default location per
+workspace, with the other rows unconstrained. Index:
+`workspace_location_workspace_id_idx` on (`workspaceId`).
+
+`latitude` and `longitude` are `numeric`, Postgres' exact decimal type, so a
+coordinate survives a round trip unchanged. Scale 6 resolves to about 11cm.
+Proximity search ("locations within 5km") would need PostGIS
+`geography(Point, 4326)`; independent numerics cannot index distance.

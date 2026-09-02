@@ -13,7 +13,7 @@
  * reliably available in an email client, so the monospace stack stands in for
  * the brand's technical voice on labels and data.
  *
- * @see apps/docs/content/docs/design/brand.mdx
+ * @see apps/docs/content/docs/product/brand/foundations.mdx
  */
 export const brand = {
   /** The base palette, matching the `--color-*` base tier by name. */

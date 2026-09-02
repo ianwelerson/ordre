@@ -1,0 +1,16 @@
+{
+  "title": "Architecture",
+  "icon": "Boxes",
+  "pages": [
+    "index",
+    "packages",
+    "apps",
+    "conventions",
+    "data-model",
+    "authorization",
+    "outbox",
+    "runtime",
+    "infrastructure",
+    "...reference"
+  ]
+}

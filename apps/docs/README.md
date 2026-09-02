@@ -1,6 +1,6 @@
 # 📚 docs
 
-The **docs** app is Ordre's documentation site, served at `docs.ordre.app`. It hosts two sections under one Next.js app: the internal **Guides** and the generated **API Reference**.
+The **docs** app is Ordre's documentation site, served at `docs.ordre.app`. It hosts two sections under one Next.js app: the internal **Documentation** and the generated **API Reference**.
 
 Built with **[Fumadocs](https://fumadocs.dev)** on Next.js.
 
@@ -8,10 +8,10 @@ Built with **[Fumadocs](https://fumadocs.dev)** on Next.js.
 
 ## 🧩 Responsibilities
 
-- Serve the internal **Guides** (`/internal-docs`) - architecture, specs, infrastructure, pricing, brand, and roadmap
+- Serve the **Documentation** (`/internal-docs`) - Get started, Product, and Architecture
 - Serve the **API Reference** (`/api-docs`), generated from the OpenAPI spec with an interactive request playground
-- Redirect the root (`/`) to the Guides (the docs app has no landing page of its own)
-- Expose raw guide markdown for LLM/agent consumption
+- Redirect the root (`/`) to the Documentation (the docs app has no landing page of its own)
+- Expose the raw documentation markdown for LLM/agent consumption
 
 The root (`/`) redirects to `/internal-docs` on every environment (see `src/app/page.tsx`).
 
@@ -19,7 +19,7 @@ The root (`/`) redirects to `/internal-docs` on every environment (see `src/app/
 
 ## 🚀 Getting Started
 
-Install and run the whole stack from the repo root - see **[Setup → Running the Project](content/docs/setup/running-the-project.mdx)**. To run only the docs:
+Install and run the whole stack from the repo root - see **[Setup → Running the Project](content/docs/start/running-the-project.mdx)**. To run only the docs:
 
 ```bash
 pnpm --filter docs docs:dev
@@ -34,5 +34,5 @@ pnpm --filter docs docs:dev
 How a guide page is added, and which pages are generated rather than written, are
 documented once in the docs project:
 
-- [Architecture → docs](content/docs/engineering/architecture.mdx#-docs)
+- [Architecture → Apps](content/docs/architecture/apps.mdx#docs)
 - [Root README](../../README.md) - monorepo overview

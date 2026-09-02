@@ -1,0 +1,187 @@
+---
+title: AI Assistance
+icon: Bot
+description: How AI assistance is configured in the repo - the instruction file, the three review skills, and the rule that the docs win.
+---
+
+AI is a supporting tool here, not the author (see [On AI usage](/internal-docs)).
+That position is enforced by configuration rather than good intentions: a tracked
+instruction file sets the ground rules for every session, and three review skills
+turn the useful part of AI assistance, a second pair of eyes, into a repeatable
+procedure.
+
+Everything described here is committed, so the rules travel with the repo instead
+of living in one machine's local settings.
+
+## The three kinds of file
+
+| Kind         | Lives in                                                                                          | Applied                                                    |
+| ------------ | ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Instructions | [`CLAUDE.md`](https://github.com/ianwelerson/ordre/blob/main/CLAUDE.md)                           | Read every session, followed by judgment                   |
+| Skill        | [`.claude/skills/<name>/SKILL.md`](https://github.com/ianwelerson/ordre/blob/main/.claude/skills) | Name and description always, body only when the skill runs |
+| Hook         | [`.claude/settings.json`](https://github.com/ianwelerson/ordre/blob/main/.claude/settings.json)   | Executed by Claude Code on a matching event, every time    |
+
+The instructions-versus-skill split is by nature, not by topic. `CLAUDE.md` is injected into every session, so
+every line it holds is a permanent cost paid by conversations that will never need
+it. A skill body loads only when that skill is invoked, and any `reference/` file it
+points at loads only when that particular review needs it.
+
+**The rule:** a fact or a rule that applies always goes in `CLAUDE.md`. A checklist
+you walk through occasionally goes in a skill.
+
+<Callout>
+  This is why the OWASP checklist and the WCAG criteria list are not in `CLAUDE.md`. Together they
+  are around 300 lines that would otherwise be re-read at the top of every unrelated conversation.
+</Callout>
+
+## What `CLAUDE.md` governs
+
+The file itself is the source of truth for its own content. In outline, it covers:
+
+- **How we work.** AI acts as a co-worker, not the implementer. Every change is
+  explained in the conversation: why, how, and the concept behind it.
+- **The docs win.** This documentation is the specification. A request that
+  conflicts with a page stops for a decision instead of being implemented quietly.
+- **Comments and JSDoc.** The first sentence says what the thing is or does, in
+  plain technical register. Every factual claim has to be verified before it is
+  written. Inline comments only where the code cannot speak for itself, and a
+  comment describes the code as it stands rather than defining it against a
+  previous implementation or another package's choice.
+- **Code conventions.** Follow the surrounding file, the tokens, the tiers, and the
+  package boundaries already documented in
+  [Architecture](/internal-docs/architecture).
+- **Commits.** Conventional Commits, subject line only with no body, no AI
+  attribution trailers, and a linear history. See
+  [Workflow](/internal-docs/start/workflow).
+
+`CLAUDE.md` deliberately does **not** restate what this documentation already
+defines. Duplicating the package boundaries or the testing tiers there would create
+a second copy that drifts, which is the exact failure the "docs win" rule exists to
+prevent. It links here instead.
+
+## The docs win
+
+The most important rule in the file, and the one worth stating twice:
+
+1. Read the relevant page before proposing anything, and treat it as true.
+2. When a request conflicts with a page, stop and lay out the difference: what the
+   docs define, what is being asked, and what each implies.
+3. A human decides which one wins.
+4. The docs are updated to match the decision, in the same change.
+
+This keeps documentation and implementation from forking. A page that quietly
+stopped being true is worse than no page.
+
+## Hooks: the rules that enforce themselves
+
+A rule in `CLAUDE.md` is a **probabilistic** constraint. The model reads it and
+usually complies. A hook is a **deterministic** one: Claude Code runs it, so
+compliance does not depend on the model's attention.
+
+Sort every rule by that test. Mechanically checkable goes in a hook; needs
+judgment stays an instruction. Two `PostToolUse` hooks run on every write:
+
+| Hook          | What it does                                                                      |
+| ------------- | --------------------------------------------------------------------------------- |
+| Prettier      | Formats the edited file                                                           |
+| Em dash guard | Blocks the edit and reports the offending lines when the file contains an em dash |
+
+The formatter finds the owning workspace by walking up to the nearest
+`package.json`, then runs the repo's Prettier binary **from that directory**. That
+detail matters: `.prettierignore` resolves against the working directory, so
+running from the repo root would reformat `apps/docs/content`, which the docs app
+deliberately excludes. Lockfiles, build output, and the generated `openapi.json`
+are skipped outright, and a formatter failure never blocks the turn.
+
+The em dash guard exits non-zero with the offending line numbers, so the model
+fixes it rather than hitting a wall. It skips the DrawDB export, whose comments
+come from a tool rather than from us.
+
+The rules about comment quality cannot be hooked, because deciding whether a
+comment earns its place takes judgment. Those stay in `CLAUDE.md`, which is the
+right place for them.
+
+## The review skills
+
+Three skills, invoked as `/name` or triggered by asking for the review in plain
+words. Each one reads and reports; none of them edits files unless asked, and each
+declares a read-only tool set so that stays structurally true.
+
+| Skill                  | Reviews                                                                                                | Grounded in                                                                                                                                                                                         |
+| ---------------------- | ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/review-architecture` | Boundaries, design shape, contracts, correctness, error handling, naming, tests                        | [Architecture](/internal-docs/architecture), [Testing](/internal-docs/start/testing)                                                                                              |
+| `/review-security`     | Threat model, then OWASP Top 10 mapped onto this stack                                                 | [RBAC](/internal-docs/architecture/authorization/rbac), [Row-Level Security](/internal-docs/architecture/authorization/row-level-security), [Transactional Outbox](/internal-docs/architecture/outbox) |
+| `/review-interface`    | Semantics, keyboard and focus, WCAG 2.2 AA, responsive behaviour, motion, forms, design-token fidelity | [Brand](/internal-docs/product/brand), the token files in `packages/ui/src/styles/tokens/`                                                                                                           |
+
+Each takes an optional target and falls back to the working tree, then the branch
+against `develop`:
+
+```bash
+/review-architecture                 # the working tree
+/review-security apps/api/src        # a whole surface
+/review-interface packages/ui/src/components/Drawer
+```
+
+### The shape they share
+
+Every review runs the same five steps, and the second one is the one that matters:
+
+1. **Fix the scope.** Say what is being reviewed before starting.
+2. **Ground yourself.** Read the docs page covering the touched area, then the two
+   or three closest existing files. A reviewer who does not know the surrounding
+   pattern reports problems the pattern already solved, and invents conventions the
+   project never adopted.
+3. **Run ordered passes.** Ordering is deliberate: a broken package boundary makes
+   naming feedback pointless, so boundaries come first.
+4. **Rank.** Anything that cannot be justified at a severity level is dropped. A
+   long review is not a better review.
+5. **Write it up**, citing `file.ts:line` and naming the principle behind each
+   finding.
+
+The last part is the point. These skills exist to make the code better _and_ to
+explain why it is better, which is what a study project needs from a reviewer.
+
+### What `/review-security` is and is not
+
+It reads code and reasons about reachability. It forces a written threat model
+before any checklist: what surface is new, who can reach it, the worst case, and the
+name of the guard that stops them. A guard nobody can name is the finding.
+
+It is not a penetration test, a dependency scanner, or a runtime configuration
+audit. It cannot see the deployed environment, and it cannot execute anything.
+Findings without a concrete attack path are not reported, which trades some recall
+for the trust that a reported finding is real.
+
+## Task skills
+
+A task skill encodes a procedure that spans several files, where forgetting a step
+is silent.
+
+| Skill                  | Covers                                                                                                                                                                 |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/new-component`       | The four edits a `@ordre/ui` component needs: the component with its variants, the behaviour test, the Storybook story, and the explicit line in `components/index.ts` |
+| `/new-dashboard-route` | The path constant in `@ordre/core`, the route file, the view split into `ui/` and `model/`, copy in both locales, and the proxy gate                                   |
+
+The test for whether something deserves a skill: does it span several files in a
+specific order, and would a missed step go unnoticed? Adding an error code fails
+that test, because copy is typed as `Record<ErrorCode, string>` and TypeScript
+refuses to compile a code missing from a locale. Never wrap a constraint the type
+system already owns.
+
+## Adding a skill
+
+1. Create `.claude/skills/<name>/SKILL.md`. The directory name becomes the command.
+2. Give it YAML frontmatter with `name` (lowercase, hyphens) and `description`.
+3. Write the description as a routing rule, not a summary. It is the only part
+   loaded at startup, so it decides whether the skill ever fires. Say what the skill
+   does and the words a person would use when they want it.
+4. Keep the body under 500 lines. Anything longer moves into a sibling file that the
+   body links to, one level deep so it is read whole rather than previewed.
+5. Give reference files over 100 lines a table of contents.
+
+## What is not tracked
+
+`.claude/settings.local.json` holds per-machine tool permissions and is gitignored
+wherever it appears, including inside a workspace. Nothing in it should be needed
+by anyone else: a rule that matters to the project belongs in `CLAUDE.md`, a skill,
+or the tracked `.claude/settings.json`, which carries hooks and no permissions.

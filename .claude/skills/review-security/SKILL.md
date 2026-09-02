@@ -29,9 +29,9 @@ Report findings only. Do not edit files unless the user asks for the fix.
 
 Read before judging, or you will report defences that already exist:
 
-- `apps/docs/content/docs/engineering/authorization/rbac.mdx` for the permission
+- `apps/docs/content/docs/architecture/authorization/rbac.mdx` for the permission
   catalog, the role map, and the two guards.
-- `apps/docs/content/docs/engineering/authorization/row-level-security.mdx` for the
+- `apps/docs/content/docs/architecture/authorization/row-level-security.mdx` for the
   per-request database identity and the policies.
 - `apps/api/src/adapters/express/server.ts` and `middlewares/` for the request
   pipeline: helmet, credentialed CORS, the trusted proxy depth, client IP, session

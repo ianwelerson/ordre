@@ -1,0 +1,453 @@
+---
+title: Apps
+icon: AppWindow
+description: Each runnable surface - the API, the three frontends, and the two tooling apps - with its stack and folder layout.
+---
+
+## App Responsibilities
+
+Each runnable surface, with what it is built with and how its folders are laid out.
+The three frontend apps share the [three-folder convention](#-three-folder-convention)
+and the [i18n structure](#-i18n-structure) described further down.
+
+---
+
+### api
+
+**Tech stack:** Express 5 on Node.js, Better Auth for sessions, Drizzle ORM via `@ordre/db`, Zod 4 via `@ordre/core/schemas`, Resend for email, `helmet` + `cors` for HTTP hardening, `@asteasolutions/zod-to-openapi` for the spec, and `supertest` for route tests.
+
+The API app is an Express (Node.js) server - deployed as a standard long-running process in both development and production. Routes are thin HTTP adapters that call controllers; controllers contain the business logic, the OpenAPI contract, and their tests, and import from `@ordre/core/schemas` for validation and `@ordre/db` for database queries. See [Infrastructure - Alternatives](/internal-docs/architecture/infrastructure/alternatives) for compute migration options.
+
+**URL shape:** everything is served under `API_BASE_PATH` (`/v1`) on the API's own subdomain - `https://api.ordre.app/v1/workspace`. The prefix buys versioning rather than namespacing (the subdomain already does that), and it doubles as the scanner gate in `server.ts`, which answers anything outside it with an empty 404 before helmet, CORS, and the access log run. The paths below it come from `API_ROUTES` in [`@ordre/core/constants`](#ordrecore), never from string literals in a router.
+
+**Database connection ownership:** `@ordre/db/connection` exposes the `createPool` / `createDb` factories, but the API app owns the live connection. `config/db.ts` creates exactly one `pg` pool (and its Drizzle `db`) per process and exports both; controllers and `config/auth.ts` import that shared `db`. Because the server is long-lived, the entrypoint (`adapters/express/index.ts`) drains the pool on `SIGTERM`/`SIGINT` so deploys and `node --watch` reloads finish in-flight queries before exiting.
+
+```
+apps/api/src/
+├── adapters/
+│   └── express/
+│       ├── middlewares/                # authenticate, rlsContext, workspace access/quota
+│       ├── routes/
+│       │   ├── boards/
+│       │   │   ├── boards.routes.ts    # thin: parses req, calls controller, sends res
+│       │   │   └── boards.routes.test.ts   # integration tests (real DB)
+│       │   └── members/
+│       │       └── members.routes.ts
+│       ├── server.ts                   # Express app assembly (helmet, CORS, routes)
+│       └── index.ts                    # entrypoint: listen, start worker, graceful shutdown
+│
+├── config/                             # env, logger, db pool, RLS context, auth, OpenAPI, urls
+│
+├── controllers/                        # business logic + OpenAPI contract + tests
+│   ├── boards/
+│   │   ├── index.ts                    # barrel - public surface only
+│   │   ├── get-boards.controller.ts
+│   │   ├── create-board.controller.ts
+│   │   ├── boards.schemas.ts           # local Zod schemas (optional)
+│   │   ├── boards.openapi.ts           # OpenAPI registration for the feature
+│   │   ├── get-boards.test.ts
+│   │   └── helpers/                    # internal helpers (only when >1 file)
+│   └── members/
+│       └── ...
+│
+├── services/                           # third-party providers (email/Resend)
+├── workers/                            # background loops (outbox delivery)
+├── utils/                              # framework-agnostic helpers
+├── types/                              # request context + DB row types
+└── test/                               # harness: fixtures, seed/reset, owner DB
+```
+
+Two folders sit outside the request path and are worth calling out:
+
+| Folder      | Contents                                                                                                                                                                    |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `services/` | Integrations with a third party. One module per provider, throwing on failure so the caller decides what to do about it.                                                    |
+| `workers/`  | Long-running background loops owned by the process. Started from `adapters/express/index.ts` - never from `server.ts`, so importing the app in a test doesn't start a loop. |
+
+The [outbox worker](/internal-docs/architecture/outbox) is the current example of both: producers queue a row inside the request transaction, and the worker delivers it through `services/email.ts` afterwards.
+
+#### Controller folder convention
+
+Every controller folder is a self-contained feature unit that owns the business logic, OpenAPI contract, tests, and internal helpers. Co-locating the OpenAPI registration with the controller (instead of with the Express route) keeps the contract independent of the HTTP adapter - swapping Express for Lambda or Vercel Functions only touches `adapters/`.
+
+| File              | Responsibility                                                                                                                    |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `index.ts`        | Barrel. Re-exports public surface only (`*.controller.ts` and `*.openapi.ts`). Helpers and local types stay private.              |
+| `*.controller.ts` | Controller function(s). No Express dependency. Imports from `@ordre/core/schemas` and `@ordre/db`.                                |
+| `*.openapi.ts`    | OpenAPI registration for the feature. One per folder, not one per controller.                                                     |
+| `*.schemas.ts`    | Local Zod schemas. Use only when controller-internal; otherwise put the schema in `@ordre/core/schemas`.                          |
+| `*.test.ts`       | Co-located unit tests for fault injection (mocked DB). Full-path coverage lives in `*.routes.test.ts` - see [Testing](./testing). |
+| `helpers/`        | Folder for 2+ internal helpers. For a single helper, use a flat `*.helpers.ts` file instead.                                      |
+
+**Naming:** `<feature>.<role>.ts` (e.g. `get-boards.controller.ts`, `boards.openapi.ts`). The `.controller.ts` suffix disambiguates controllers from helpers and schemas as the folder grows.
+
+#### Subpath imports
+
+The API uses Node's `imports` field to expose each controller folder as a single import surface, so consumers never reach past `index.ts`:
+
+```jsonc
+// apps/api/package.json
+{
+  "imports": {
+    "#env": "./src/config/env.ts",
+    "#controllers/*": "./src/controllers/*/index.ts",
+    "#/*": "./src/*",
+  },
+}
+```
+
+```ts
+// adapters/express/routes/boards/boards.routes.ts
+import { boardsOpenApi, createBoard, getBoards } from '#controllers/boards';
+```
+
+#### Responsibility split
+
+Routes only know about HTTP - they parse the request and send the response. Controllers contain the logic - they import from `@ordre/core/schemas` and `@ordre/db`, and have no Express dependency.
+
+```ts
+// routes/boards/boards.routes.ts - only knows about HTTP
+import { createBoard } from "#controllers/boards";
+
+router.post("/boards", async (req, res) => {
+  const result = await createBoard(req.body, req.user.workspaceId);
+  res.json(result);
+});
+
+// controllers/boards/create-board.controller.ts - only knows about logic
+import { createBoardSchema } from "@ordre/core/schemas";
+import { boards } from "@ordre/db/schemas";
+
+import { db } from "#/config/db.ts"; // the app's shared pg pool + Drizzle
+
+export async function createBoard(body: unknown, workspaceId: string) {
+  const data = createBoardSchema.parse(body);
+  const [row] = await db
+    .insert(boards)
+    .values({ ...data, workspaceId })
+    .returning();
+  return row;
+}
+```
+
+#### API documentation
+
+Each controller folder includes a `.openapi.ts` file that registers the feature's routes against the same `@ordre/core/schemas` schemas used by the controller. The top-level `openapi.ts` imports from each `#controllers/*` and generates an `openapi.json` spec consumed by the `apps/docs` API reference. See [Documentation - Fumadocs](/internal-docs/architecture/infrastructure/services) for the docs app details.
+
+#### If the compute layer changes
+
+If migrating to Lambda or Vercel Functions, each route becomes a new adapter file that calls the same controller. Controllers and their `.openapi.ts` files have no Express dependency, so nothing in `controllers/`, `@ordre/core`, or `@ordre/db` changes.
+
+---
+
+### marketing
+
+The Marketing Next.js app follows a strict **three-folder convention** inside `src/`.
+
+**Tech stack:** Next.js 16 (App Router), React 19, `@ordre/ui`, Tailwind CSS v4, and `next-intl` with path-based locale routing.
+
+```
+apps/marketing/
+├── src/
+│   ├── app/                          # Next.js App Router - routing only
+│   │   ├── [locale]/                 # Locale segment for all marketing routes
+│   │   │   ├── page.tsx              # Home page (renders @/views/Home)
+│   │   │   ├── layout.tsx
+│   │   │   └── globals.css
+│   │   ├── favicon.ico
+│   │   ├── [PLANNED] about/, pricing/, terms-conditions/, privacy/, not-found.tsx
+│   │
+│   ├── proxy.ts                      # next-intl middleware (delegates routing to shared/i18n/routing.ts)
+│   │
+│   ├── views/                        # Page implementations
+│   │   ├── Home/
+│   │   │   ├── index.ts
+│   │   │   └── ui/
+│   │   │       └── HomePage.tsx
+│   │   └── ...                       # One folder per page
+│   │
+│   ├── shared/                       # Reusable app-level code
+│   │   ├── components/               # (planned)
+│   │   ├── hooks/                    # (planned)
+│   │   ├── utils/                    # (planned)
+│   │   ├── types/                    # (planned)
+│   │   └── i18n/
+│   │       ├── routing.ts            # next-intl routing (locales: en/pt, prefixes: { pt: '/br' }, mode: 'as-needed')
+│   │       ├── navigation.ts         # Locale-aware <Link>, redirect, usePathname, useRouter
+│   │       ├── requests.ts           # getRequestConfig - merges @ordre/core app + global + local messages
+│   │       └── messages/
+│   │           ├── en.ts             # App-specific English strings
+│   │           └── pt.ts             # App-specific Portuguese strings
+│   │
+│   └── [no styles folder]            # All styles live in @ordre/ui
+│
+├── public/
+└── package.json
+```
+
+**Dev port:** `3000`.
+
+> The middleware file is named `src/proxy.ts` (Next.js 16 convention) rather than `middleware.ts`.
+
+**Import aliases:**
+| Alias | Resolves to |
+|--------|-------------|
+| `@/*` | `src/*` |
+
+> Imports use the single `@/*` alias (e.g. `@/views/HomePage`, `@/shared/i18n/routing`).
+
+---
+
+### dashboard
+
+The Dashboard Next.js app follows a strict **three-folder convention** inside `src/`. This is the workspace management app used by workspace members.
+
+**Tech stack:** Next.js 16 (App Router), React 19, `@ordre/ui`, Tailwind CSS v4, and `next-intl` with `Negotiator` + `@formatjs/intl-localematcher` for `Accept-Language` detection.
+
+```
+apps/dashboard/
+├── src/
+│   ├── app/                          # Next.js App Router - routing only
+│   │   ├── (auth)/                   # Signed-out shell: SiteShell + the header CTA
+│   │   │   ├── layout.tsx
+│   │   │   ├── HeaderCta.tsx         # "Already have an account?" - varies per screen
+│   │   │   ├── login/page.tsx
+│   │   │   ├── get-started/page.tsx
+│   │   │   ├── forgot-password/page.tsx
+│   │   │   ├── set-password/page.tsx
+│   │   │   └── invite/[token]/page.tsx
+│   │   ├── (authenticated)/          # Everything behind a session
+│   │   │   └── page.tsx
+│   │   ├── layout.tsx
+│   │   ├── globals.css
+│   │   └── [PLANNED] (authenticated)/boards, members/[id], settings, not-found.tsx
+│   │
+│   ├── proxy.ts                      # Route gate - picks the shell, carries ?next=
+│   │
+│   ├── views/                        # Page implementations
+│   │   ├── Invite/
+│   │   │   ├── index.ts
+│   │   │   ├── model/                # Hooks and form schemas - no JSX
+│   │   │   │   ├── useInviteState.ts
+│   │   │   │   └── schema.ts
+│   │   │   └── ui/                   # The screen and the parts only it uses
+│   │   │       ├── InvitePage.tsx
+│   │   │       └── InviteSignUp.tsx
+│   │   └── ...                       # One folder per page
+│   │
+│   ├── shared/                       # Reusable app-level code
+│   │   ├── components/               # Reused across the dashboard, app-specific
+│   │   │   ├── AuthCard/             # The sheet every auth screen is printed on
+│   │   │   │   ├── AuthCard.tsx      # …with its .test.tsx and .stories.tsx
+│   │   │   │   ├── AuthCard.test.tsx
+│   │   │   │   └── AuthCard.stories.tsx
+│   │   │   ├── AuthHeading/          # Eyebrow, headline, and the sentence under it
+│   │   │   ├── AuthAction/           # The one thing a screen asks its reader to do
+│   │   │   ├── AuthFootnote/         # The small centred line under the action
+│   │   │   └── index.ts              # One explicit line per export
+│   │   ├── constants.ts              # Query-param vocabularies (login notices)
+│   │   ├── services.ts               # The app's one configured @ordre/services surface
+│   │   ├── safeRedirect.ts           # Narrows an untrusted ?next= to a path we will follow
+│   │   ├── authLinks.ts              # Builds the links that carry a destination between screens
+│   │   └── i18n/
+│   │       ├── requests.ts           # getRequestConfig - detects locale via Negotiator + intl-localematcher
+│   │       └── messages/
+│   │           ├── en.ts             # App-specific English strings
+│   │           └── pt.ts             # App-specific Portuguese strings
+│   │
+│   └── [no styles folder]            # All styles live in @ordre/ui
+│
+├── public/
+└── package.json
+```
+
+**Dev port:** `3001`.
+
+> The middleware file is named `src/proxy.ts` (Next.js 16 convention) rather than `middleware.ts`.
+
+`/register` has no page: `next.config.ts` redirects it to `/get-started`, which is
+answered before a render is scheduled.
+
+**The route gate.** `proxy.ts` decides which shell a visitor lands in, and nothing
+else - it is explicitly _not_ a security boundary, since every piece of data still
+crosses the API, which authenticates each request and enforces row-level security.
+No session cookie on a protected path goes to `/login?next=<destination>`; a live
+session on an auth screen goes on to that destination. `/invite/:token` is the one
+public route a session is welcome on, because whether _this_ account is the invited
+one is a question only the page can answer.
+
+> Planned: `(authenticated)/team/` will be named `(authenticated)/members/` to align with the `Member` entity in `@ordre/core`.
+
+**Import aliases:**
+| Alias | Resolves to |
+|--------|-------------|
+| `@/*` | `src/*` |
+
+> Imports use the single `@/*` alias (e.g. `@/views/HomePage`, `@/shared/i18n/requests`).
+
+---
+
+### board
+
+The Board app uses **React Router v8 in framework mode** (SSR). It is a lightweight choice appropriate for a simple, client-facing app - not a full Next.js setup, but with SSR capabilities for fast initial load and a clean path to OG tag support in the future. All React learning value is preserved; framework mode only adds a server rendering layer, not React abstractions.
+
+The app follows a strict **three-folder convention** inside `src/`.
+
+**Tech stack:** React Router v8 in framework mode (SSR) on Vite, React 19, Tailwind CSS v4, and `i18next` + `react-i18next` + `remix-i18next`.
+
+```
+apps/board/
+├── src/
+│   ├── app/                              # RR v8 app directory (appDirectory: 'src/app')
+│   │   ├── pages/                        # Route modules - each page is a folder
+│   │   │   ├── home/
+│   │   │   │   └── home.tsx              # / (and /br via prefix) - renders @/views/Home
+│   │   │   └── not-found/
+│   │   │       └── not-found.tsx         # Splat * route
+│   │   ├── api/
+│   │   │   └── locales.ts                # /api/locales/:lng/:ns - serves i18next namespaces
+│   │   ├── locale/
+│   │   │   └── locales.ts                # supportedLanguages, fallbackLanguage, localePrefixes, helpers
+│   │   ├── middleware/
+│   │   │   └── i18next.ts                # remix-i18next middleware + lng cookie + i18next module augmentation
+│   │   ├── app.css                       # Global styles entry
+│   │   ├── entry.client.tsx              # Client entry
+│   │   ├── entry.server.tsx              # Server entry
+│   │   ├── root.tsx                      # Root layout (RR v8 framework mode entry point)
+│   │   └── routes.ts                     # Route config (index, prefix, route)
+│   │
+│   ├── views/                            # Page implementations
+│   │   └── Home/
+│   │       ├── index.ts
+│   │       └── ui/
+│   │           ├── HomePage.tsx
+│   │           └── HomePage.test.tsx
+│   │
+│   └── shared/
+│       ├── components/                   # (planned)
+│       ├── hooks/                        # (planned)
+│       ├── utils/                        # (planned)
+│       ├── types/                        # (planned)
+│       └── i18n/
+│           ├── index.ts                  # Resource map merging en + pt message bundles
+│           └── messages/
+│               ├── en.ts                 # Merges @ordre/core global + app-specific strings
+│               └── pt.ts
+│
+├── react-router.config.ts                # Framework config (appDirectory: 'src/app', ssr: true, v8_middleware)
+├── vite.config.ts                        # Vite bundler config (used internally by RR v8)
+├── public/
+└── package.json
+```
+
+**Dev port:** `3002`.
+
+**Routes (`src/app/routes.ts`):**
+
+```ts
+export default [
+  index('pages/home/home.tsx'),
+  ...prefix('br', [index('pages/home/home.tsx', { id: 'home-br' })]),
+  route('api/locales/:lng/:ns', 'api/locales.ts'),
+  route('*', 'pages/not-found/not-found.tsx'),
+] satisfies RouteConfig;
+```
+
+**Import aliases:**
+| Alias | Resolves to |
+|--------|-------------|
+| `@/*` | `src/*` |
+
+> Imports use the single `@/*` alias (e.g. `@/views/Home`, `@/shared/i18n`, `@/app/locale/locales`).
+
+**Container:** the board ships a `Dockerfile` for containerized deployment, which
+is what makes it portable off Vercel if it ever needs to be.
+
+```bash
+docker build -t ordre-board apps/board
+docker run -p 3000:3000 ordre-board
+```
+
+---
+
+### docs
+
+**Tech stack:** Next.js 16 + Fumadocs (`fumadocs-core`, `fumadocs-ui`, `fumadocs-mdx`), with `fumadocs-openapi` generating the API reference and `lucide-react` for page icons.
+
+The API is documented at `docs.ordre.app/api-docs`, inside the same Fumadocs app that serves the internal guides. The OpenAPI spec is generated at build time from route registrations in `apps/api`, not maintained manually.
+
+**How it works:**
+
+1. Each controller folder includes a `.openapi.ts` file that registers the feature's request and response shapes against the same `@ordre/core/schemas` Zod schemas used by the controller
+2. The `@asteasolutions/zod-to-openapi` library converts those Zod schemas into OpenAPI 3.x definitions - no schema duplication
+3. The top-level `openapi.ts` entry point combines all `.openapi.ts` files and generates a single `openapi.json` spec
+4. `fumadocs-openapi` turns that spec into MDX pages (one per operation) rendered with the Fumadocs UI, including an interactive request playground
+
+**App structure:**
+
+```
+apps/docs/
+├── public/
+│   └── openapi.json          # Generated at build time from apps/api
+├── content/
+│   ├── docs/                 # Internal guides (/internal-docs)
+│   └── api-docs/             # Generated from openapi.json (/api-docs)
+├── src/                      # Next.js + Fumadocs app
+└── package.json
+```
+
+**Adding a guide page:** create the MDX file under `content/docs` with `title`,
+`icon`, and `description` frontmatter, then add its path to the `meta.json` that
+controls its section. A page missing from `meta.json` renders but is not linked
+from the sidebar. The path maps straight to the URL: `content/docs/<path>.mdx` is
+served at `/internal-docs/<path>`, and `index.mdx` at `/internal-docs`.
+
+Two pages are **generated, never written by hand**, and carry a banner saying so:
+
+| Page                        | Generated from             | Command             |
+| --------------------------- | -------------------------- | ------------------- |
+| `reference/error-codes.mdx` | `packages/core/src/errors` | `pnpm docs:errors`  |
+| `content/api-docs/**`       | `public/openapi.json`      | `pnpm docs:openapi` |
+
+`content/api-docs` is gitignored and rebuilt on `postinstall`, `build`, and
+`check-types`. `public/openapi.json` is regenerated by lint-staged whenever
+anything under `apps/api` changes.
+
+**Hosting:** Deployed to `docs.ordre.app` via Vercel, protected by Vercel's built-in password protection during development and beta.
+
+**Alternatives considered:** Scalar (polished standalone UI, but a separate look from the guides), Swagger UI (dated look and feel), Redoc (read-only, no API client).
+
+---
+
+### storybook
+
+The Storybook app is a thin shell: it contains no product code, and its only job is
+to bundle stories from every other workspace into one browsable site.
+
+**Tech stack:** Storybook 10 on `@storybook/react-vite`, with `@storybook/addon-docs`
+and `remark-gfm` for tables in MDX pages. Tailwind v4 is wired through
+`@tailwindcss/vite`.
+
+```
+apps/storybook/
+├── .storybook/
+│   ├── main.ts               # stories glob, addons, Vite tweaks
+│   ├── preview.ts            # global parameters (story sort, backgrounds, controls)
+│   ├── global.css            # styles loaded into every story
+│   └── shims/                # local module shims for Storybook/Vite
+│
+├── Introduction/             # MDX orientation pages rendered in the sidebar
+├── postcss.config.ts
+└── package.json
+```
+
+**Where stories come from:** any `*.stories.tsx` or `*.mdx` in `apps/*` or
+`packages/*` is picked up by the glob in `.storybook/main.ts`. Adding a story means
+creating it next to its component - nothing here needs to change.
+
+**Sidebar order:** `preview.ts` pins the sidebar to Design Tokens, then Components,
+with an `Introduction` entry first inside each group, so anyone opening Storybook
+lands on an orientation page before browsing individual stories.
+
+**Deployment:** built to `storybook-static/` and deployed to `storybook.ordre.app`
+via Vercel. See [Infrastructure](/internal-docs/architecture/infrastructure/platform).

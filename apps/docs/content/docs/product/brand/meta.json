@@ -1,0 +1,9 @@
+{
+  "title": "Brand",
+  "icon": "Palette",
+  "pages": [
+    "foundations",
+    "logo",
+    "components"
+  ]
+}

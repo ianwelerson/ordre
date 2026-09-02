@@ -1,24 +1,21 @@
 {
-  "title": "Guides",
-  "root": true,
   "pages": [
-    "---Getting Started---",
     "index",
-    "setup",
+    "---Get started---",
+    "start/running-the-project",
+    "start/environment-variables",
+    "start/database-roles",
+    "---Working on Ordre---",
+    "start/workflow",
+    "start/testing",
+    "start/ai-assistance",
+    "start/deployment",
     "---Product---",
-    "design/brand",
     "product/specs",
     "product/pricing",
     "product/roadmap",
-    "---Engineering---",
-    "engineering/architecture",
-    "engineering/data-model",
-    "engineering/authorization",
-    "engineering/outbox",
-    "engineering/runtime",
-    "engineering/testing",
-    "engineering/ai-assistance",
-    "engineering/infrastructure",
-    "reference"
+    "product/brand",
+    "---Architecture---",
+    "...architecture"
   ]
 }
