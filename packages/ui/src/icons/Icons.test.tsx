@@ -16,7 +16,7 @@ describe('Icons.tsx', () => {
     const { getByTestId } = render(<Icons name="ordre-logo" data-testid="logo" />);
 
     await waitFor(() => {
-      expect(getByTestId('icon')).toBeInTheDocument();
+      expect(getByTestId('logo')).toBeInTheDocument();
     });
   });
 

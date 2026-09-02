@@ -1,25 +1,31 @@
-export type LogoTheme = 'white' | 'dark' | 'amber';
+export type LogoTheme = 'white' | 'dark' | 'amber' | 'mono';
 
 type LogoColors = {
   primary: string;
   accent: string;
-  soft: string;
 };
 
+/**
+ * Ink colours for the Ordre mark, one entry per background it sits on.
+ *
+ * `primary` strokes the O, `accent` fills the cursor bar. `mono` defers both to the
+ * inherited `color`, so a caller can print the mark in a single ink of its own.
+ */
 export const logoThemes = {
   white: {
     primary: 'var(--color-midnight)',
     accent: 'var(--color-amber)',
-    soft: 'var(--color-ash)',
   },
   dark: {
     primary: 'var(--color-snow)',
     accent: 'var(--color-amber)',
-    soft: 'color-mix(in srgb, var(--color-ash) 35%, transparent)',
   },
   amber: {
     primary: 'var(--color-white)',
-    accent: 'var(--color-midnight)',
-    soft: 'color-mix(in srgb, var(--color-white) 40%, transparent)',
+    accent: 'var(--color-white)',
+  },
+  mono: {
+    primary: 'currentColor',
+    accent: 'currentColor',
   },
 } as const satisfies Record<LogoTheme, LogoColors>;

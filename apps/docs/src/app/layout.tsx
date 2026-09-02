@@ -3,10 +3,17 @@ import { RootProvider } from 'fumadocs-ui/provider/next';
 import './global.css';
 
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, Plus_Jakarta_Sans } from 'next/font/google';
 
 const inter = Inter({
   subsets: ['latin'],
+});
+
+// The brand headline face, for the logo specimens on the Brand page.
+const headline = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  weight: ['700'],
+  variable: '--font-headline',
 });
 
 export const metadata: Metadata = {
@@ -24,7 +31,7 @@ export const metadata: Metadata = {
 
 export default function Layout({ children }: LayoutProps<'/'>) {
   return (
-    <html lang="en" className={inter.className} suppressHydrationWarning>
+    <html lang="en" className={`${inter.className} ${headline.variable}`} suppressHydrationWarning>
       <body className="flex min-h-screen flex-col">
         <RootProvider>{children}</RootProvider>
       </body>
