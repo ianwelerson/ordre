@@ -89,7 +89,7 @@ The keys and their copy are listed on the [Error Codes](/internal-docs/architect
 
 #### Messages
 
-Every translated string in the product. App-specific copy still lives in each app's `shared/i18n/` and is merged with these at runtime - see [i18n Structure](#-i18n-structure).
+Every translated string in the product. App-specific copy still lives in each app's `shared/i18n/` and is merged with these at runtime - see [i18n Structure](/internal-docs/architecture/conventions#i18n-structure).
 
 ```
 packages/core/src/messages/
@@ -341,7 +341,7 @@ import '@ordre/ui/styles/main';
 // imported once in root layout
 ```
 
-**Package exports:** `./components`, `./config/postcss`, `./styles/*`, `./fonts/*`, `./icons`, `./helpers/*`, `./hooks/*`.
+**Package exports:** `./components`, `./config/postcss`, `./styles/*`, `./fonts/*`, `./icons`, `./form`, `./helpers/*`, `./hooks/*`.
 
 **Storybook requirement:** Every component in `@ordre/ui` must ship with a co-located `.stories.tsx`. Stories are published as part of the deployed Storybook at `storybook.ordre.app` - adding a component without a story is a review blocker.
 

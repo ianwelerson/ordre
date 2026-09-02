@@ -7,8 +7,8 @@ description: Each runnable surface - the API, the three frontends, and the two t
 ## App Responsibilities
 
 Each runnable surface, with what it is built with and how its folders are laid out.
-The three frontend apps share the [three-folder convention](#-three-folder-convention)
-and the [i18n structure](#-i18n-structure) described further down.
+The three frontend apps share the [three-folder convention](/internal-docs/architecture/conventions#three-folder-convention)
+and the [i18n structure](/internal-docs/architecture/conventions#i18n-structure) described further down.
 
 ---
 
@@ -18,7 +18,7 @@ and the [i18n structure](#-i18n-structure) described further down.
 
 The API app is an Express (Node.js) server - deployed as a standard long-running process in both development and production. Routes are thin HTTP adapters that call controllers; controllers contain the business logic, the OpenAPI contract, and their tests, and import from `@ordre/core/schemas` for validation and `@ordre/db` for database queries. See [Infrastructure - Alternatives](/internal-docs/architecture/infrastructure/alternatives) for compute migration options.
 
-**URL shape:** everything is served under `API_BASE_PATH` (`/v1`) on the API's own subdomain - `https://api.ordre.app/v1/workspace`. The prefix buys versioning rather than namespacing (the subdomain already does that), and it doubles as the scanner gate in `server.ts`, which answers anything outside it with an empty 404 before helmet, CORS, and the access log run. The paths below it come from `API_ROUTES` in [`@ordre/core/constants`](#ordrecore), never from string literals in a router.
+**URL shape:** everything is served under `API_BASE_PATH` (`/v1`) on the API's own subdomain - `https://api.ordre.app/v1/workspace`. The prefix buys versioning rather than namespacing (the subdomain already does that), and it doubles as the scanner gate in `server.ts`, which answers anything outside it with an empty 404 before helmet, CORS, and the access log run. The paths below it come from `API_ROUTES` in [`@ordre/core/constants`](/internal-docs/architecture/packages#ordrecore), never from string literals in a router.
 
 **Database connection ownership:** `@ordre/db/connection` exposes the `createPool` / `createDb` factories, but the API app owns the live connection. `config/db.ts` creates exactly one `pg` pool (and its Drizzle `db`) per process and exports both; controllers and `config/auth.ts` import that shared `db`. Because the server is long-lived, the entrypoint (`adapters/express/index.ts`) drains the pool on `SIGTERM`/`SIGINT` so deploys and `node --watch` reloads finish in-flight queries before exiting.
 
@@ -26,29 +26,31 @@ The API app is an Express (Node.js) server - deployed as a standard long-running
 apps/api/src/
 ├── adapters/
 │   └── express/
-│       ├── middlewares/                # authenticate, rlsContext, workspace access/quota
+│       ├── middlewares/                # authenticate, client-ip, request-locale, rls-context,
+│       │                               #   workspace-access, workspace-permission, workspace-quota
 │       ├── routes/
-│       │   ├── boards/
-│       │   │   ├── boards.routes.ts    # thin: parses req, calls controller, sends res
-│       │   │   └── boards.routes.test.ts   # integration tests (real DB)
-│       │   └── members/
-│       │       └── members.routes.ts
+│       │   ├── workspace/
+│       │   │   ├── workspace.routes.ts      # thin: parses req, calls controller, sends res
+│       │   │   └── workspace.routes.test.ts # integration tests (real DB)
+│       │   ├── auth/
+│       │   └── health/
+│       ├── utils/                      # adapter-only helpers (send-result, is-authenticated)
 │       ├── server.ts                   # Express app assembly (helmet, CORS, routes)
 │       └── index.ts                    # entrypoint: listen, start worker, graceful shutdown
 │
 ├── config/                             # env, logger, db pool, RLS context, auth, OpenAPI, urls
 │
 ├── controllers/                        # business logic + OpenAPI contract + tests
-│   ├── boards/
+│   ├── workspace/
 │   │   ├── index.ts                    # barrel - public surface only
-│   │   ├── get-boards.controller.ts
-│   │   ├── create-board.controller.ts
-│   │   ├── boards.schemas.ts           # local Zod schemas (optional)
-│   │   ├── boards.openapi.ts           # OpenAPI registration for the feature
-│   │   ├── get-boards.test.ts
-│   │   └── helpers/                    # internal helpers (only when >1 file)
-│   └── members/
-│       └── ...
+│   │   ├── workspace.controller.ts     # one controller file per resource
+│   │   ├── workspace.openapi.ts        # OpenAPI registration for that resource
+│   │   ├── workspace.utils.ts          # internal helpers for that resource
+│   │   ├── workspace.controller.test.ts
+│   │   ├── member.controller.ts        # …plus invite. and location., same four files each
+│   │   └── …
+│   ├── auth/
+│   └── health/
 │
 ├── services/                           # third-party providers (email/Resend)
 ├── workers/                            # background loops (outbox delivery)
@@ -68,16 +70,15 @@ The [outbox worker](/internal-docs/architecture/outbox) is the current example o
 
 #### Controller folder convention
 
-Every controller folder is a self-contained feature unit that owns the business logic, OpenAPI contract, tests, and internal helpers. Co-locating the OpenAPI registration with the controller (instead of with the Express route) keeps the contract independent of the HTTP adapter - swapping Express for Lambda or Vercel Functions only touches `adapters/`.
+Every controller folder is a self-contained feature unit that owns the business logic, OpenAPI contract, tests, and internal helpers. A folder holds one **domain**; the files inside are split by **resource**, so `controllers/workspace/` carries `workspace.`, `member.`, `invite.`, and `location.` sets side by side rather than one file per HTTP operation. Co-locating the OpenAPI registration with the controller (instead of with the Express route) keeps the contract independent of the HTTP adapter - swapping Express for Lambda or Vercel Functions only touches `adapters/`.
 
 | File              | Responsibility                                                                                                                    |
 | ----------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | `index.ts`        | Barrel. Re-exports public surface only (`*.controller.ts` and `*.openapi.ts`). Helpers and local types stay private.              |
 | `*.controller.ts` | Controller function(s). No Express dependency. Imports from `@ordre/core/schemas` and `@ordre/db`.                                |
-| `*.openapi.ts`    | OpenAPI registration for the feature. One per folder, not one per controller.                                                     |
-| `*.schemas.ts`    | Local Zod schemas. Use only when controller-internal; otherwise put the schema in `@ordre/core/schemas`.                          |
-| `*.test.ts`       | Co-located unit tests for fault injection (mocked DB). Full-path coverage lives in `*.routes.test.ts` - see [Testing](./testing). |
-| `helpers/`        | Folder for 2+ internal helpers. For a single helper, use a flat `*.helpers.ts` file instead.                                      |
+| `*.openapi.ts`    | OpenAPI registration for one resource, sharing its prefix (`member.controller.ts` / `member.openapi.ts`).                         |
+| `*.utils.ts`      | Internal helpers for one resource. Not exported from `index.ts`, and tested through `*.utils.test.ts`.                            |
+| `*.test.ts`       | Co-located unit tests for fault injection (mocked DB). Full-path coverage lives in `*.routes.test.ts` - see [Testing](/internal-docs/start/testing). |
 
 **Naming:** `<feature>.<role>.ts` (e.g. `get-boards.controller.ts`, `boards.openapi.ts`). The `.controller.ts` suffix disambiguates controllers from helpers and schemas as the folder grows.
 
@@ -213,6 +214,7 @@ apps/dashboard/
 │   │   │   ├── HeaderCta.tsx         # "Already have an account?" - varies per screen
 │   │   │   ├── login/page.tsx
 │   │   │   ├── get-started/page.tsx
+│   │   │   ├── register/page.tsx
 │   │   │   ├── forgot-password/page.tsx
 │   │   │   ├── set-password/page.tsx
 │   │   │   └── invite/[token]/page.tsx

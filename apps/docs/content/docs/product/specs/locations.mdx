@@ -4,6 +4,14 @@ icon: MapPin
 description: Running more than one physical site under a single workspace, and the rules that govern them.
 ---
 
+<Callout title="Built">
+  Implemented. The `workspace_location` and `workspace_member_location` tables exist, and the API
+  serves the full CRUD surface plus member assignment under `/workspace/:id/location` - see the
+  [API Reference](/api-docs) and the
+  [Data Model](/internal-docs/architecture/data-model/workspace). The tier limits below are the
+  exception: entitlements are read from `plan.entitlements`, but no paid tier is purchasable yet.
+</Callout>
+
 ## Workspace Locations
 
 ### Overview

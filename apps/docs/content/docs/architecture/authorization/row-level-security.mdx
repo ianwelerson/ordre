@@ -67,6 +67,7 @@ Defined in [`0001_row_level_security.sql`](https://github.com/ianwelerson/ordre/
 - `app_is_member(ws)` - is the caller a member of workspace `ws`? Declared `SECURITY DEFINER` so it runs with the owner's privileges and **bypasses RLS internally**. Without that, a policy on `workspace_member` that calls this function would recurse into itself forever. Hardened with `SET search_path = public, pg_temp` so it can't be tricked into reading an attacker-planted table.
 - `app_workspace_has_members(ws)`, `app_can_access_member(member)`, `app_slug_exists(slug)` - narrower `SECURITY DEFINER` helpers for the bootstrap, the join table, and the public slug check.
 - `app_member_audience_state(member)` - the contact details and cross-workspace segment membership for one member, defined in [`0002_functions.sql`](https://github.com/ianwelerson/ordre/blob/main/packages/db/src/migrations/0002_functions.sql).
+- `app_invite_preview(token)`, `app_invite_accept(token)`, `app_invite_decline(token)`, `app_invite_expire(token)` - the invite flow, also in `0002_functions.sql`. They are `SECURITY DEFINER` because someone acting on an invite is not yet a member of the workspace it points at, so no policy on `workspace_invite` could let them read or update the row.
 
 ### Reading across workspaces on purpose
 

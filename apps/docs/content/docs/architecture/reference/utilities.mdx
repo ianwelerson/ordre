@@ -11,10 +11,41 @@ here before writing another one.
 
 | Utility                                   | Purpose                                                      |
 | ----------------------------------------- | ------------------------------------------------------------ |
+| [`audience`](#audience)                   | Resolve the Resend audience segments a member belongs to     |
 | [`db-error`](#db-error)                   | Classify raw Postgres driver errors (unique violation, etc.) |
 | [`outbox`](#outbox)                       | Queue a transactional message in the caller's transaction    |
+| [`outbox-payload`](#outbox-payload)       | Re-parse a queued payload against its delivery's schema      |
 | [`slug-restrictions`](#slug-restrictions) | Block reserved, brand-protected, and profane workspace slugs |
+| [`testing`](#testing)                     | Assert a response body against a shared schema in a test     |
 | [`validation`](#validation)               | Parse request bodies and normalize validation errors         |
+
+---
+
+## `audience`
+
+`apps/api/src/utils/audience.ts`
+
+Works out which Resend audience segments a person belongs to, so the `audience`
+channel can reconcile their contact after a membership change. See
+**[Transactional Outbox](/internal-docs/architecture/outbox)** for how the channel
+consumes this.
+
+**Exports:**
+
+| Export                                          | Kind     | Description                                                                       |
+| ----------------------------------------------- | -------- | --------------------------------------------------------------------------------- |
+| `audienceSegmentsForSelf(transaction, userId)`  | function | The caller's own segments, read from their active memberships                     |
+| `audienceStateForMember(transaction, memberId)` | function | Contact details and segments for another member, or `null` when they are not visible |
+
+`audienceSegmentsForSelf` always includes `all-accounts`, because a contact only
+exists here when an account does and Resend requires a segment to broadcast to.
+It reads the caller's own rows, which the `member_select` policy allows across
+every workspace.
+
+`audienceStateForMember` goes through the `app_member_audience_state` database
+function instead of a query, because RLS hides the target's other workspaces from
+the caller. Pass the transaction that wrote the membership change, not the request
+handle, or the segments reflect pre-change state.
 
 ---
 
@@ -108,6 +139,27 @@ await pushToOutbox(tx, {
 
 ---
 
+## `outbox-payload`
+
+`apps/api/src/utils/outbox-payload.ts`
+
+The consumer side of the same contract `pushToOutbox` writes. The worker re-parses
+each claimed row against the schema for its `<channel>:<topic>` delivery, so a
+payload queued before a schema changed fails loudly instead of rendering a
+half-empty template.
+
+**Exports:**
+
+| Export                                    | Kind     | Description                                                             |
+| ----------------------------------------- | -------- | ----------------------------------------------------------------------- |
+| `parseOutboxPayload(delivery, payload, id)` | function | Returns the typed payload, or throws naming the row and the bad field |
+
+The thrown message carries the row id and a flattened list of field errors,
+because it lands in the row's `last_error` column and that column is the only
+place the failure is debuggable afterwards.
+
+---
+
 ## `slug-restrictions`
 
 `apps/api/src/utils/slug-restrictions.ts`
@@ -157,6 +209,26 @@ if (restriction) {
 
 > Expects an already-normalized slug (lowercase, hyphenated) - the same shape
 > `WorkspaceCreateSchema` produces via `.slugify()`.
+
+---
+
+## `testing`
+
+`apps/api/src/utils/testing.ts`
+
+Test-only helper. Validates a response body against a shared Zod schema and
+returns it typed, so a test asserts the *shape* once and then only the *values*
+that matter, instead of re-listing every field.
+
+**Exports:**
+
+| Export                     | Kind     | Description                                                       |
+| -------------------------- | -------- | ------------------------------------------------------------------ |
+| `parseBody(schema, body)`  | function | Returns the parsed body, or throws with the reason and the payload |
+
+On a mismatch it throws with a prettified Zod error plus the received body, so a
+failing test points straight at the offending field. See
+**[Testing](/internal-docs/start/testing)** for where each tier uses it.
 
 ---
 

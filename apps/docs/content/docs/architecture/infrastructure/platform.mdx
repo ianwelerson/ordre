@@ -116,9 +116,9 @@ The service's exact configuration (skipped build, direct `node` start command, V
 
 **Why:** Already registered; Cloudflare provides reliable DNS management with fast propagation. Cloudflare R2 for image storage lives in the same account.
 
-**Preview domains:** All apps are accessible via Vercel's default `.vercel.app` subdomains for per-branch preview deployments. Production subdomains on `ordre.app` are configured once ready for public access. `ordre.dev` is planned as an additional domain and will be purchased and configured before launch. For local development, apps run behind HTTPS `*.localhost` hostnames via portless (see [Local Development - portless](#-local-development---portless)).
+**Preview domains:** All apps are accessible via Vercel's default `.vercel.app` subdomains for per-branch preview deployments. Production subdomains on `ordre.app` are configured once ready for public access. `ordre.dev` is planned as an additional domain and will be purchased and configured before launch. For local development, apps run behind HTTPS `*.localhost` hostnames via portless (see [Local Development - portless](#local-development---portless)).
 
-**Staging is not a preview deploy.** Staging is a long-lived deployment with its own stable subdomains under `staging.ordre.app` and its own database (see [Neon](#-database---neon)), running `APP_STAGE=staging`. Vercel's `.vercel.app` URLs are throwaway per-branch builds; the two are separate and the staging origins are the ones the API trusts for CORS.
+**Staging is not a preview deploy.** Staging is a long-lived deployment with its own stable subdomains under `staging.ordre.app` and its own database (see [Neon](#database---neon)), running `APP_STAGE=staging`. Vercel's `.vercel.app` URLs are throwaway per-branch builds; the two are separate and the staging origins are the ones the API trusts for CORS.
 
 **DNS strategy:**
 

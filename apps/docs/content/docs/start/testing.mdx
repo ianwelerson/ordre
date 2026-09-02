@@ -13,24 +13,24 @@ The API is tested at two tiers, and they are deliberately **not** redundant. Eac
 | **Integration** | `*.routes.test.ts` | The real test DB | The full request path: middleware, RBAC guards, validation, happy paths  |
 | **Unit**        | `*.test.ts`        | Mocks (no DB)    | Branches that need fault injection - errors, races, impossible DB states |
 
-These map one-to-one onto the two Vitest projects in [`vitest.config.ts`](../../../../apps/api/vitest.config.ts): the `integration` project globs `*.routes.test.ts` and boots a database; the `unit` project globs every other `*.test.ts` and explicitly excludes `*.routes.test.ts`, so it never needs one.
+These map one-to-one onto the two Vitest projects in [`vitest.config.ts`](https://github.com/ianwelerson/ordre/blob/main/apps/api/vitest.config.ts): the `integration` project globs `*.routes.test.ts` and boots a database; the `unit` project globs every other `*.test.ts` and explicitly excludes `*.routes.test.ts`, so it never needs one.
 
 ## Integration tests (`*.routes.test.ts`)
 
 Co-located with the route in `adapters/express/routes/<feature>/`, these drive the assembled Express app with [`supertest`](https://github.com/ladjs/supertest) against a **real** Postgres test database. Because the whole stack is live, they are the only place that can verify how the pieces connect:
 
-- **RBAC** - the full role/permission matrix per route (owner, admin, member, non-member, unauthenticated). See [`workspace.routes.test.ts`](../../../../apps/api/src/adapters/express/routes/workspace/workspace.routes.test.ts), whose header comment lays out the matrix as a table with one test per cell.
+- **RBAC** - the full role/permission matrix per route (owner, admin, member, non-member, unauthenticated). See [`workspace.routes.test.ts`](https://github.com/ianwelerson/ordre/blob/main/apps/api/src/adapters/express/routes/workspace/workspace.routes.test.ts), whose header comment lays out the matrix as a table with one test per cell.
 - **Validation & input rules** - malformed UUIDs, missing fields, protected/reserved/banned slugs.
 - **Happy paths** - a real create/read/update/delete round-trips through Drizzle and the fixtures.
 
 The harness gives every test identical, known data:
 
-- [`global-setup.ts`](../../../../apps/api/src/test/global-setup.ts) migrates and cleans the shared test DB once per run.
-- [`integration.setup.ts`](../../../../apps/api/src/test/integration.setup.ts) runs `resetDb()` + `seedDb()` in a `beforeEach`, so each test starts from the fixed-UUID fixtures in [`fixtures.ts`](../../../../apps/api/src/test/fixtures.ts).
+- [`global-setup.ts`](https://github.com/ianwelerson/ordre/blob/main/apps/api/src/test/global-setup.ts) migrates and cleans the shared test DB once per run.
+- [`integration.setup.ts`](https://github.com/ianwelerson/ordre/blob/main/apps/api/src/test/integration.setup.ts) runs `resetDb()` + `seedDb()` in a `beforeEach`, so each test starts from the fixed-UUID fixtures in [`fixtures.ts`](https://github.com/ianwelerson/ordre/blob/main/apps/api/src/test/fixtures.ts).
 - `fileParallelism: false` serializes the files so one file's per-test `TRUNCATE` never wipes data another file is mid-way through using.
 - The seeded plans are deliberately **uncapped** (`entitlements.limits: {}`), so a route test that creates a location or an invite is never gated by `requireWorkspaceQuota` and keeps asserting its own behaviour. A test that means to exercise a quota sets the cap it needs.
 
-A guard in [`db.ts`](../../../../apps/api/src/test/db.ts) refuses to reset unless `APP_STAGE=test`, so the truncate can never point at a real database.
+A guard in [`db.ts`](https://github.com/ianwelerson/ordre/blob/main/apps/api/src/test/db.ts) refuses to reset unless `APP_STAGE=test`, so the truncate can never point at a real database.
 
 ## Unit tests (`*.controller.test.ts`)
 
@@ -40,7 +40,7 @@ Co-located with the controller, these mock the database entirely (`vi.mock('#/co
 - **Infrastructure failures** - the DB throws, mapping to `INTERNAL_ERROR` (500).
 - **Impossible-by-construction states** - a transaction commits but the read-back returns nothing (`WORKSPACE_CREATE_FAILED`); no active plan is seeded.
 
-See [`workspace.controller.test.ts`](../../../../apps/api/src/controllers/workspace/workspace.controller.test.ts): every case is a `catch` block or error mapping, and there are **zero** happy-path or RBAC assertions. It does not re-test anything the integration suite covers.
+See [`workspace.controller.test.ts`](https://github.com/ianwelerson/ordre/blob/main/apps/api/src/controllers/workspace/workspace.controller.test.ts): every case is a `catch` block or error mapping, and there are **zero** happy-path or RBAC assertions. It does not re-test anything the integration suite covers.
 
 ## Which tier does my test belong to?
 
@@ -58,4 +58,4 @@ The trap to avoid: adding a happy-path or plain-validation case to the controlle
 | `pnpm test:unit:integration` | The `integration` project only (needs the DB) |
 | `pnpm test:unit:unit`        | The `unit` project only (no DB)               |
 
-All scripts set `APP_STAGE=test`. See the [API README](../../../../apps/api/README.md) for the rest of the app's scripts.
+All scripts set `APP_STAGE=test`. See the [API README](https://github.com/ianwelerson/ordre/blob/main/apps/api/README.md) for the rest of the app's scripts.

@@ -4,6 +4,16 @@ icon: CreditCard
 description: Pricing tiers, founding member strategy, billing model, and payout constraints.
 ---
 
+<Callout title="Partly built">
+  The shape exists, the commerce does not. `plan` and `workspace_subscription` are real tables, and
+  registration creates a free subscription, so entitlement checks already run against
+  `plan.entitlements` - see the
+  [Data Model](/internal-docs/architecture/data-model/billing). Everything downstream of that is
+  planned: there is no Stripe dependency in the repo, no checkout, no webhooks, and no `addon` or
+  `workspace_subscription_addon` table. Prices, fees, and the founding-member terms below are
+  decisions, not behaviour that runs.
+</Callout>
+
 ## Pricing Tiers
 
 ### Free Tier
