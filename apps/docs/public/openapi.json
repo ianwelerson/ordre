@@ -3321,7 +3321,7 @@
         "tags": [
           "Workspace"
         ],
-        "summary": "Check whether a workspace slug is taken",
+        "summary": "Check whether a workspace slug is unavailable",
         "parameters": [
           {
             "schema": {
@@ -3334,7 +3334,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Whether a workspace already uses this slug",
+            "description": "Whether the slug is unavailable, because it is taken or restricted",
             "content": {
               "application/json": {
                 "schema": {

@@ -6,6 +6,7 @@ import type { MemberContext, SessionUser, WorkspaceContext } from '#/types/conte
 import { audienceSegmentsForSelf } from '#/utils/audience.ts';
 import { isUniqueViolation } from '#/utils/db-error.ts';
 import { pushToOutbox } from '#/utils/outbox.ts';
+import { getSlugRestriction } from '#/utils/slug-restrictions.ts';
 import { validateField, validateRequestBody } from '#/utils/validation.ts';
 import { eq, sql } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
@@ -33,12 +34,17 @@ import {
 } from './workspace.utils.ts';
 
 /**
- * Checks whether a workspace slug is already taken.
+ * Checks whether a workspace slug is unavailable, whether because it is taken or
+ * because it is restricted.
  *
  * The raw input is run through the same `slug` transform `workspaceCreate` uses,
  * so the availability answer matches what would actually be stored (e.g.
  * `"My Workspace"` is checked as `"my-workspace"`). Returns `INVALID_INPUT` when
  * the slug fails validation rather than reporting it as available.
+ *
+ * A reserved, protected, or banned slug answers `true` alongside a taken one.
+ * The answer has to agree with what `workspaceCreate` accepts, and naming which
+ * list matched would publish the restriction lists one query at a time.
  *
  * @param slug - The candidate slug, before normalization.
  * @returns `{ exists: boolean }` on success, or an error response.
@@ -51,6 +57,10 @@ export const workspaceSlugExists = async (
 
     if (!parsedSlug.success) {
       return parsedSlug.response;
+    }
+
+    if (getSlugRestriction(parsedSlug.data)) {
+      return { status: 200, body: { exists: true } };
     }
 
     // This route is public, so there is no `app.user_id` and RLS hides every

@@ -49,8 +49,8 @@ The registration flow creates a new user account and a workspace. The person reg
 - Industry selection is used for template recommendations only - it does not lock the workspace into a category; any template can be used regardless of selected industry
 - Provider type (Individual / Business) is stored for future use (invoicing, branding) but does not affect available features at this stage
 - The slug is seeded from the workspace display name and remains editable. The availability check has to agree with what workspace creation accepts, so a reserved or protected slug reports as unavailable rather than free
-- Slugification folds an accented character to its base letter before removing anything else, so `Açaí Manutenção` becomes `acai-manutencao` rather than dropping the accented letters. One transform in `@ordre/core` defines this, and both the registration flow and the API schema use it
-- A display name that slugifies to nothing, such as punctuation alone or a non-Latin script, is not rejected as a name. The flow asks for a slug directly instead
+- Slugification folds an accented character to its base letter before removing anything else, so `Açaí Manutenção` becomes `acai-manutencao` rather than dropping the accented letters. One transform in `@ordre/core` defines this, in two forms over the same rule: `slugify()` rewrites text for the field the person sees, and `SlugSchema` is what the API parses a slug against
+- A display name that slugifies to nothing, such as punctuation alone or a non-Latin script, is not rejected as a name. `slugify()` returns an empty string and the flow asks for a slug directly, while the API rejects an empty slug as invalid input
 - Leaving the business name blank means the person's name becomes the workspace display name, and so the public slug
 - The password is set during registration, so the account is usable as soon as the form is submitted - a forgotten password is recovered through the reset link on the login page
 - The workspace owner can later invite additional members (admin or member roles) from the dashboard

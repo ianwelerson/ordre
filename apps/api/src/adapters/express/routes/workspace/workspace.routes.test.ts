@@ -1077,5 +1077,15 @@ describe('Workspace', () => {
 
       expect(body.exists).toBe(false);
     });
+
+    test('GET reports a reserved slug as existing', async () => {
+      mockUserSession();
+
+      const response = await request(app).get(slugExistsUrl('admin')).send().expect(200);
+
+      const body = parseBody(WorkspaceSlugExistsSchema, response.body);
+
+      expect(body.exists).toBe(true);
+    });
   });
 });

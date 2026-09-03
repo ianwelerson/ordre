@@ -37,11 +37,11 @@ registry.registerPath({
   path: toOpenApiPath(API_ROUTES.workspace.slugExists),
   operationId: 'workspaceSlugExists',
   tags: ['Workspace'],
-  summary: 'Check whether a workspace slug is taken',
+  summary: 'Check whether a workspace slug is unavailable',
   request: { params: slugParams },
   responses: {
     200: {
-      description: 'Whether a workspace already uses this slug',
+      description: 'Whether the slug is unavailable, because it is taken or restricted',
       content: { 'application/json': { schema: WorkspaceSlugExistsSchema } },
     },
     400: jsonError('The slug failed validation'),

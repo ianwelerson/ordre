@@ -7,8 +7,11 @@
   "devDependencies": {
     "@ordre/config": "workspace:*",
     "@types/node": "^26.4.0",
+    "@vitest/coverage-v8": "^4.1.11",
+    "@vitest/eslint-plugin": "^1.6.27",
     "eslint": "^10.9.1",
-    "tsx": "^4.23.13"
+    "tsx": "^4.23.13",
+    "vitest": "^4.1.11"
   },
   "exports": {
     "./permissions": "./src/permissions/index.ts",
@@ -17,6 +20,7 @@
     "./errors": "./src/errors/index.ts",
     "./enums": "./src/enums/index.ts",
     "./types": "./src/types/index.ts",
+    "./utils": "./src/utils/index.ts",
     "./messages": "./src/messages/index.ts",
     "./messages/en": "./src/messages/en/index.ts",
     "./messages/pt": "./src/messages/pt/index.ts"
@@ -26,7 +30,10 @@
     "check-types": "tsc",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
-    "lint": "eslint --max-warnings 0"
+    "lint": "eslint --max-warnings 0",
+    "test:unit": "vitest --coverage",
+    "test:unit:ci": "vitest run --coverage",
+    "test:unit:ui": "vitest --coverage --ui"
   },
   "type": "module"
 }

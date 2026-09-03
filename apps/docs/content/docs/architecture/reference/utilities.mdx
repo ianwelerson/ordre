@@ -9,6 +9,12 @@ framework-agnostic (no Express) so controllers can call them directly, and each
 one is unit-testable in isolation. This page is the index - reach for a helper
 here before writing another one.
 
+A helper a frontend also needs lives in `@ordre/core/utils` instead, so both
+sides of the wire run the same code. `slugify` is there, and it is documented
+under [`@ordre/core`](/internal-docs/architecture/packages#utilities). The ones
+below stay in the API, either because they touch the database or because their
+data should not reach a browser.
+
 | Utility                                   | Purpose                                                      |
 | ----------------------------------------- | ------------------------------------------------------------ |
 | [`audience`](#audience)                   | Resolve the Resend audience segments a member belongs to     |

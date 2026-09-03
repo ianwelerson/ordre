@@ -62,6 +62,7 @@ export const VALIDATION_KEYS = [
   'invalidNumber',
   'unknownField',
   'passwordMismatch',
+  'slugEmpty',
 ] as const;
 
 export type ValidationKey = (typeof VALIDATION_KEYS)[number];

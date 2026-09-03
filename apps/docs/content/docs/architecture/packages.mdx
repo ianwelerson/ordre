@@ -22,6 +22,7 @@ description: What each shared package owns, what it may import, and how to add a
 | `@ordre/core/enums`               | Canonical value lists, several of which back Postgres enums                                            |
 | `@ordre/core/constants`           | Values identical in every environment - route paths, TTLs, cookie names                                |
 | `@ordre/core/permissions`         | The role/permission matrix and `can()`                                                                 |
+| `@ordre/core/utils`               | Pure helpers more than one workspace needs - `slugify()`                                               |
 | `@ordre/core/messages`            | Every translated string - `{ app, en, pt }`                                                            |
 | `@ordre/core/messages/en` · `/pt` | One locale on its own                                                                                  |
 
@@ -138,6 +139,34 @@ t('validation.email');
 #### Permissions
 
 The role/permission matrix and `can()`. Documented in full under **[Authorization](/internal-docs/architecture/authorization)**.
+
+#### Utilities
+
+Pure functions more than one workspace needs, one file per subject. A helper only one app uses stays in that app: `safeRedirect` is dashboard-only and belongs in `apps/dashboard/src/shared/`.
+
+`slugify` is the whole of it today. It rewrites text into the slug the API stores, so a field that previews a slug shows the same string the server would write:
+
+```ts
+import { slugify } from '@ordre/core/utils';
+
+slugify('Açaí Manutenção'); // 'acai-manutencao'
+slugify('My_Shop'); // 'my-shop'
+slugify('!!!'); // ''
+```
+
+The rule itself is defined once, in `schemas/slug.ts`, and the helper is the string-in, string-out door to it:
+
+| Export                | Where                 | What it does                                                                                      |
+| --------------------- | --------------------- | ------------------------------------------------------------------------------------------------- |
+| `slugify(text)`       | `@ordre/core/utils`   | Returns the slug form. Succeeds on every string, giving `''` when nothing survives                |
+| `SlugSchema`          | `@ordre/core/schemas` | Parses a slug at a boundary. Text that slugifies to nothing fails with `validation.slugEmpty`     |
+| `SlugTransformSchema` | `@ordre/core/schemas` | The transform the other two share. It never rejects, so untrusted input is parsed by `SlugSchema` |
+
+**Why the transform and the check are separate.** The two consumers need opposite things from the same empty result. The registration wizard derives a slug from a display name as it is typed and has to ask for one directly when nothing survives; the API has to reject it. Splitting them means neither has to reimplement the other's half. `WorkspaceCreateSchema.slug` is `SlugSchema`, so the wizard's preview and the stored value are the same code.
+
+**Accent folding is part of the rule.** `normalize('NFD')` splits an accented character into its base letter plus a combining mark, so the slugify that follows keeps the letter and drops only the mark. Without it `Açaí` slugifies to `aa`, which matters with `pt` shipping. `ß` has no canonical decomposition, so `Straße` still becomes `strae`.
+
+Reserved, brand-protected and banned slugs are **not** checked here. That list stays in the API - see [`slug-restrictions`](/internal-docs/architecture/reference/utilities#slug-restrictions) - so the profanity and brand lists are never shipped to a browser.
 
 ---
 

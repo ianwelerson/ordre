@@ -9,6 +9,7 @@ import {
   WORKSPACE_TYPES,
 } from './../enums/index.ts';
 import { WorkspaceSubscriptionReadSchema } from './billing.ts';
+import { SlugSchema } from './slug.ts';
 
 // The column is `numeric(_, 6)`, so anything finer is rounded on write rather
 // than rejected here.
@@ -18,8 +19,8 @@ const LongitudeSchema = z.number().min(-180).max(180);
 // --- Workspace ---
 
 export const WorkspaceCreateSchema = z.object({
-  name: z.string().min(1, 'Name cannot be empty'),
-  slug: z.string().slugify().min(1, 'Slug cannot be empty'),
+  name: z.string().min(1),
+  slug: SlugSchema,
   description: z.string().nullish(),
   logo: z.httpUrl().nullish(),
   type: z.enum(WORKSPACE_TYPES),
@@ -190,7 +191,10 @@ export const WorkspaceSummarySchema = z.object({
   industry: z.enum(WORKSPACE_INDUSTRIES),
 });
 
-/** Response shape for the "is this slug taken?" endpoint. */
+/**
+ * Response shape for the slug availability endpoint. `exists` is true for a slug
+ * another workspace holds and for one the restriction lists block.
+ */
 export const WorkspaceSlugExistsSchema = z.object({
   exists: z.boolean(),
 });

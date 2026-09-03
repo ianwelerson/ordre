@@ -81,6 +81,26 @@ describe('controllers/workspace', () => {
 
       expect(result.status).toBe(500);
     });
+
+    it('reports a reserved slug as taken, without querying for it', async () => {
+      const result = await workspaceSlugExists('admin');
+
+      expect(result.body).toEqual({ exists: true });
+      expect(mockDb.execute).not.toHaveBeenCalled();
+    });
+
+    it('reports a protected slug as taken', async () => {
+      const result = await workspaceSlugExists('adidas');
+
+      expect(result.body).toEqual({ exists: true });
+    });
+
+    it('checks the restriction against the transformed slug, not the raw input', async () => {
+      const result = await workspaceSlugExists('Admin');
+
+      expect(result.body).toEqual({ exists: true });
+      expect(mockDb.execute).not.toHaveBeenCalled();
+    });
   });
 
   describe('workspaceCreate', () => {
