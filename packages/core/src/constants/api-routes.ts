@@ -51,7 +51,7 @@ export const API_ROUTES = {
     collection: '/workspace',
     byId: '/workspace/:id',
     bySlug: '/workspace/slug/:slug',
-    slugExists: '/workspace/slug/:slug/exists',
+    slugAvailability: '/workspace/slug/:slug/availability',
 
     location: {
       collection: '/workspace/:id/location',

@@ -3315,13 +3315,13 @@
         }
       }
     },
-    "/workspace/slug/{slug}/exists": {
+    "/workspace/slug/{slug}/availability": {
       "get": {
-        "operationId": "workspaceSlugExists",
+        "operationId": "getWorkspaceSlugAvailability",
         "tags": [
           "Workspace"
         ],
-        "summary": "Check whether a workspace slug is unavailable",
+        "summary": "Check whether a workspace slug can be claimed",
         "parameters": [
           {
             "schema": {
@@ -3334,18 +3334,32 @@
         ],
         "responses": {
           "200": {
-            "description": "Whether the slug is unavailable, because it is taken or restricted",
+            "description": "Whether the slug is available, with the error code behind an unavailable one",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "exists": {
+                    "available": {
                       "type": "boolean"
+                    },
+                    "reason": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "enum": [
+                        "WORKSPACE_SLUG_RESERVED",
+                        "WORKSPACE_SLUG_PROTECTED",
+                        "WORKSPACE_SLUG_BANNED",
+                        "WORKSPACE_SLUG_ALREADY_EXISTS",
+                        null
+                      ]
                     }
                   },
                   "required": [
-                    "exists"
+                    "available",
+                    "reason"
                   ]
                 }
               }

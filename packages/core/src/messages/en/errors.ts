@@ -72,7 +72,7 @@ export const errors: Record<ErrorCode, string> = {
   ASYNC_VALIDATION_NOT_SUPPORTED: 'Something went wrong. Please try again.',
   WORKSPACE_NOT_FOUND: "We couldn't find the workspace you're looking for.",
   WORKSPACE_CREATE_FAILED: 'Something went wrong while creating your workspace. Please try again.',
-  WORKSPACE_SLUG_ALREADY_EXISTS: 'That workspace URL is already taken.',
+  WORKSPACE_SLUG_ALREADY_EXISTS: 'That workspace name is already taken.',
   WORKSPACE_SLUG_RESERVED: 'This name is reserved. Please choose another.',
   WORKSPACE_SLUG_PROTECTED:
     'This name is reserved. If it belongs to your organization, get in contact with us.',

@@ -19,6 +19,7 @@ import type {
   Response,
   Workspace,
   WorkspaceCreate,
+  WorkspaceSlugAvailability,
   WorkspaceSummary,
   WorkspaceUpdate,
 } from '@ordre/core/types';
@@ -34,24 +35,25 @@ import {
 } from './workspace.utils.ts';
 
 /**
- * Checks whether a workspace slug is unavailable, whether because it is taken or
- * because it is restricted.
+ * Reports whether a workspace slug can be claimed, and why it cannot when it
+ * cannot.
  *
  * The raw input is run through the same `slug` transform `workspaceCreate` uses,
  * so the availability answer matches what would actually be stored (e.g.
  * `"My Workspace"` is checked as `"my-workspace"`). Returns `INVALID_INPUT` when
  * the slug fails validation rather than reporting it as available.
  *
- * A reserved, protected, or banned slug answers `true` alongside a taken one.
- * The answer has to agree with what `workspaceCreate` accepts, and naming which
- * list matched would publish the restriction lists one query at a time.
+ * `reason` is the same error code `workspaceCreate` would reject the slug with,
+ * so a form can say "reserved" rather than "already taken" and resolve the
+ * wording in its own locale. Naming which list matched does expose the
+ * restriction lists one query at a time, accepted for the clearer message.
  *
  * @param slug - The candidate slug, before normalization.
- * @returns `{ exists: boolean }` on success, or an error response.
+ * @returns `{ available, reason }` on success, or an error response.
  */
-export const workspaceSlugExists = async (
+export const workspaceSlugGetAvailability = async (
   slug: unknown
-): Promise<Response<{ exists: boolean }>> => {
+): Promise<Response<WorkspaceSlugAvailability>> => {
   try {
     const parsedSlug = validateField(WorkspaceCreateSchema.shape.slug, slug, 'slug');
 
@@ -59,19 +61,26 @@ export const workspaceSlugExists = async (
       return parsedSlug.response;
     }
 
-    if (getSlugRestriction(parsedSlug.data)) {
-      return { status: 200, body: { exists: true } };
+    const restrictedSlug = getSlugRestriction(parsedSlug.data);
+
+    if (restrictedSlug) {
+      return { status: 200, body: { available: false, reason: restrictedSlug } };
     }
 
     // This route is public, so there is no `app.user_id` and RLS hides every
     // workspace from it - a plain lookup would always report "available".
     // `app_slug_exists` is a SECURITY DEFINER function that answers the availability
     // question with a boolean, without exposing any row.
-    const result = await getDb().execute(sql`SELECT app_slug_exists(${parsedSlug.data}) AS exists`);
+    const result = await getDb().execute(sql`SELECT app_slug_exists(${parsedSlug.data}) AS taken`);
+
+    const slugTaken = Boolean(result.rows[0]?.taken);
 
     return {
       status: 200,
-      body: { exists: Boolean(result.rows[0]?.exists) },
+      body: {
+        available: !slugTaken,
+        reason: slugTaken ? 'WORKSPACE_SLUG_ALREADY_EXISTS' : null,
+      },
     };
   } catch (error) {
     logger.error(error);

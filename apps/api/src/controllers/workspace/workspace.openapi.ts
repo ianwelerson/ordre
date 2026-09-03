@@ -6,7 +6,7 @@ import { ResponseErrorSchema } from '@ordre/core/schemas';
 import {
   WorkspaceCreateSchema,
   WorkspaceSchema,
-  WorkspaceSlugExistsSchema,
+  WorkspaceSlugAvailabilitySchema,
   WorkspaceSummarySchema,
   WorkspaceUpdateSchema,
 } from '@ordre/core/schemas';
@@ -30,19 +30,19 @@ const slugParams = z.object({ slug: z.string() });
 const authenticated = [{ cookieAuth: [] }];
 
 /**
- * GET /workspace/slug/{slug}/exists - public slug availability check.
+ * GET /workspace/slug/{slug}/availability - public slug availability check.
  */
 registry.registerPath({
   method: 'get',
-  path: toOpenApiPath(API_ROUTES.workspace.slugExists),
-  operationId: 'workspaceSlugExists',
+  path: toOpenApiPath(API_ROUTES.workspace.slugAvailability),
+  operationId: 'getWorkspaceSlugAvailability',
   tags: ['Workspace'],
-  summary: 'Check whether a workspace slug is unavailable',
+  summary: 'Check whether a workspace slug can be claimed',
   request: { params: slugParams },
   responses: {
     200: {
-      description: 'Whether the slug is unavailable, because it is taken or restricted',
-      content: { 'application/json': { schema: WorkspaceSlugExistsSchema } },
+      description: 'Whether the slug is available, with the error code behind an unavailable one',
+      content: { 'application/json': { schema: WorkspaceSlugAvailabilitySchema } },
     },
     400: jsonError('The slug failed validation'),
   },

@@ -6,6 +6,7 @@ import {
   WORKSPACE_INVITE_STATUSES,
   WORKSPACE_MEMBER_ROLES,
   WORKSPACE_MEMBER_STATUSES,
+  WORKSPACE_SLUG_UNAVAILABLE_REASONS,
   WORKSPACE_TYPES,
 } from './../enums/index.ts';
 import { WorkspaceSubscriptionReadSchema } from './billing.ts';
@@ -192,9 +193,14 @@ export const WorkspaceSummarySchema = z.object({
 });
 
 /**
- * Response shape for the slug availability endpoint. `exists` is true for a slug
- * another workspace holds and for one the restriction lists block.
+ * Response shape for the slug availability endpoint.
+ *
+ * `available` is false for a slug another workspace holds and for one the
+ * restriction lists block. `reason` carries the error code behind a false, so
+ * the client picks its own wording out of `@ordre/core/messages`, and is null
+ * whenever the slug is available.
  */
-export const WorkspaceSlugExistsSchema = z.object({
-  exists: z.boolean(),
+export const WorkspaceSlugAvailabilitySchema = z.object({
+  available: z.boolean(),
+  reason: z.enum(WORKSPACE_SLUG_UNAVAILABLE_REASONS).nullable(),
 });

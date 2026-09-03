@@ -16,6 +16,7 @@ import {
   WorkspaceMemberSchema,
   WorkspaceMemberUpdateSchema,
   WorkspaceSchema,
+  WorkspaceSlugAvailabilitySchema,
   WorkspaceSummarySchema,
   WorkspaceUpdateSchema,
 } from './../schemas/index.ts';
@@ -26,6 +27,7 @@ export type WorkspaceCreate = z.infer<typeof WorkspaceCreateSchema>;
 export type WorkspaceUpdate = z.infer<typeof WorkspaceUpdateSchema>;
 // A minimal workspace projection for listing the workspaces a user belongs to.
 export type WorkspaceSummary = z.infer<typeof WorkspaceSummarySchema>;
+export type WorkspaceSlugAvailability = z.infer<typeof WorkspaceSlugAvailabilitySchema>;
 
 /** --- Workspace Member --- */
 export type WorkspaceMember = z.infer<typeof WorkspaceMemberSchema>;

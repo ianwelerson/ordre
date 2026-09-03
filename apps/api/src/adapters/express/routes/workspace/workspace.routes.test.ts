@@ -12,7 +12,7 @@ import { errorMessage } from '@ordre/core/errors';
 import {
   ResponseErrorSchema,
   WorkspaceSchema,
-  WorkspaceSlugExistsSchema,
+  WorkspaceSlugAvailabilitySchema,
   WorkspaceSummarySchema,
 } from '@ordre/core/schemas';
 
@@ -21,8 +21,8 @@ const BASE = `${API_BASE_PATH}${API_ROUTES.workspace.collection}`;
 const itemUrl = (id: string) => `${API_BASE_PATH}${buildPath(API_ROUTES.workspace.byId, { id })}`;
 const slugUrl = (slug: string) =>
   `${API_BASE_PATH}${buildPath(API_ROUTES.workspace.bySlug, { slug })}`;
-const slugExistsUrl = (slug: string) =>
-  `${API_BASE_PATH}${buildPath(API_ROUTES.workspace.slugExists, { slug })}`;
+const slugAvailabilityUrl = (slug: string) =>
+  `${API_BASE_PATH}${buildPath(API_ROUTES.workspace.slugAvailability, { slug })}`;
 
 vi.mock('#/config/auth.ts', () => {
   return {
@@ -50,15 +50,15 @@ const mockUserSession = (user?: Record<string, string>) => {
  * RBAC matrix exercised below (one test per marked cell), so a change to the
  * route guards or the role/permission policy surfaces as a failing case:
  *
- * | Route                       | owner | admin | member | non-member | unauth |
- * | --------------------------- | ----- | ----- | ------ | ---------- | ------ |
- * | GET  /slug-exists/:slug     |  200  |  200  |  200   |    200     |  200   |
- * | GET  /                      |  200  |  200  |  200   |    200     |  401   |
- * | POST /                      |  201  |  201  |  201   |    201     |  401   |
- * | GET  /:id  (workspace:read) |  200  |  200  |  200   |    404     |  401   |
- * | GET  /:slug(workspace:read) |  200  |  200  |  200   |    404     |  401   |
- * | DEL  /:id (workspace:delete)|  200  |  403  |  403   |    404     |  401   |
- * | PATCH /:id(workspace:update)|  200  |  200  |  403   |    404     |  401   |
+ * | Route                         | owner | admin | member | non-member | unauth |
+ * | ----------------------------- | ----- | ----- | ------ | ---------- | ------ |
+ * | GET  /slug/:slug/availability |  200  |  200  |  200   |    200     |  200   |
+ * | GET  /                        |  200  |  200  |  200   |    200     |  401   |
+ * | POST /                        |  201  |  201  |  201   |    201     |  401   |
+ * | GET  /:id  (workspace:read)   |  200  |  200  |  200   |    404     |  401   |
+ * | GET  /:slug(workspace:read)   |  200  |  200  |  200   |    404     |  401   |
+ * | DEL  /:id (workspace:delete)  |  200  |  403  |  403   |    404     |  401   |
+ * | PATCH /:id(workspace:update)  |  200  |  200  |  403   |    404     |  401   |
  *
  * A non-member (`outsider`) is authenticated but has no membership row, so
  * `requireWorkspaceAccess` returns WORKSPACE_NOT_FOUND to avoid leaking existence.
@@ -1040,52 +1040,75 @@ describe('Workspace', () => {
     });
   });
 
-  describe(`${API_ROUTES.workspace.slugExists}`, () => {
+  describe(`${API_ROUTES.workspace.slugAvailability}`, () => {
     // RBAC: public route - mounted before `authenticate`, so no session required.
 
     test('GET is public and works without authentication', async () => {
       const response = await request(app)
-        .get(slugExistsUrl(workspaceFixtures[0]!.slug))
+        .get(slugAvailabilityUrl(workspaceFixtures[0]!.slug))
         .send()
         .expect(200);
 
-      const body = parseBody(WorkspaceSlugExistsSchema, response.body);
+      const body = parseBody(WorkspaceSlugAvailabilitySchema, response.body);
 
-      expect(body.exists).toBe(true);
+      expect(body.available).toBe(false);
     });
 
     // Behavior
-    test('GET reports a taken slug as existing', async () => {
+    test('GET reports a taken slug as unavailable', async () => {
       mockUserSession();
 
       const response = await request(app)
-        .get(slugExistsUrl(workspaceFixtures[0]!.slug))
+        .get(slugAvailabilityUrl(workspaceFixtures[0]!.slug))
         .send()
         .expect(200);
 
-      const body = parseBody(WorkspaceSlugExistsSchema, response.body);
+      const body = parseBody(WorkspaceSlugAvailabilitySchema, response.body);
 
-      expect(body.exists).toBe(true);
+      expect(body).toEqual({ available: false, reason: 'WORKSPACE_SLUG_ALREADY_EXISTS' });
     });
 
-    test('GET reports an available slug as not existing', async () => {
+    test('GET reports a free slug as available, with no reason', async () => {
       mockUserSession();
 
-      const response = await request(app).get(slugExistsUrl('non-existing')).send().expect(200);
+      const response = await request(app)
+        .get(slugAvailabilityUrl('non-existing'))
+        .send()
+        .expect(200);
 
-      const body = parseBody(WorkspaceSlugExistsSchema, response.body);
+      const body = parseBody(WorkspaceSlugAvailabilitySchema, response.body);
 
-      expect(body.exists).toBe(false);
+      expect(body).toEqual({ available: true, reason: null });
     });
 
-    test('GET reports a reserved slug as existing', async () => {
+    test('GET separates a reserved slug from a taken one', async () => {
       mockUserSession();
 
-      const response = await request(app).get(slugExistsUrl('admin')).send().expect(200);
+      const response = await request(app).get(slugAvailabilityUrl('admin')).send().expect(200);
 
-      const body = parseBody(WorkspaceSlugExistsSchema, response.body);
+      const body = parseBody(WorkspaceSlugAvailabilitySchema, response.body);
 
-      expect(body.exists).toBe(true);
+      expect(body).toEqual({ available: false, reason: 'WORKSPACE_SLUG_RESERVED' });
+    });
+
+    test('GET reports a protected slug with its own reason', async () => {
+      mockUserSession();
+
+      const response = await request(app).get(slugAvailabilityUrl('adidas')).send().expect(200);
+
+      const body = parseBody(WorkspaceSlugAvailabilitySchema, response.body);
+
+      expect(body).toEqual({ available: false, reason: 'WORKSPACE_SLUG_PROTECTED' });
+    });
+
+    test('GET reports a banned slug with its own reason', async () => {
+      mockUserSession();
+
+      const response = await request(app).get(slugAvailabilityUrl('fuck')).send().expect(200);
+
+      const body = parseBody(WorkspaceSlugAvailabilitySchema, response.body);
+
+      expect(body).toEqual({ available: false, reason: 'WORKSPACE_SLUG_BANNED' });
     });
   });
 });

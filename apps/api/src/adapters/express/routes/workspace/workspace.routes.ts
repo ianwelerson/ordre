@@ -13,7 +13,7 @@ import {
   workspaceGetAll,
   workspaceGetById,
   workspaceGetBySlug,
-  workspaceSlugExists,
+  workspaceSlugGetAvailability,
   workspaceUpdate,
 } from '#controllers/workspace';
 import { Router } from 'express';
@@ -28,8 +28,8 @@ const workspaceRouter: Router = Router();
 
 // Unauthenticated routes
 workspaceRouter.get(
-  API_ROUTES.workspace.slugExists,
-  sendResult((req) => workspaceSlugExists(req.params.slug))
+  API_ROUTES.workspace.slugAvailability,
+  sendResult((req) => workspaceSlugGetAvailability(req.params.slug))
 );
 
 /**

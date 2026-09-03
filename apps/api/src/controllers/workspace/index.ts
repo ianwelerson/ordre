@@ -14,7 +14,7 @@ export {
   workspaceGetAll,
   workspaceGetById,
   workspaceGetBySlug,
-  workspaceSlugExists,
+  workspaceSlugGetAvailability,
   workspaceUpdate,
 } from './workspace.controller.ts';
 export {

@@ -147,7 +147,7 @@ export const checkSlugAvailability = async (
   const restricted = getSlugRestriction(slug);
 
   if (restricted) {
-    return errorResponse(WORKSPACE_ERRORS, `WORKSPACE_SLUG_${restricted}`);
+    return errorResponse(WORKSPACE_ERRORS, restricted);
   }
 
   const existing = await getDb().query.workspace.findFirst({

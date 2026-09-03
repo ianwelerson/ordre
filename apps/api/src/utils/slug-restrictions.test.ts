@@ -8,29 +8,29 @@ describe('utils/slug-restriction', () => {
       expect(result).toBeNull();
     });
 
-    it('classifies a known brand as PROTECTED', () => {
+    it('classifies a known brand as WORKSPACE_SLUG_PROTECTED', () => {
       const result = getSlugRestriction('coca-cola');
 
-      expect(result).toBe('PROTECTED');
+      expect(result).toBe('WORKSPACE_SLUG_PROTECTED');
     });
 
-    it('classifies a platform/system name as RESERVED', () => {
+    it('classifies a platform/system name as WORKSPACE_SLUG_RESERVED', () => {
       const result = getSlugRestriction('admin');
 
-      expect(result).toBe('RESERVED');
+      expect(result).toBe('WORKSPACE_SLUG_RESERVED');
     });
 
     describe('Banned slugs', () => {
-      it('classifies profanity as BANNED', () => {
+      it('classifies profanity as WORKSPACE_SLUG_BANNED', () => {
         const result = getSlugRestriction('fuck');
 
-        expect(result).toBe('BANNED');
+        expect(result).toBe('WORKSPACE_SLUG_BANNED');
       });
 
-      it('classifies separator-smuggled profanity as BANNED after normalization', () => {
+      it('classifies separator-smuggled profanity as WORKSPACE_SLUG_BANNED after normalization', () => {
         const result = getSlugRestriction('b1tch');
 
-        expect(result).toBe('BANNED');
+        expect(result).toBe('WORKSPACE_SLUG_BANNED');
       });
     });
   });

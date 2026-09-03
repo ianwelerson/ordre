@@ -177,11 +177,11 @@ Guards workspace slug creation against names that must never be granted. It runs
 
 Checks run in priority order:
 
-| Restriction | What it covers                                                                                                      |
-| ----------- | ------------------------------------------------------------------------------------------------------------------- |
-| `RESERVED`  | Platform / system names needed for routes, subdomains, and auth (`api`, `admin`, `settings`, ...). Never grantable. |
-| `PROTECTED` | Well-known brands / trademarks (`apple`, `nike`, `stripe`, ...). Grantable only to a verified owner.                |
-| `BANNED`    | Profanity and slurs, matched after normalization.                                                                   |
+| Restriction                | What it covers                                                                                                     |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `WORKSPACE_SLUG_RESERVED`  | Platform / system names needed for routes, subdomains, and auth (`api`, `admin`, `settings`, ...). Never grantable. |
+| `WORKSPACE_SLUG_PROTECTED` | Well-known brands / trademarks (`apple`, `nike`, `stripe`, ...). Grantable only to a verified owner.                |
+| `WORKSPACE_SLUG_BANNED`    | Profanity and slurs, matched after normalization.                                                                   |
 
 **Profanity matching** is deliberately careful about false positives:
 
@@ -195,12 +195,15 @@ Checks run in priority order:
 
 **Exports:**
 
-| Export                     | Kind     | Description                                                         |
-| -------------------------- | -------- | ------------------------------------------------------------------- |
-| `SlugRestriction`          | type     | `'RESERVED' \| 'PROTECTED' \| 'BANNED'`                             |
-| `getSlugRestriction(slug)` | function | Returns the matched restriction, or `null` when the slug is allowed |
+| Export                     | Kind     | Description                                                                            |
+| -------------------------- | -------- | -------------------------------------------------------------------------------------- |
+| `getSlugRestriction(slug)` | function | Returns the matched restriction as a `WorkspaceSlugRestriction`, or `null` when allowed |
 
-**Usage** - the returned value maps straight onto the matching `WORKSPACE_SLUG_*` error:
+The return type is `WorkspaceSlugRestriction` from `@ordre/core/enums`, whose
+values are `WORKSPACE_ERRORS` keys checked with `satisfies`. A restriction is
+therefore already the error code, so it goes straight to `errorResponse` with no
+string building in between, and renaming a code in the catalog fails the build
+here rather than producing an unknown code at runtime.
 
 ```ts
 import { getSlugRestriction } from '#/utils/slug-restrictions.ts';
@@ -208,10 +211,13 @@ import { getSlugRestriction } from '#/utils/slug-restrictions.ts';
 const restriction = getSlugRestriction(data.slug);
 
 if (restriction) {
-  // 'RESERVED' -> WORKSPACE_SLUG_RESERVED, 'PROTECTED' -> WORKSPACE_SLUG_PROTECTED, ...
-  return errorResponse(WORKSPACE_ERRORS, `WORKSPACE_SLUG_${restriction}`);
+  return errorResponse(WORKSPACE_ERRORS, restriction);
 }
 ```
+
+The same values back the `reason` field on the slug availability endpoint, which
+adds `WORKSPACE_SLUG_ALREADY_EXISTS` for the uniqueness case. Both lists live in
+`WORKSPACE_SLUG_RESTRICTIONS` and `WORKSPACE_SLUG_UNAVAILABLE_REASONS`.
 
 > Expects an already-normalized slug (lowercase, hyphenated) - the same shape
 > `WorkspaceCreateSchema` produces via `.slugify()`.

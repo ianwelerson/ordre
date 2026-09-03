@@ -148,7 +148,7 @@ describe('controllers/workspace/workspace.utils', () => {
 
   describe('checkSlugAvailability', () => {
     it('returns a reserved-slug error before hitting the database', async () => {
-      getSlugRestriction.mockReturnValueOnce('RESERVED');
+      getSlugRestriction.mockReturnValueOnce('WORKSPACE_SLUG_RESERVED');
 
       const result = await checkSlugAvailability('admin');
 

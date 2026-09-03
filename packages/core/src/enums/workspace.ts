@@ -1,3 +1,5 @@
+import type { WORKSPACE_ERRORS } from './../errors/workspace.ts';
+
 /**
  * Canonical value lists for the workspace domain.
  *
@@ -53,3 +55,27 @@ export const WORKSPACE_RELATION = {
 } as const;
 
 export type WorkspaceRelation = (typeof WORKSPACE_RELATION)[keyof typeof WORKSPACE_RELATION];
+
+/**
+ * Error codes for the restriction lists a slug can match, in the priority
+ * `getSlugRestriction` checks them.
+ *
+ * The values are `WORKSPACE_ERRORS` keys, so the create path can hand a matched
+ * restriction straight to `errorResponse` and the availability endpoint can
+ * report it as a `reason` the client resolves through `@ordre/core/messages`.
+ */
+export const WORKSPACE_SLUG_RESTRICTIONS = [
+  'WORKSPACE_SLUG_RESERVED',
+  'WORKSPACE_SLUG_PROTECTED',
+  'WORKSPACE_SLUG_BANNED',
+] as const satisfies readonly (keyof typeof WORKSPACE_ERRORS)[];
+
+export type WorkspaceSlugRestriction = (typeof WORKSPACE_SLUG_RESTRICTIONS)[number];
+
+/** Every reason the slug availability endpoint can give for refusing a slug. */
+export const WORKSPACE_SLUG_UNAVAILABLE_REASONS = [
+  ...WORKSPACE_SLUG_RESTRICTIONS,
+  'WORKSPACE_SLUG_ALREADY_EXISTS',
+] as const satisfies readonly (keyof typeof WORKSPACE_ERRORS)[];
+
+export type WorkspaceSlugUnavailableReason = (typeof WORKSPACE_SLUG_UNAVAILABLE_REASONS)[number];

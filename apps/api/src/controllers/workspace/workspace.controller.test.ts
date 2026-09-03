@@ -5,7 +5,7 @@ import {
   workspaceCreate,
   workspaceDelete,
   workspaceGetById,
-  workspaceSlugExists,
+  workspaceSlugGetAvailability,
   workspaceUpdate,
 } from './workspace.controller.ts';
 
@@ -73,33 +73,55 @@ describe('controllers/workspace', () => {
     vi.clearAllMocks();
   });
 
-  describe('workspaceSlugExists', () => {
+  describe('workspaceSlugGetAvailability', () => {
     it('returns INTERNAL_ERROR when the availability query throws', async () => {
       mockDb.execute.mockRejectedValue(new Error('db down'));
 
-      const result = await workspaceSlugExists('valid-workspace');
+      const result = await workspaceSlugGetAvailability('valid-workspace');
 
       expect(result.status).toBe(500);
     });
 
-    it('reports a reserved slug as taken, without querying for it', async () => {
-      const result = await workspaceSlugExists('admin');
+    it('reports a reserved slug as unavailable, without querying for it', async () => {
+      const result = await workspaceSlugGetAvailability('admin');
 
-      expect(result.body).toEqual({ exists: true });
+      expect(result.body).toEqual({ available: false, reason: 'WORKSPACE_SLUG_RESERVED' });
       expect(mockDb.execute).not.toHaveBeenCalled();
     });
 
-    it('reports a protected slug as taken', async () => {
-      const result = await workspaceSlugExists('adidas');
+    it('reports a protected slug as unavailable', async () => {
+      const result = await workspaceSlugGetAvailability('adidas');
 
-      expect(result.body).toEqual({ exists: true });
+      expect(result.body).toEqual({ available: false, reason: 'WORKSPACE_SLUG_PROTECTED' });
+    });
+
+    it('reports a banned slug as unavailable', async () => {
+      const result = await workspaceSlugGetAvailability('fuck');
+
+      expect(result.body).toEqual({ available: false, reason: 'WORKSPACE_SLUG_BANNED' });
     });
 
     it('checks the restriction against the transformed slug, not the raw input', async () => {
-      const result = await workspaceSlugExists('Admin');
+      const result = await workspaceSlugGetAvailability('Admin');
 
-      expect(result.body).toEqual({ exists: true });
+      expect(result.body).toEqual({ available: false, reason: 'WORKSPACE_SLUG_RESERVED' });
       expect(mockDb.execute).not.toHaveBeenCalled();
+    });
+
+    it('reports a taken slug as unavailable', async () => {
+      mockDb.execute.mockResolvedValueOnce({ rows: [{ taken: true }] });
+
+      const result = await workspaceSlugGetAvailability('valid-workspace');
+
+      expect(result.body).toEqual({ available: false, reason: 'WORKSPACE_SLUG_ALREADY_EXISTS' });
+    });
+
+    it('reports a free slug as available, with no reason', async () => {
+      mockDb.execute.mockResolvedValueOnce({ rows: [{ taken: false }] });
+
+      const result = await workspaceSlugGetAvailability('valid-workspace');
+
+      expect(result.body).toEqual({ available: true, reason: null });
     });
   });
 

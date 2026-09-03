@@ -71,7 +71,7 @@ export const errors: Record<ErrorCode, string> = {
   ASYNC_VALIDATION_NOT_SUPPORTED: 'Algo deu errado. Tente novamente.',
   WORKSPACE_NOT_FOUND: 'Não encontramos o workspace que você procura.',
   WORKSPACE_CREATE_FAILED: 'Algo deu errado ao criar seu workspace. Tente novamente.',
-  WORKSPACE_SLUG_ALREADY_EXISTS: 'Essa URL de workspace já está em uso.',
+  WORKSPACE_SLUG_ALREADY_EXISTS: 'Este nome já está em uso.',
   WORKSPACE_SLUG_RESERVED: 'Este nome é reservado. Escolha outro.',
   WORKSPACE_SLUG_PROTECTED:
     'Este nome é reservado. Se ele pertence à sua organização, entre em contato conosco.',

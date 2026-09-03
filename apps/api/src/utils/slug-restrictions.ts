@@ -1,3 +1,5 @@
+import type { WorkspaceSlugRestriction } from '@ordre/core/enums';
+
 // Names the platform needs for routes, subdomains, auth and system endpoints.
 // These are never grantable to a workspace.
 const RESERVED: string[] = [
@@ -284,8 +286,6 @@ const normalize = (value: string): string =>
     .join('')
     .replace(/[^a-z]/g, '');
 
-export type SlugRestriction = 'RESERVED' | 'PROTECTED' | 'BANNED';
-
 /**
  * Returns `true` when the normalized slug contains banned profanity. Substring
  * terms match anywhere; short, embeddable terms match only as a whole segment.
@@ -319,17 +319,17 @@ const isBanned = (slug: string): boolean => {
  * @param slug - The normalized workspace slug to check.
  * @returns The matched restriction, or `null` when the slug is allowed.
  */
-export const getSlugRestriction = (slug: string): SlugRestriction | null => {
+export const getSlugRestriction = (slug: string): WorkspaceSlugRestriction | null => {
   if (RESERVED.includes(slug)) {
-    return 'RESERVED';
+    return 'WORKSPACE_SLUG_RESERVED';
   }
 
   if (PROTECTED.includes(slug)) {
-    return 'PROTECTED';
+    return 'WORKSPACE_SLUG_PROTECTED';
   }
 
   if (isBanned(slug)) {
-    return 'BANNED';
+    return 'WORKSPACE_SLUG_BANNED';
   }
 
   return null;
