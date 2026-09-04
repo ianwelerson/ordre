@@ -41,6 +41,12 @@ export default {
       'account-exists': 'Você já tem uma conta. Entre para aceitar o convite.',
     },
   },
+  GetStarted: {
+    eyebrow: 'Comece agora',
+    title: 'Os cadastros estão fechados por enquanto.',
+    subtitle: 'Novas contas estão desativadas enquanto terminamos de construir o Ordre.',
+    contact: 'Dúvidas? Fale com a gente em',
+  },
   ForgotPassword: {
     eyebrow: 'Redefinir senha',
     title: 'Problemas para entrar?',

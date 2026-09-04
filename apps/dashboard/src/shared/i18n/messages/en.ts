@@ -41,6 +41,12 @@ export default {
       'account-exists': 'You already have an account. Sign in to accept the invite.',
     },
   },
+  GetStarted: {
+    eyebrow: 'Get started',
+    title: 'Registration is closed for now.',
+    subtitle: 'New accounts are disabled while we finish building Ordre.',
+    contact: 'Questions? Get in touch at',
+  },
   ForgotPassword: {
     eyebrow: 'Reset your password',
     title: 'Trouble signing in?',
