@@ -9,6 +9,7 @@
     "data-model",
     "authorization",
     "outbox",
+    "feature-switches",
     "runtime",
     "infrastructure",
     "...reference"

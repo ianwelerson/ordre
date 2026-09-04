@@ -48,6 +48,10 @@
     {
       "name": "Health",
       "description": "Service health checks."
+    },
+    {
+      "name": "Features",
+      "description": "The feature switches and whether each is on."
     }
   ],
   "components": {
@@ -1582,6 +1586,51 @@
     }
   },
   "paths": {
+    "/features": {
+      "get": {
+        "operationId": "getFeatures",
+        "tags": [
+          "Features"
+        ],
+        "summary": "List the feature switches",
+        "responses": {
+          "200": {
+            "description": "Every feature switch and whether it is on",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "login": {
+                      "type": "boolean"
+                    },
+                    "registration": {
+                      "type": "boolean"
+                    },
+                    "workspace-creation": {
+                      "type": "boolean"
+                    },
+                    "workspace-location": {
+                      "type": "boolean"
+                    },
+                    "workspace-invite": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "login",
+                    "registration",
+                    "workspace-creation",
+                    "workspace-location",
+                    "workspace-invite"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "operationId": "healthCheck",

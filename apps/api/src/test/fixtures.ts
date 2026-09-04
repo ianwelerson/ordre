@@ -1,3 +1,4 @@
+import { FEATURES } from '@ordre/core/enums';
 import type * as schema from '@ordre/db/schemas';
 
 type UserInsert = typeof schema.user.$inferInsert;
@@ -7,6 +8,7 @@ type WorkspaceLocationInsert = typeof schema.workspaceLocation.$inferInsert;
 type WorkspaceMemberInviteInsert = typeof schema.workspaceInvite.$inferInsert;
 type PlanInsert = typeof schema.plan.$inferInsert;
 type WorkspaceSubscriptionInsert = typeof schema.workspaceSubscription.$inferInsert;
+type FeatureInsert = typeof schema.feature.$inferInsert;
 
 /**
  * Stable UUIDs for seeded rows.
@@ -328,3 +330,15 @@ export const workspaceSubscriptionFixtures = [
     status: 'active',
   },
 ] satisfies WorkspaceSubscriptionInsert[];
+
+/**
+ * The feature switches seeded before each integration test, every one of them on,
+ * so route tests exercise the route rather than the switch.
+ *
+ * Derived from `FEATURES`, so a switch is open in tests from the moment it is
+ * declared. A test that wants the closed door calls `setFeature()` first.
+ */
+export const featureFixtures = FEATURES.map((key) => ({
+  key,
+  enabled: true,
+})) satisfies FeatureInsert[];

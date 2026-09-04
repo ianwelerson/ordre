@@ -3,6 +3,7 @@ import { getDb } from '#/config/db-context.ts';
 import { db } from '#/config/db.ts';
 import { logger } from '#/config/logger.ts';
 import { appOrigins, cookieDomain, urls } from '#/config/urls.ts';
+import { isFeatureEnabled } from '#/services/feature.ts';
 import { pushToOutbox } from '#/utils/outbox.ts';
 import { parseBetterAuthValidationDetails } from '#/utils/validation.ts';
 import { env } from '#env';
@@ -14,8 +15,15 @@ import { openAPI } from 'better-auth/plugins';
 import { z } from 'zod';
 
 import { API_BASE_PATH, API_ROUTES, SESSION_COOKIE_PREFIX } from '@ordre/core/constants';
-import type { AudienceTopic } from '@ordre/core/enums';
-import { AUTH_ERRORS, BASE_ERRORS, errorMessage, VALIDATION_ERRORS } from '@ordre/core/errors';
+import type { AudienceTopic, Feature } from '@ordre/core/enums';
+import {
+  AUTH_ERRORS,
+  BASE_ERRORS,
+  errorMessage,
+  FEATURE_DISABLED,
+  FEATURE_ERRORS,
+  VALIDATION_ERRORS,
+} from '@ordre/core/errors';
 import type { ErrorMap } from '@ordre/core/types';
 import * as schema from '@ordre/db/schemas';
 
@@ -156,6 +164,41 @@ const signUpTopics = (user: Record<string, unknown>): AudienceTopic[] => {
  * with no key still mounts every dashboard endpoint.
  */
 const dashPlugins = env.BETTER_AUTH_API_KEY ? [dash({ apiKey: env.BETTER_AUTH_API_KEY })] : [];
+
+/** The shape the auth guard below needs, and nothing more. */
+type AuthPathContext = { path: string };
+
+/**
+ * The feature each guarded Better Auth path belongs to.
+ *
+ * A path this map does not name is served without a switch check, so closing
+ * `login` stops new sign-ins while the sessions already issued keep working.
+ */
+const AUTH_PATH_FEATURES: Record<string, Feature> = {
+  '/sign-in/email': 'login',
+  '/sign-up/email': 'registration',
+};
+
+/**
+ * Refuses a Better Auth request whose feature is switched off.
+ *
+ * Better Auth owns every path under `/auth`, so the switch check for these
+ * endpoints belongs in its hook. The thrown `APIError` carries a code from our
+ * catalog, so a client maps it as it maps any other refusal.
+ *
+ * Exported for unit testing; the `before` hook below is its only caller.
+ */
+export const guardAuthFeature = async (ctx: AuthPathContext): Promise<void> => {
+  const key = AUTH_PATH_FEATURES[ctx.path];
+
+  if (!key || (await isFeatureEnabled(key))) {
+    return;
+  }
+
+  const code = FEATURE_DISABLED[key];
+
+  throw new APIError(FEATURE_ERRORS[code].status, { code, message: errorMessage(code) });
+};
 
 // Better Auth Configuration
 export const auth = betterAuth({
@@ -310,6 +353,8 @@ export const auth = betterAuth({
   },
   hooks: {
     before: createAuthMiddleware(async (ctx) => {
+      await guardAuthFeature(ctx);
+
       defaultSignUpCallbackUrl(ctx);
       defaultPasswordResetRedirect(ctx);
     }),

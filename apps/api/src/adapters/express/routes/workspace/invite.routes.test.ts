@@ -1,6 +1,6 @@
 import { app } from '#/adapters/express/server.ts';
 import { auth } from '#/config/auth.ts';
-import { setFreePlanLimits } from '#/test/db.ts';
+import { setFeature, setFreePlanLimits } from '#/test/db.ts';
 import { INVITE_IDS, USER_IDS, userFixtures, WORKSPACE_IDS } from '#/test/fixtures.ts';
 import { parseBody } from '#/utils/testing.ts';
 import request from 'supertest';
@@ -162,6 +162,45 @@ describe('Workspace Invite (admin)', () => {
 
     test('POST still creates an invite while seats remain', async () => {
       await setFreePlanLimits({ seat: 20 });
+      mockUserSession({ id: USER_IDS.owner });
+
+      const response = await request(app).post(collectionUrl(WS)).send(invite()).expect(201);
+
+      expect(parseBody(WorkspaceInviteSchema, response.body).status).toBe('pending');
+    });
+
+    // --- Feature switch ---
+    // The fixtures seed every switch on (see `featureFixtures`), so each case
+    // closes the one it needs.
+    test('POST refuses an invite while `workspace-invite` is off', async () => {
+      await setFeature('workspace-invite', false);
+      mockUserSession({ id: USER_IDS.owner });
+
+      const response = await request(app).post(collectionUrl(WS)).send(invite()).expect(403);
+
+      expect(parseBody(ResponseErrorSchema, response.body).code).toBe(
+        'FEATURE_WORKSPACE_INVITE_DISABLED'
+      );
+    });
+
+    test('POST reports the closed switch, not FORBIDDEN, for a member who lacks the permission', async () => {
+      // The opposite of the seat-cap case above, and deliberately so. A plan cap
+      // is that workspace's billing state, so it stays hidden from a caller who
+      // may not invite. A switch is global and already public on
+      // `GET /v1/features`, so answering with it leaks nothing and saves the
+      // membership and permission queries on a route that is closed to everyone.
+      await setFeature('workspace-invite', false);
+      mockUserSession({ id: USER_IDS.member });
+
+      const response = await request(app).post(collectionUrl(WS)).send(invite()).expect(403);
+
+      expect(parseBody(ResponseErrorSchema, response.body).code).toBe(
+        'FEATURE_WORKSPACE_INVITE_DISABLED'
+      );
+    });
+
+    test('POST still creates an invite while the switch is on', async () => {
+      await setFeature('workspace-invite', true);
       mockUserSession({ id: USER_IDS.owner });
 
       const response = await request(app).post(collectionUrl(WS)).send(invite()).expect(201);

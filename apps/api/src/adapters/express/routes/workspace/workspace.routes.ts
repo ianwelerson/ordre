@@ -1,4 +1,5 @@
 import { authenticate } from '#/adapters/express/middlewares/authenticate.ts';
+import { requireFeature } from '#/adapters/express/middlewares/feature.ts';
 import { rlsContext } from '#/adapters/express/middlewares/rls-context.ts';
 import { requireWorkspaceAccess } from '#/adapters/express/middlewares/workspace-access.ts';
 import { requireWorkspacePermission } from '#/adapters/express/middlewares/workspace-permission.ts';
@@ -52,6 +53,7 @@ workspaceRouter.get(
 
 workspaceRouter.post(
   API_ROUTES.workspace.collection,
+  requireFeature('workspace-creation'),
   sendAuthResult((req) => workspaceCreate(req.user, req.body))
 );
 

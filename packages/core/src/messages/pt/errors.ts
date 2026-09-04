@@ -105,4 +105,12 @@ export const errors: Record<ErrorCode, string> = {
   NETWORK_ERROR: 'Não conseguimos alcançar o servidor. Verifique sua conexão e tente novamente.',
   MALFORMED_RESPONSE: 'Recebemos uma resposta inesperada do servidor. Tente novamente.',
   UNKNOWN_ERROR: 'Algo deu errado. Tente novamente.',
+  FEATURE_LOGIN_DISABLED: 'No momento não é possível entrar. Tente novamente mais tarde.',
+  FEATURE_REGISTRATION_DISABLED: 'No momento não estamos aceitando novas contas. Volte em breve.',
+  FEATURE_WORKSPACE_CREATION_DISABLED:
+    'No momento não estamos aceitando novos workspaces. Volte em breve.',
+  FEATURE_WORKSPACE_LOCATION_DISABLED:
+    'No momento não é possível adicionar novas localizações. Tente novamente mais tarde.',
+  FEATURE_WORKSPACE_INVITE_DISABLED:
+    'No momento não é possível convidar novos membros. Tente novamente mais tarde.',
 };

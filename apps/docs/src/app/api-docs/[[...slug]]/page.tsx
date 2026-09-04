@@ -1,6 +1,8 @@
 import type { Folder, Node } from 'fumadocs-core/page-tree';
 import { Card, Cards } from 'fumadocs-ui/components/card';
+import { buttonVariants } from 'fumadocs-ui/components/ui/button';
 import { DocsBody, DocsDescription, DocsPage, DocsTitle } from 'fumadocs-ui/layouts/docs/page';
+import { DownloadIcon } from 'lucide-react';
 
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
@@ -8,7 +10,9 @@ import { notFound } from 'next/navigation';
 import { APIPage } from '@/components/api-page';
 import { getMDXComponents } from '@/components/mdx';
 
+import { cn } from '@/lib/cn';
 import { openapi } from '@/lib/openapi';
+import { openApiSpecFilename, openApiSpecRoute } from '@/lib/shared';
 import { apiSource } from '@/lib/source';
 
 export default async function Page(props: PageProps<'/api-docs/[[...slug]]'>) {
@@ -77,6 +81,34 @@ function countOperations(nodes: Node[]): number {
   }, 0);
 }
 
+/**
+ * Offers the OpenAPI document these pages are generated from, as a download.
+ *
+ * `download` names the saved file, and the plain `<a>` keeps it a same-origin
+ * request for a static asset rather than a client-side navigation.
+ */
+function DownloadSpec() {
+  return (
+    <div className="not-prose bg-fd-card mb-8 flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <p className="font-medium">OpenAPI 3.1 specification</p>
+        <p className="text-fd-muted-foreground text-sm">
+          The document this reference is built from. Import it into Bruno, Insomnia, Postman, or any
+          client that reads OpenAPI.
+        </p>
+      </div>
+      <a
+        href={openApiSpecRoute}
+        download={openApiSpecFilename}
+        className={cn(buttonVariants({ color: 'primary' }), 'shrink-0 gap-2')}
+      >
+        <DownloadIcon className="size-4" />
+        Download spec
+      </a>
+    </div>
+  );
+}
+
 function ApiIndex() {
   // Show a card per top-level folder (e.g. auth, health) rather than one per
   // operation. Folders come from the generated content tree.
@@ -92,6 +124,7 @@ function ApiIndex() {
         to browse its endpoints.
       </DocsDescription>
       <DocsBody>
+        <DownloadSpec />
         <Cards>
           {folders.map((folder) => {
             const href = folder.index?.url ?? firstItemUrl(folder.children);

@@ -1,3 +1,4 @@
+import { requireFeature } from '#/adapters/express/middlewares/feature.ts';
 import { requireWorkspaceAccess } from '#/adapters/express/middlewares/workspace-access.ts';
 import { requireWorkspacePermission } from '#/adapters/express/middlewares/workspace-permission.ts';
 import { requireWorkspaceQuota } from '#/adapters/express/middlewares/workspace-quota.ts';
@@ -16,6 +17,7 @@ const inviteRouter: Router = Router();
 
 inviteRouter.post(
   API_ROUTES.workspace.invite.collection,
+  requireFeature('workspace-invite'),
   requireWorkspaceAccess,
   requireWorkspacePermission('workspace:member:manage'),
   requireWorkspaceQuota('seat'),

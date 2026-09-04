@@ -1,6 +1,6 @@
 import { app } from '#/adapters/express/server.ts';
 import { auth } from '#/config/auth.ts';
-import { setFreePlanLimits } from '#/test/db.ts';
+import { setFeature, setFreePlanLimits } from '#/test/db.ts';
 import { LOCATION_IDS, USER_IDS, userFixtures, WORKSPACE_IDS } from '#/test/fixtures.ts';
 import { parseBody } from '#/utils/testing.ts';
 import request from 'supertest';
@@ -259,6 +259,54 @@ describe('Workspace Location', () => {
         .expect(201);
 
       expect(parseBody(WorkspaceLocationSchema, response.body).name).toBe('Warehouse');
+    });
+
+    // --- Feature switch ---
+    // The fixtures seed every switch on (see `featureFixtures`), so each case
+    // closes the one it needs.
+    test('POST refuses a location while `workspace-location` is off', async () => {
+      await setFeature('workspace-location', false);
+      mockUserSession({ id: USER_IDS.owner });
+
+      const response = await request(app)
+        .post(collectionUrl(WS))
+        .send({ name: 'Warehouse' })
+        .expect(403);
+
+      expect(parseBody(ResponseErrorSchema, response.body).code).toBe(
+        'FEATURE_WORKSPACE_LOCATION_DISABLED'
+      );
+    });
+
+    test('POST refuses before the plan cap is even measured while the switch is off', async () => {
+      // The switch guard is mounted ahead of `requireWorkspaceQuota`, so a closed
+      // surface answers without counting anything.
+      await setFeature('workspace-location', false);
+      await setFreePlanLimits({ location: 1 });
+      mockUserSession({ id: USER_IDS.owner });
+
+      const response = await request(app)
+        .post(collectionUrl(WS))
+        .send({ name: 'Warehouse' })
+        .expect(403);
+
+      expect(parseBody(ResponseErrorSchema, response.body).code).toBe(
+        'FEATURE_WORKSPACE_LOCATION_DISABLED'
+      );
+    });
+
+    test('POST leaves an existing location editable while the switch is off', async () => {
+      // The switch closes creation only, so nobody is locked out of the locations
+      // they already run.
+      await setFeature('workspace-location', false);
+      mockUserSession({ id: USER_IDS.owner });
+
+      const response = await request(app)
+        .patch(itemUrl(WS, LOCATION_IDS.primarySecondary))
+        .send({ name: 'Renamed' })
+        .expect(200);
+
+      expect(parseBody(WorkspaceLocationSchema, response.body).name).toBe('Renamed');
     });
   });
 

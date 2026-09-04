@@ -1,10 +1,13 @@
+import { clearFeatureCache } from '#/services/feature.ts';
 import { isTest } from '#env';
 import { eq } from 'drizzle-orm';
 
+import type { Feature } from '@ordre/core/enums';
 import type { PlanEntitlements } from '@ordre/core/types';
 import * as schema from '@ordre/db/schemas';
 
 import {
+  featureFixtures,
   PLAN_IDS,
   planFixtures,
   userFixtures,
@@ -65,6 +68,12 @@ export const seedDb = async () => {
   await ownerDb.insert(schema.workspaceInvite).values(workspaceInviteFixtures);
   await ownerDb.insert(schema.plan).values(planFixtures);
   await ownerDb.insert(schema.workspaceSubscription).values(workspaceSubscriptionFixtures);
+  // Catalog data with no foreign keys, so order does not matter here.
+  await ownerDb.insert(schema.feature).values(featureFixtures);
+
+  // The resolved switches are cached in the worker process and outlive the
+  // TRUNCATE above, so without this a test reads the previous test's answer.
+  clearFeatureCache();
 };
 
 /**
@@ -84,4 +93,22 @@ export const setFreePlanLimits = async (limits: PlanEntitlements['limits']) => {
     .update(schema.plan)
     .set({ entitlements: { limits } })
     .where(eq(schema.plan.id, PLAN_IDS.free));
+};
+
+/**
+ * Turns one feature switch on or off for a single test.
+ *
+ * The fixtures seed every switch on (see `featureFixtures`), so a test that wants
+ * a closed surface closes it here. `resetDb()` + `seedDb()` reopen them all
+ * before the next test.
+ *
+ * @param key - The feature to change.
+ * @param enabled - What to set it to.
+ */
+export const setFeature = async (key: Feature, enabled: boolean) => {
+  assertTestDb();
+
+  await ownerDb.update(schema.feature).set({ enabled }).where(eq(schema.feature.key, key));
+
+  clearFeatureCache();
 };

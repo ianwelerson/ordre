@@ -10,7 +10,7 @@ screen (registration, dashboard, boards, the public client board, and settings).
 It exists so tables can be created by hand with a complete picture of what each
 screen needs.
 
-Most of it is therefore a **specification, not a description**. Twelve tables
+Most of it is therefore a **specification, not a description**. Thirteen tables
 exist today; everything else on this page is a design waiting to be built.
 
 Two modelling decisions are baked in:
@@ -35,7 +35,7 @@ marked against it:
 | ✅ **Built**   | The table is in the schema and has a migration. The fields, enums, and indexes listed match it.                                   |
 | 📋 **Planned** | Designed here, not created yet. Names, types, and enums are proposals, and get checked against reality when the table is written. |
 
-The twelve built tables, by schema file:
+The thirteen built tables, by schema file:
 
 | Schema file                  | Tables                                                                                                 |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------ |
@@ -43,6 +43,11 @@ The twelve built tables, by schema file:
 | `workspace.ts`               | `workspace`, `workspace_location`, `workspace_member`, `workspace_member_location`, `workspace_invite` |
 | `billing.ts`                 | `plan`, `workspace_subscription`                                                                       |
 | `outbox.ts`                  | `outbox`                                                                                               |
+| `feature.ts`                 | `feature`                                                                                              |
+
+`feature` holds the global switches that close a surface without a deploy; it is
+documented in [Feature Switches](/internal-docs/architecture/feature-switches) rather than in a
+section below, because the table is the smaller half of the mechanism.
 
 Everything else - clients, templates, boards, the activity feed, media,
 messaging, channels, user preferences, and add-ons - is planned. The product
@@ -86,6 +91,7 @@ workspace ─┬─ workspace_location
 
 verification                 (standalone - Better Auth tokens)
 outbox                       (standalone - no FKs, no RLS; see Transactional Outbox)
+feature                      (standalone - global switches, no RLS; see Feature Switches)
 ```
 
 ### Planned

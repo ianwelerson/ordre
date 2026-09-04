@@ -1,3 +1,4 @@
+import { requireFeature } from '#/adapters/express/middlewares/feature.ts';
 import { requireWorkspaceAccess } from '#/adapters/express/middlewares/workspace-access.ts';
 import { requireWorkspacePermission } from '#/adapters/express/middlewares/workspace-permission.ts';
 import { requireWorkspaceQuota } from '#/adapters/express/middlewares/workspace-quota.ts';
@@ -27,6 +28,7 @@ locationRouter.get(
 
 locationRouter.post(
   API_ROUTES.workspace.location.collection,
+  requireFeature('workspace-location'),
   requireWorkspaceAccess,
   requireWorkspacePermission('workspace:location:manage'),
   requireWorkspaceQuota('location'),

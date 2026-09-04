@@ -63,10 +63,13 @@ the member's working view in the dashboard, and the board the client opens.
 
 ### Finally: opening the doors
 
-Subscription billing with localised pricing, the public marketing site, and the
-switches that let a surface be closed without a deploy. Ahead of any of it, the
-backend and database move onto their production plans, which is the point several
-of the foundations below are working towards.
+Subscription billing with localised pricing and the public marketing site. Ahead
+of either, the backend and database move onto their production plans, which is
+the point several of the foundations below are working towards.
+
+The switches that close a surface without a deploy are built, and the API
+enforces each one. See
+[Feature Switches](/internal-docs/architecture/feature-switches).
 
 ## Product
 
@@ -173,6 +176,7 @@ product in production rather than optional polish.
 
 | Area                | What it covers                                                                                                     | Status |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------ | ------ |
+| Feature switches    | Global switches closing sign-in, sign-up, workspace creation, locations and invites without a deploy               | ✅     |
 | Log hygiene         | Session cookies, invite tokens and query parameters scrubbed from every log record                                 | ✅     |
 | Process resilience  | Dropped database connections and uncaught failures handled rather than ending the process                          | ✅     |
 | Invite privileges   | An administrator cannot issue an invite that grants more than they hold                                            | ✅     |

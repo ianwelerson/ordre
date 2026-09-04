@@ -3,6 +3,7 @@ import { AUTH_ERRORS } from './auth.ts';
 import { BASE_ERRORS } from './base.ts';
 import { BILLING_ERRORS } from './billing.ts';
 import { CLIENT_ERRORS } from './client.ts';
+import { FEATURE_ERRORS } from './feature.ts';
 import { INVITE_ERRORS } from './invite.ts';
 import { LOCATION_ERRORS } from './location.ts';
 import { MEMBER_ERRORS } from './member.ts';
@@ -33,6 +34,7 @@ export const ERROR_CATALOG = {
   ...MEMBER_ERRORS,
   ...INVITE_ERRORS,
   ...BILLING_ERRORS,
+  ...FEATURE_ERRORS,
   ...CLIENT_ERRORS,
 } satisfies ErrorMap;
 

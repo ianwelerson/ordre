@@ -1,4 +1,5 @@
 import { urls } from '#/config/urls.ts';
+import { isFeatureEnabled } from '#/services/feature.ts';
 import { APIError } from 'better-auth/api';
 
 import { errorMessage } from '@ordre/core/errors';
@@ -7,8 +8,13 @@ import {
   composeName,
   defaultPasswordResetRedirect,
   defaultSignUpCallbackUrl,
+  guardAuthFeature,
   remapAuthError,
 } from './auth.ts';
+
+vi.mock('#/services/feature.ts', () => ({ isFeatureEnabled: vi.fn() }));
+
+const checkFeature = vi.mocked(isFeatureEnabled);
 
 describe('config/auth', () => {
   describe('remapAuthError', () => {
@@ -127,6 +133,57 @@ describe('config/auth', () => {
 
     it('tolerates an endpoint reached with no body', () => {
       expect(() => defaultPasswordResetRedirect({ path: '/request-password-reset' })).not.toThrow();
+    });
+  });
+
+  describe('guardAuthFeature', () => {
+    beforeEach(() => {
+      vi.resetAllMocks();
+    });
+
+    it('lets a sign-in through while `login` is on', async () => {
+      checkFeature.mockResolvedValue(true);
+
+      await expect(guardAuthFeature({ path: '/sign-in/email' })).resolves.toBeUndefined();
+      expect(checkFeature).toHaveBeenCalledWith('login');
+    });
+
+    it('refuses a sign-in with FEATURE_LOGIN_DISABLED while `login` is off', async () => {
+      checkFeature.mockResolvedValue(false);
+
+      await expect(guardAuthFeature({ path: '/sign-in/email' })).rejects.toMatchObject({
+        statusCode: 403,
+        body: {
+          code: 'FEATURE_LOGIN_DISABLED',
+          message: errorMessage('FEATURE_LOGIN_DISABLED'),
+        },
+      });
+    });
+
+    it('refuses a sign-up with FEATURE_REGISTRATION_DISABLED while `registration` is off', async () => {
+      checkFeature.mockResolvedValue(false);
+
+      await expect(guardAuthFeature({ path: '/sign-up/email' })).rejects.toMatchObject({
+        statusCode: 403,
+        body: { code: 'FEATURE_REGISTRATION_DISABLED' },
+      });
+      expect(checkFeature).toHaveBeenCalledWith('registration');
+    });
+
+    it('throws an APIError, so Better Auth answers rather than the process failing', async () => {
+      checkFeature.mockResolvedValue(false);
+
+      await expect(guardAuthFeature({ path: '/sign-up/email' })).rejects.toBeInstanceOf(APIError);
+    });
+
+    it('leaves an unlisted path alone without reading a switch', async () => {
+      await expect(guardAuthFeature({ path: '/request-password-reset' })).resolves.toBeUndefined();
+      expect(checkFeature).not.toHaveBeenCalled();
+    });
+
+    it('does not gate reading a session, so live sessions survive a closed `login`', async () => {
+      await expect(guardAuthFeature({ path: '/get-session' })).resolves.toBeUndefined();
+      expect(checkFeature).not.toHaveBeenCalled();
     });
   });
 

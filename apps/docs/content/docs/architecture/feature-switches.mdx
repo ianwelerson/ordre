@@ -1,0 +1,201 @@
+---
+title: Feature Switches
+icon: ToggleLeft
+description: The switches that close a surface without a deploy - where the keys live, how a value is resolved, and where each one is enforced.
+---
+
+A feature switch closes one surface for everybody, at once, without shipping
+code. They exist so a controlled launch can open sign-ups on a Tuesday and close
+them again on a Wednesday, and so a surface that is misbehaving can be shut
+without a deploy.
+
+They are **not** per-workspace capability. What one workspace may do that another
+may not is its plan, and that lives in `plan.entitlements` - see
+[Billing](/internal-docs/architecture/data-model/billing). Two axes, two
+mechanisms, no overlap.
+
+## The keys are code; the table is an override
+
+The set of switches is a union in `@ordre/core`, and every key carries a default
+there:
+
+```ts
+// packages/core/src/enums/feature.ts
+export const FEATURES = [
+  'login',
+  'registration',
+  'workspace-creation',
+  'workspace-location',
+  'workspace-invite',
+] as const;
+
+export const FEATURE_DEFAULTS: Record<Feature, boolean> = {
+  login: false,
+  registration: false,
+  // ...
+};
+```
+
+The `feature` table stores an override per key, and nothing else. That split is
+the whole design:
+
+- A **missing row**, an **empty table**, and a **database that cannot be read**
+  all resolve to `FEATURE_DEFAULTS`, which is `false` for every switch. No
+  failure mode silently opens a door.
+- A row whose `key` is not in `FEATURES` is **ignored on read**. A switch removed
+  from the code stops meaning anything without a migration to delete its row.
+- The response shape, the error codes, and the seed are all derived from
+  `FEATURES`, so adding a switch is one edit plus its copy.
+
+<Callout type="warn">
+  **Name a switch for the surface it opens, never for a restriction it applies.** The fail-closed
+  guarantee above holds because `false` is the safe value for every key, and only a name of that
+  shape keeps it true. Nothing in the code enforces the phrasing, so it stands as a rule.
+</Callout>
+
+<Callout type="warn">
+  **The seed ships every switch off.** A fresh database serves no sign-ins, no sign-ups, and no
+  workspace creation until someone opens them. That includes a fresh production database. Opening
+  one is an `UPDATE` run as the owner role, and it takes effect within the cache TTL below.
+</Callout>
+
+## Resolving a value
+
+Everything goes through
+[`services/feature.ts`](https://github.com/ianwelerson/ordre/blob/main/apps/api/src/services/feature.ts).
+Callers only ever see `isFeatureEnabled(key)` and `getFeatures()`.
+
+The `feature` table is the only place a switch is stored, and `readOverrides` is
+the one function that reads it. A switch has a single home, so there is one answer
+to what state it is in and one place to change if that home ever moves.
+
+The resolved set is cached in-process for **30 seconds**. The API is one
+persistent container, so a module-level cache takes the query off the sign-in
+path entirely; the cost is that a flip takes up to that long to reach a running
+instance.
+
+Two details of that cache hold the cost down, which matters because
+`GET /v1/features` is unauthenticated and no rate limiter is mounted yet:
+
+- **Callers share an in-flight read.** A cold cache costs one query however many
+  requests land on it at once, so a burst timed at the TTL boundary stays one
+  query against a pool that defaults to ten connections.
+- **A failed read is cached too, for two seconds.** It is logged as
+  `feature.read_failed` and answered with the defaults. The window is short enough
+  that a flip lands promptly once the database recovers, and long enough that an
+  unreachable database is read once every couple of seconds.
+
+The read goes through the pooled `db`, since the table is global configuration
+with no row-level security to scope it by.
+
+## Where each switch is enforced
+
+Enforcement is server-side, always. A client reading `GET /v1/features` to hide a
+button is a courtesy; the API refusing is the switch.
+
+| Switch               | Closes                                    | Enforced in                                    |
+| -------------------- | ----------------------------------------- | ---------------------------------------------- |
+| `login`              | Signing in. Live sessions keep working    | `config/auth.ts`, on `/sign-in/email`          |
+| `registration`       | Creating an account                       | `config/auth.ts`, on `/sign-up/email`          |
+| `workspace-creation` | Creating a workspace                      | `POST /workspace`                              |
+| `workspace-location` | Adding a location. Editing keeps working  | `POST /workspace/:id/location`                 |
+| `workspace-invite`   | Sending an invite. Accepting keeps working | `POST /workspace/:id/invite`                  |
+
+Every switch closes **creation only**. Nobody is locked out of a location they
+already run, and nobody holding a valid invite is stranded by a closed
+`workspace-invite`.
+
+### The two halves of enforcement
+
+Routes we own take a middleware, in the shape of `requireWorkspacePermission`:
+
+```ts
+workspaceRouter.post(
+  API_ROUTES.workspace.collection,
+  requireFeature('workspace-creation'),
+  sendAuthResult((req) => workspaceCreate(req.user, req.body))
+);
+```
+
+Better Auth owns every path under `/auth` through a single `router.all`, so
+sign-in and sign-up are gated in its `before` hook, through a path-to-feature map.
+The map names those two paths, so closing `login` stops new sign-ins while the
+sessions already issued keep working.
+
+<Callout>
+  **`requireFeature` mounts *ahead* of the authorization guards**, which is the opposite of
+  [`requireWorkspaceQuota`](/internal-docs/architecture/authorization/rbac). A plan cap is that
+  workspace's billing state, so it must stay hidden from a caller who lacks the permission. A switch
+  is global and already public on `GET /v1/features`, so answering with it leaks nothing and saves
+  the membership and permission queries on a route that is closed to everyone.
+</Callout>
+
+## The endpoint
+
+`GET /v1/features` is public and unauthenticated, because the sign-in and sign-up
+screens read it before anyone has a session. It returns one boolean per key in
+`FEATURES` and nothing else.
+
+That key set is the whole contract. The endpoint is a disclosure surface, so
+operational data does not belong on it - a queue depth or a dead-letter count
+would need its own authenticated endpoint.
+
+## Refusals
+
+Each switch has its own code in the catalog, with copy in both locales, so a
+person is told which surface is paused rather than that something went wrong. The
+codes are listed in [Error Codes](/internal-docs/architecture/reference/error-codes).
+
+They are **403**: the request was understood and refused.
+
+## The table
+
+The table holds global configuration rather than tenant data, and carries no
+row-level security, as `plan` does. The sign-in and sign-up checks read it
+unauthenticated, where `app_current_user_id()` is `NULL` and a policy would match
+nothing. See
+[Row-Level Security](/internal-docs/architecture/authorization/row-level-security).
+
+| Field         | Type        | Notes                                                   |
+| ------------- | ----------- | ------------------------------------------------------- |
+| `key`         | `text` PK   | The feature name. Matches a member of `FEATURES`        |
+| `enabled`     | `boolean`   | `NOT NULL DEFAULT false`                                |
+| `description` | `text`      | What closing it stops, and what it leaves alone         |
+| `createdAt`   | `timestamp` |                                                         |
+| `updatedAt`   | `timestamp` |                                                         |
+
+`key` is `text`, so a new switch needs a seed row and no migration. The union in
+`@ordre/core` is what decides which keys mean anything.
+
+The runtime role holds **`SELECT` only**, granted in
+[`0004_pale_doctor_octopus.sql`](https://github.com/ianwelerson/ordre/blob/main/packages/db/src/migrations/0004_pale_doctor_octopus.sql).
+The table carries no policies, so its privileges are the only thing scoping it,
+and the API only ever reads: every write is an owner-role statement.
+
+The seed
+([`seeds/feature.ts`](https://github.com/ianwelerson/ordre/blob/main/packages/db/src/seeds/feature.ts))
+inserts a row for any switch that has none and leaves the rest as they are. A
+switch's state is set by whoever opened it, so re-seeding never closes a surface
+that is live.
+
+## Opening and closing a switch
+
+Both are a statement run as the owner role:
+
+```sql
+UPDATE feature SET enabled = true  WHERE key = 'registration';
+UPDATE feature SET enabled = false WHERE key = 'workspace-invite';
+```
+
+## In tests
+
+The integration fixtures seed every switch **on**, derived from `FEATURES`, so a
+switch is open in tests from the moment it is declared and a route test exercises
+the route. A test that wants the closed door calls `setFeature(key, false)` from
+`test/db.ts` first, which writes the row as the owner role and drops the cache.
+
+The service's own unit tests mock `db.select`, so they exercise the query path the
+API runs.
+
+The resolved set is cached in the worker process and outlives the per-test
+`TRUNCATE`, so `seedDb()` and `setFeature()` both clear it.

@@ -45,6 +45,15 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public
   GRANT USAGE, SELECT ON SEQUENCES TO ordre_app;
 ```
 
+<Callout title="`feature` is read-only for the app role">
+  `feature` carries no row-level security, because the sign-in and sign-up checks read it before a
+  caller is known, so its privileges are the only thing scoping the table.
+  [`0004_pale_doctor_octopus.sql`](https://github.com/ianwelerson/ordre/blob/main/packages/db/src/migrations/0004_pale_doctor_octopus.sql)
+  leaves `ordre_app` with `SELECT` on it. Writing a switch is an owner-role statement, which is why
+  the seed connects with `DATABASE_OWNER_URL`. See
+  [Feature Switches](/internal-docs/architecture/feature-switches).
+</Callout>
+
 Tables and sequences only. **Function privileges are not here** - they live in
 [`0003_grants.sql`](https://github.com/ianwelerson/ordre/blob/main/packages/db/src/migrations/0003_grants.sql),
 because a grant can only name a function that already exists, and the functions

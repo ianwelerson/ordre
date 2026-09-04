@@ -5,9 +5,10 @@ description: The sign-up flow, what it creates in one transaction, and how the w
 ---
 
 <Callout title="Built">
-  Implemented. The dashboard serves the sign-up screens and the API creates the account, workspace,
-  owner membership, and free subscription in one transaction. The slug rules below are enforced by
-  `slug-restrictions` - see [Utilities](/internal-docs/architecture/reference/utilities#slug-restrictions).
+  Implemented. The dashboard serves the sign-up screens, Better Auth creates the account, and a
+  second request creates the workspace, owner membership, free subscription and default location in
+  one transaction. The slug rules below are enforced by `slug-restrictions` - see
+  [Utilities](/internal-docs/architecture/reference/utilities#slug-restrictions).
 </Callout>
 
 ## Registration
@@ -54,3 +55,5 @@ The registration flow creates a new user account and a workspace. The person reg
 - Leaving the business name blank means the person's name becomes the workspace display name, and so the public slug
 - The password is set during registration, so the account is usable as soon as the form is submitted - a forgotten password is recovered through the reset link on the login page
 - The workspace owner can later invite additional members (admin or member roles) from the dashboard
+- Registration is gated by two [feature switches](/internal-docs/architecture/feature-switches), not one. `registration` closes the account half at `/sign-up/email`, and `workspace-creation` closes the workspace half at `POST /workspace`. Both refuse with 403 and their own error code
+- **Closing `workspace-creation` alone leaves a gap the flow has to handle.** The account is created by the first request, so someone can finish sign-up and then be refused the workspace, landing signed in with no workspace. The two switches are independent, so the wizard is what decides what that person sees

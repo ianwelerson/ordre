@@ -30,6 +30,7 @@ export const API_BASE_PATH = '/v1';
 
 export const API_ROUTES = {
   health: '/health',
+  features: '/features',
 
   /**
    * Better Auth owns everything under `base` and generates its own OpenAPI

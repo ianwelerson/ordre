@@ -1,5 +1,6 @@
 import { app } from '#/adapters/express/server.ts';
 import { auth } from '#/config/auth.ts';
+import { setFeature } from '#/test/db.ts';
 import { USER_IDS, userFixtures, WORKSPACE_IDS, workspaceFixtures } from '#/test/fixtures.ts';
 import { ownerDb } from '#/test/owner-db.ts';
 import { parseBody } from '#/utils/testing.ts';
@@ -244,6 +245,30 @@ describe('Workspace', () => {
 
       expect(error.code).toBe('UNAUTHORIZED');
       expect(error.message).toBe(errorMessage('UNAUTHORIZED'));
+    });
+
+    // --- Feature switch ---
+    test('POST refuses a workspace while `workspace-creation` is off', async () => {
+      await setFeature('workspace-creation', false);
+      mockUserSession();
+
+      const response = await request(app)
+        .post(BASE)
+        .send({ name: 'Test', slug: `test-${Date.now()}`, type: 'individual', industry: 'other' })
+        .expect(403);
+
+      const error = parseBody(ResponseErrorSchema, response.body);
+
+      expect(error.code).toBe('FEATURE_WORKSPACE_CREATION_DISABLED');
+      expect(error.message).toBe(errorMessage('FEATURE_WORKSPACE_CREATION_DISABLED'));
+    });
+
+    test('POST still refuses an unauthenticated caller with UNAUTHORIZED while the switch is on', async () => {
+      await setFeature('workspace-creation', true);
+
+      const response = await request(app).post(BASE).send({}).expect(401);
+
+      expect(parseBody(ResponseErrorSchema, response.body).code).toBe('UNAUTHORIZED');
     });
 
     // Behavior & validation

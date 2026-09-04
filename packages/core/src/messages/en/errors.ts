@@ -103,4 +103,10 @@ export const errors: Record<ErrorCode, string> = {
   NETWORK_ERROR: "We couldn't reach the server. Check your connection and try again.",
   MALFORMED_RESPONSE: 'We got an unexpected response from the server. Please try again.',
   UNKNOWN_ERROR: 'Something went wrong. Please try again.',
+  FEATURE_LOGIN_DISABLED: "Signing in isn't available right now. Check back soon.",
+  FEATURE_REGISTRATION_DISABLED: "New accounts aren't open right now. Check back soon.",
+  FEATURE_WORKSPACE_CREATION_DISABLED: "New workspaces aren't open right now. Check back soon.",
+  FEATURE_WORKSPACE_LOCATION_DISABLED:
+    "Adding locations isn't available right now. Check back soon.",
+  FEATURE_WORKSPACE_INVITE_DISABLED: "Sending invites isn't available right now. Check back soon.",
 };

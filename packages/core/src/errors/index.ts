@@ -10,3 +10,4 @@ export { CLIENT_ERRORS, type ClientErrorCode } from './client.ts';
 export { ERROR_CATALOG, type ErrorCode } from './catalog.ts';
 export { clientError, ServiceError } from './service-error.ts';
 export { errorMessage, errorResponse } from './response.ts';
+export { FEATURE_DISABLED, FEATURE_ERRORS } from './feature.ts';

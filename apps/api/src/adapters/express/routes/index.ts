@@ -1,6 +1,7 @@
 import express, { Router } from 'express';
 
 import authRoutes from './auth/auth.routes.ts';
+import featureRoutes from './feature/feature.routes.ts';
 import healthRoutes from './health/health.routes.ts';
 import publicInviteRoutes from './workspace/invite.public.routes.ts';
 import workspaceRoutes from './workspace/workspace.routes.ts';
@@ -13,6 +14,8 @@ routes.use(express.json());
 routes.use(express.urlencoded({ extended: true }));
 
 routes.use(healthRoutes);
+
+routes.use(featureRoutes);
 
 routes.use(workspaceRoutes);
 

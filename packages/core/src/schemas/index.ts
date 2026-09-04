@@ -29,3 +29,4 @@ export * from './billing.ts';
 export * from './outbox.ts';
 export * from './auth.ts';
 export * from './slug.ts';
+export * from './feature.ts';

@@ -10,7 +10,7 @@
         {
           "name": "id",
           "type": "UUID",
-          "default": "gen_random_uuid()",
+          "default": "pg_catalog.gen_random_uuid()",
           "check": "",
           "primary": true,
           "unique": false,
@@ -111,6 +111,51 @@
           "id": "fld_user_updated_06",
           "size": "",
           "values": []
+        },
+        {
+          "name": "firstName",
+          "type": "TEXT",
+          "default": "",
+          "check": "",
+          "primary": false,
+          "unique": false,
+          "unsigned": true,
+          "notNull": true,
+          "increment": false,
+          "comment": "",
+          "id": "pzYJFF-qbIU8ICJhrlUN-",
+          "size": "",
+          "values": []
+        },
+        {
+          "name": "lastName",
+          "type": "TEXT",
+          "default": "",
+          "check": "",
+          "primary": false,
+          "unique": false,
+          "unsigned": true,
+          "notNull": true,
+          "increment": false,
+          "comment": "",
+          "id": "gz0IdwG8IlpX4bVg3wq3Z",
+          "size": "",
+          "values": []
+        },
+        {
+          "name": "productNewsOptIn",
+          "type": "BOOLEAN",
+          "default": "false",
+          "check": "",
+          "primary": false,
+          "unique": false,
+          "unsigned": true,
+          "notNull": false,
+          "increment": false,
+          "comment": "",
+          "id": "GdJqm6JRP7hRwB34TzKFZ",
+          "size": "",
+          "values": []
         }
       ],
       "comment": "",
@@ -129,7 +174,7 @@
         {
           "name": "id",
           "type": "UUID",
-          "default": "gen_random_uuid()",
+          "default": "pg_catalog.gen_random_uuid()",
           "check": "",
           "primary": true,
           "unique": false,
@@ -234,7 +279,7 @@
         {
           "name": "updatedAt",
           "type": "TIMESTAMPTZ",
-          "default": "",
+          "default": "now()",
           "check": "",
           "primary": false,
           "unique": false,
@@ -270,7 +315,7 @@
         {
           "name": "id",
           "type": "UUID",
-          "default": "gen_random_uuid()",
+          "default": "pg_catalog.gen_random_uuid()",
           "check": "",
           "primary": true,
           "unique": false,
@@ -279,6 +324,21 @@
           "increment": false,
           "comment": "",
           "id": "fld_account_id_001",
+          "size": "",
+          "values": []
+        },
+        {
+          "name": "issuer",
+          "type": "TEXT",
+          "default": "",
+          "check": "",
+          "primary": false,
+          "unique": false,
+          "unsigned": true,
+          "notNull": true,
+          "increment": false,
+          "comment": "",
+          "id": "pjqLX6dBrrwr84eM_TxP4",
           "size": "",
           "values": []
         },
@@ -450,7 +510,7 @@
         {
           "name": "updatedAt",
           "type": "TIMESTAMPTZ",
-          "default": "",
+          "default": "now()",
           "check": "",
           "primary": false,
           "unique": false,
@@ -470,6 +530,12 @@
           "name": "account_userId_idx",
           "unique": false,
           "fields": ["userId"]
+        },
+        {
+          "id": "k7vkg1xcDEoYUbqLEtUvp",
+          "name": "account_issuer_accountId_uidx",
+          "unique": true,
+          "fields": ["issuer", "accountId"]
         }
       ],
       "uniqueConstraints": [],
@@ -486,7 +552,7 @@
         {
           "name": "id",
           "type": "UUID",
-          "default": "gen_random_uuid()",
+          "default": "pg_catalog.gen_random_uuid()",
           "check": "",
           "primary": true,
           "unique": false,
@@ -682,7 +748,7 @@
         {
           "id": "plan_f_entitlements",
           "name": "entitlements",
-          "type": "JSON",
+          "type": "JSONB",
           "default": "{\"limits\":{}}",
           "check": "",
           "primary": false,
@@ -745,7 +811,7 @@
         {
           "name": "id",
           "type": "UUID",
-          "default": "",
+          "default": "gen_random_uuid()",
           "check": "",
           "primary": true,
           "unique": false,
@@ -859,7 +925,7 @@
           "id": "FSwHghOcwW5D48_kPmkHC",
           "name": "createdAt",
           "type": "TIMESTAMPTZ",
-          "default": "",
+          "default": "now()",
           "check": "",
           "primary": false,
           "unique": false,
@@ -873,7 +939,7 @@
           "id": "l7nr5QcQGwQwdE1Sqax68",
           "name": "updatedAt",
           "type": "TIMESTAMPTZ",
-          "default": "",
+          "default": "now()",
           "check": "",
           "primary": false,
           "unique": false,
@@ -901,7 +967,7 @@
         {
           "name": "id",
           "type": "UUID",
-          "default": "",
+          "default": "gen_random_uuid()",
           "check": "",
           "primary": true,
           "unique": false,
@@ -1015,7 +1081,7 @@
           "id": "MtRr9Kh7apHji15ts_fCG",
           "name": "isDefault",
           "type": "BOOLEAN",
-          "default": "",
+          "default": "false",
           "check": "",
           "primary": false,
           "unique": false,
@@ -1029,7 +1095,7 @@
           "id": "XFBWmlHTFDWYAuQgKZ87j",
           "name": "createdAt",
           "type": "TIMESTAMPTZ",
-          "default": "",
+          "default": "now()",
           "check": "",
           "primary": false,
           "unique": false,
@@ -1043,7 +1109,7 @@
           "id": "tAzl0RbCEnJ4fL4SUesSq",
           "name": "updatedAt",
           "type": "TIMESTAMPTZ",
-          "default": "",
+          "default": "now()",
           "check": "",
           "primary": false,
           "unique": false,
@@ -1054,12 +1120,18 @@
           "values": []
         }
       ],
-      "comment": "Partial unique: at most one is_default=true location per workspace — uniqueIndex workspace_location_one_default_per_workspace WHERE is_default. DrawDB cannot express the partial WHERE.",
+      "comment": "Partial unique: at most one is_default=true location per workspace \u2014 uniqueIndex workspace_location_one_default_per_workspace WHERE is_default. DrawDB cannot express the partial WHERE.",
       "indices": [
         {
           "id": "idx_wsloc_workspace_01",
           "name": "workspace_location_workspace_id_idx",
           "unique": false,
+          "fields": ["workspaceId"]
+        },
+        {
+          "id": "dFpGXe2cpkSr1n3-u69Zx",
+          "name": "workspace_location_one_default_per_workspace",
+          "unique": true,
           "fields": ["workspaceId"]
         }
       ],
@@ -1077,7 +1149,7 @@
         {
           "name": "id",
           "type": "UUID",
-          "default": "",
+          "default": "gen_random_uuid()",
           "check": "",
           "primary": true,
           "unique": false,
@@ -1188,10 +1260,25 @@
           "values": []
         },
         {
+          "name": "locale",
+          "type": "locale",
+          "default": "en",
+          "check": "",
+          "primary": false,
+          "unique": false,
+          "unsigned": true,
+          "notNull": true,
+          "increment": false,
+          "comment": "",
+          "id": "_aK_BeVSzOfV9bwTYQ1Wr",
+          "size": "",
+          "values": []
+        },
+        {
           "id": "tR60V_nQRdlUtchf-Estg",
           "name": "createdAt",
           "type": "TIMESTAMPTZ",
-          "default": "",
+          "default": "now()",
           "check": "",
           "primary": false,
           "unique": false,
@@ -1205,7 +1292,7 @@
           "id": "5yOmcVCRC4q7SL9AN1KJn",
           "name": "updatedAt",
           "type": "TIMESTAMPTZ",
-          "default": "",
+          "default": "now()",
           "check": "",
           "primary": false,
           "unique": false,
@@ -1246,7 +1333,7 @@
         {
           "name": "id",
           "type": "UUID",
-          "default": "",
+          "default": "gen_random_uuid()",
           "check": "",
           "primary": true,
           "unique": false,
@@ -1290,7 +1377,7 @@
           "id": "XFvu8YTR4U6PseM0UFO_-",
           "name": "createdAt",
           "type": "TIMESTAMPTZ",
-          "default": "",
+          "default": "now()",
           "check": "",
           "primary": false,
           "unique": false,
@@ -1304,7 +1391,7 @@
           "id": "87MIJHb2UgBrq5Mj3aUw7",
           "name": "updatedAt",
           "type": "TIMESTAMPTZ",
-          "default": "",
+          "default": "now()",
           "check": "",
           "primary": false,
           "unique": false,
@@ -1344,7 +1431,7 @@
         {
           "name": "id",
           "type": "UUID",
-          "default": "",
+          "default": "gen_random_uuid()",
           "check": "",
           "primary": true,
           "unique": false,
@@ -1430,7 +1517,7 @@
           "id": "YUO6XXNAB86jVP8cyUrli",
           "name": "cancelAtPeriodEnd",
           "type": "BOOLEAN",
-          "default": "",
+          "default": "false",
           "check": "",
           "primary": false,
           "unique": false,
@@ -1444,7 +1531,7 @@
           "id": "4e08RqnsUL4HQSUurggMx",
           "name": "createdAt",
           "type": "TIMESTAMPTZ",
-          "default": "",
+          "default": "now()",
           "check": "",
           "primary": false,
           "unique": false,
@@ -1458,7 +1545,7 @@
           "id": "s8zXIir1Znr07lrnn-Lzi",
           "name": "updatedAt",
           "type": "TIMESTAMPTZ",
-          "default": "",
+          "default": "now()",
           "check": "",
           "primary": false,
           "unique": false,
@@ -1478,13 +1565,7 @@
           "fields": ["workspaceId"]
         }
       ],
-      "uniqueConstraints": [
-        {
-          "id": 0,
-          "name": "Workspace_Subscription_unique_0",
-          "fields": ["workspaceId"]
-        }
-      ],
+      "uniqueConstraints": [],
       "color": "#175e7a",
       "collapsed": false,
       "inherits": []
@@ -1499,7 +1580,7 @@
         {
           "name": "id",
           "type": "UUID",
-          "default": "",
+          "default": "gen_random_uuid()",
           "check": "",
           "primary": true,
           "unique": false,
@@ -1641,7 +1722,7 @@
           "id": "Oc0d0o16oUhlon3kqA8li",
           "name": "createdAt",
           "type": "TIMESTAMPTZ",
-          "default": "",
+          "default": "now()",
           "check": "",
           "primary": false,
           "unique": false,
@@ -1655,7 +1736,7 @@
           "id": "WA_RPhEqT60T5ceTns2NK",
           "name": "updatedAt",
           "type": "TIMESTAMPTZ",
-          "default": "",
+          "default": "now()",
           "check": "",
           "primary": false,
           "unique": false,
@@ -1666,12 +1747,12 @@
           "values": []
         }
       ],
-      "comment": "Partial unique: only one pending invite per (workspaceId, email) — uniqueIndex workspace_invite_workspace_email_pending_unique WHERE status = 'pending'. DrawDB cannot express the partial WHERE, so it is represented as a plain index here.",
+      "comment": "Partial unique: only one pending invite per (workspaceId, email) \u2014 uniqueIndex workspace_invite_workspace_email_pending_unique WHERE status = 'pending'. DrawDB cannot express the partial WHERE, so it is represented as a plain index here.",
       "indices": [
         {
           "id": "idx_wsinv_we_pending_01",
           "name": "workspace_invite_workspace_email_pending_unique",
-          "unique": false,
+          "unique": true,
           "fields": ["workspaceId", "email"]
         },
         {
@@ -1691,6 +1772,12 @@
           "name": "workspace_invite_invited_by_member_id_idx",
           "unique": false,
           "fields": ["invitedByMemberId"]
+        },
+        {
+          "id": "1WWh0WsLcsk1s7VTkgy2O",
+          "name": "workspace_invite_pending_expiry_idx",
+          "unique": false,
+          "fields": ["expiresAt"]
         }
       ],
       "uniqueConstraints": [],
@@ -1750,7 +1837,7 @@
         {
           "id": "outbox_f_payload",
           "name": "payload",
-          "type": "JSON",
+          "type": "JSONB",
           "default": "",
           "check": "",
           "primary": false,
@@ -2063,6 +2150,95 @@
       ],
       "color": "#175e7a",
       "collapsed": false
+    },
+    {
+      "id": "0jgGvlkXdjbIO90npMAFH",
+      "name": "feature",
+      "x": 900.0,
+      "y": 100.0,
+      "locked": false,
+      "fields": [
+        {
+          "name": "key",
+          "type": "TEXT",
+          "default": "",
+          "check": "",
+          "primary": true,
+          "unique": false,
+          "unsigned": true,
+          "notNull": true,
+          "increment": false,
+          "comment": "",
+          "id": "PdJt7CCKVPXYAVMeojdH8",
+          "size": "",
+          "values": []
+        },
+        {
+          "name": "enabled",
+          "type": "BOOLEAN",
+          "default": "false",
+          "check": "",
+          "primary": false,
+          "unique": false,
+          "unsigned": true,
+          "notNull": true,
+          "increment": false,
+          "comment": "",
+          "id": "XHtxAG531BwYZuiyeMZpM",
+          "size": "",
+          "values": []
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "default": "",
+          "check": "",
+          "primary": false,
+          "unique": false,
+          "unsigned": true,
+          "notNull": false,
+          "increment": false,
+          "comment": "",
+          "id": "9ZeJrWpr2EauO0ctGkzhQ",
+          "size": "",
+          "values": []
+        },
+        {
+          "name": "createdAt",
+          "type": "TIMESTAMPTZ",
+          "default": "now()",
+          "check": "",
+          "primary": false,
+          "unique": false,
+          "unsigned": true,
+          "notNull": true,
+          "increment": false,
+          "comment": "",
+          "id": "GBECP5RyA9VbfqnuMTL0b",
+          "size": "",
+          "values": []
+        },
+        {
+          "name": "updatedAt",
+          "type": "TIMESTAMPTZ",
+          "default": "now()",
+          "check": "",
+          "primary": false,
+          "unique": false,
+          "unsigned": true,
+          "notNull": true,
+          "increment": false,
+          "comment": "",
+          "id": "zPBQ7a8dq1Lgqdr51Fwcd",
+          "size": "",
+          "values": []
+        }
+      ],
+      "comment": "Global feature switches. No FKs and no RLS: the sign-in and sign-up checks read it unauthenticated. The key set is a union in @ordre/core; a row whose key is not in it is ignored on read.",
+      "indices": [],
+      "uniqueConstraints": [],
+      "color": "#175e7a",
+      "collapsed": false
     }
   ],
   "relationships": [
@@ -2123,12 +2299,12 @@
     },
     {
       "startTableId": "R2XcREucUoAUMo2ZCRMFQ",
-      "startFieldId": "oHrrzDgZBzHHaWpNVHRad",
+      "startFieldId": "plan_f_id",
       "endTableId": "GcU3ql059kJeOABcdbAHV",
       "endFieldId": "sMWwj7sylQ3wPJb3rBikX",
       "cardinality": "one_to_many",
       "updateConstraint": "No action",
-      "deleteConstraint": "No action",
+      "deleteConstraint": "Restrict",
       "name": "fk_Plans_id_Workspace_Plan",
       "id": "bgbYYJNgaxaOSkbL798A5"
     },
@@ -2264,11 +2440,22 @@
     },
     {
       "name": "outbox_channel",
-      "values": ["email"]
+      "values": ["email", "audience"]
     },
     {
       "name": "outbox_topic",
-      "values": ["account:created", "workspace:created", "invite:created"]
+      "values": [
+        "account:created",
+        "account:verify-email",
+        "account:reset-password",
+        "workspace:created",
+        "invite:created",
+        "contact:sync"
+      ]
+    },
+    {
+      "name": "locale",
+      "values": ["en", "pt"]
     }
   ],
   "title": "Ordre"

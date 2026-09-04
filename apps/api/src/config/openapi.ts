@@ -61,6 +61,7 @@ const openApiDocument = generator.generateDocument({
       description: "Manage a workspace's member invites.",
     },
     { name: 'Health', description: 'Service health checks.' },
+    { name: 'Features', description: 'The feature switches and whether each is on.' },
   ],
 });
 

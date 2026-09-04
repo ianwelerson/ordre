@@ -1,4 +1,5 @@
 import { createDb, createPool } from './connection.ts';
+import { seedFeatures } from './seeds/feature.ts';
 import { seedPlans } from './seeds/plan.ts';
 
 // Mirror drizzle.config.ts: the connection string is shared infra and lives in
@@ -23,6 +24,9 @@ const db = createDb(pool);
 try {
   await seedPlans(db);
   console.log('✓ Seeded plan catalog');
+
+  await seedFeatures(db);
+  console.log('✓ Seeded feature switches');
 } finally {
   await pool.end();
 }
